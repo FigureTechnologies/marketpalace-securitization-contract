@@ -1,0 +1,19 @@
+use cosmwasm_std::{Binary, Env};
+
+use crate::{
+    core::{
+        aliases::{ProvDeps, ProvQueryResponse},
+        msg::QueryMsg,
+    },
+    util::validate::{Validate, ValidateResult},
+};
+
+pub fn run(_deps: ProvDeps, _env: Env, _msg: QueryMsg) -> ProvQueryResponse {
+    Ok(Binary(Vec::new()))
+}
+
+impl Validate for QueryMsg {
+    fn validate(&self) -> ValidateResult {
+        Ok(())
+    }
+}
