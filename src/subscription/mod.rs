@@ -1,24 +1,16 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 
+use crate::core::msg::SecurityCommitment;
+
+#[cw_serde]
 pub struct Subscription {
-    pub admin: Addr,
     pub lp: Addr,
-    pub commitment_denom: String,
-    pub initial_commitment: Option<u64>,
+    pub commitments: Vec<SecurityCommitment>,
 }
 
 impl Subscription {
-    pub fn new(
-        admin: Addr,
-        lp: Addr,
-        commitment_denom: String,
-        initial_commitment: Option<u64>,
-    ) -> Self {
-        Subscription {
-            admin,
-            lp,
-            commitment_denom,
-            initial_commitment,
-        }
+    pub fn new(lp: Addr, commitments: Vec<SecurityCommitment>) -> Self {
+        Subscription { lp, commitments }
     }
 }

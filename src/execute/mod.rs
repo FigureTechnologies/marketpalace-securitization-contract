@@ -9,22 +9,18 @@ use crate::{
     util::validate::{Validate, ValidateResult},
 };
 
+use self::accept_subscription::accept_subscription;
+
+mod accept_subscription;
 mod propose_subscription;
 
-pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
-    let state = STATE.load(deps.storage)?;
+pub fn run(deps: ProvDepsMut, _env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
+    let _state = STATE.load(deps.storage)?;
     match msg {
-        ExecuteMsg::ProposeSubscription { initial_commitment } => {
-            propose_subscription::propose_subscription(
-                deps,
-                &info.sender,
-                env.contract.address.into_string(),
-                state.subscription_code_id,
-                &state.commitment_denom,
-                &state.recovery_admin,
-                initial_commitment,
-            )
+        ExecuteMsg::ProposeSubscription { securities } => {
+            propose_subscription::propose_subscription(deps, info.sender, securities)
         }
+        ExecuteMsg::AcceptSubscription {} => accept_subscription(),
     }
 }
 

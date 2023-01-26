@@ -3,14 +3,14 @@ use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub subscription_code_id: u64,
-    pub recovery_admin: Addr,
     pub gp: Addr,
+    pub securities: Vec<Security>,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    ProposeSubscription { initial_commitment: Option<u64> },
+    ProposeSubscription { securities: Vec<SecurityCommitment> },
+    AcceptSubscription,
 }
 
 #[cw_serde]
@@ -26,10 +26,37 @@ pub struct MyQueryResponse {}
 #[cw_serde]
 pub enum MigrateMsg {}
 
+// TODO Extract these out
+
 #[cw_serde]
-pub struct SubInstantiateMsg {
-    pub admin: Addr,
-    pub lp: Addr,
-    pub commitment_denom: String,
-    pub initial_commitment: Option<u64>,
+#[derive(Eq)]
+pub struct Security {
+    pub name: String,
+    pub amount: u128,
+    pub minimum_amount: u128,
+    pub security_type: SecurityType,
+}
+
+impl Security {
+    pub fn get_commitment_name(&self, contract: &Addr) -> String {
+        format! {"{}.{}.commitment", contract, self.name}
+    }
+
+    pub fn get_investment_name(&self, contract: &Addr) -> String {
+        format! {"{}.{}.investment", contract, self.name}
+    }
+}
+
+#[cw_serde]
+#[derive(Eq)]
+pub enum SecurityType {
+    Fund,
+    Primary,
+    Tranche,
+}
+
+#[cw_serde]
+pub struct SecurityCommitment {
+    pub name: String,
+    pub amount: u128,
 }

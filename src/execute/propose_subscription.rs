@@ -3,6 +3,7 @@ use cosmwasm_std::{Addr, Response};
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
+        msg::SecurityCommitment,
         state::PENDING,
     },
     subscription::Subscription,
@@ -10,21 +11,15 @@ use crate::{
 
 pub fn propose_subscription(
     deps: ProvDepsMut,
-    lp: &Addr,
-    admin: String,
-    code_id: u64,
-    commitment_denom: &str,
-    recovery: &Addr,
-    initial_commitment: Option<u64>,
+    lp: Addr,
+    commitments: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
-    let subscription = Subscription::new(
-        recovery.clone(),
-        lp.clone(),
-        commitment_denom.to_string(),
-        initial_commitment,
-    );
+    // TODO We probably want to validate the minimums
 
-    PENDING.save(deps.storage, lp.clone(), &true)?;
+    let subscription = Subscription::new(lp.clone(), commitments);
 
+    // Maybe we want to verify that they actually have the funds they are committing?
+
+    PENDING.save(deps.storage, lp, &subscription)?;
     Ok(Response::new())
 }
