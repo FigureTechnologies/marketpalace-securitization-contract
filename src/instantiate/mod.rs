@@ -1,8 +1,8 @@
 use cosmwasm_std::{Addr, CosmosMsg, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use provwasm_std::{
-    activate_marker, create_marker, finalize_marker, grant_marker_access, MarkerAccess, MarkerType,
-    ProvenanceMsg,
+    activate_marker, create_marker, finalize_marker, grant_marker_access, withdraw_coins,
+    MarkerAccess, MarkerType, ProvenanceMsg,
 };
 
 use crate::{
@@ -56,9 +56,10 @@ fn new_active_marker(
     ];
     Ok(vec![
         create_marker(amount, denom.clone(), MarkerType::Coin)?,
-        grant_marker_access(denom, owner, permissions)?,
+        grant_marker_access(denom, owner.clone(), permissions)?,
         finalize_marker(denom)?,
         activate_marker(denom)?,
+        withdraw_coins(denom, amount, denom, owner.clone())?,
     ])
 }
 

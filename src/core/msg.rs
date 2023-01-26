@@ -10,7 +10,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     ProposeSubscription { securities: Vec<SecurityCommitment> },
-    AcceptSubscription,
+    AcceptSubscription { subscriptions: Vec<Addr> },
 }
 
 #[cw_serde]
