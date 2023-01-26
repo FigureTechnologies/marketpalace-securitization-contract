@@ -1,9 +1,9 @@
-use cosmwasm_std::{entry_point, Env, MessageInfo, Reply};
+use cosmwasm_std::{entry_point, Env, MessageInfo};
 
 use crate::{
     core::aliases::{ProvDeps, ProvDepsMut, ProvQueryResponse, ProvTxResponse},
     core::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
-    execute, instantiate, migrate, query, reply,
+    execute, instantiate, migrate, query,
     util::validate::Validate,
 };
 
@@ -34,11 +34,6 @@ pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) 
 pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) -> ProvTxResponse {
     msg.validate()?;
     migrate::run(deps, env, msg)
-}
-
-#[entry_point]
-pub fn reply(deps: ProvDepsMut, env: Env, msg: Reply) -> ProvTxResponse {
-    reply::run(deps, env, msg)
 }
 
 #[cfg(test)]
