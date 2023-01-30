@@ -3,11 +3,12 @@ use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::subscription::Subscription;
+use crate::commitment::Commitment;
 
 use super::{
     constants::{
-        ACCEPTED_SUBSCRIPTIONS_KEY, PENDING_SUBSCRIPTIONS_KEY, SECURITY_TYPES_KEY, STATE_KEY,
+        ACCEPTED_COMMITS_KEY, COMMITS_KEY, PENDING_COMMITS_KEY, SECURITIES_LIST_KEY,
+        SECURITIES_MAP_KEY, STATE_KEY,
     },
     msg::Security,
 };
@@ -24,6 +25,9 @@ impl State {
 }
 
 pub const STATE: Item<State> = Item::new(STATE_KEY);
-pub const PENDING: Map<Addr, Subscription> = Map::new(PENDING_SUBSCRIPTIONS_KEY);
-pub const ACCEPTED: Map<Addr, Subscription> = Map::new(ACCEPTED_SUBSCRIPTIONS_KEY);
-pub const SECURITY_TYPES: Map<String, Security> = Map::new(SECURITY_TYPES_KEY);
+pub const SECURITIES_MAP: Map<String, Security> = Map::new(SECURITIES_MAP_KEY);
+pub const SECURITIES_LIST: Item<Vec<Security>> = Item::new(SECURITIES_LIST_KEY);
+// TODO Have a single COMMIT map, but move the state into COMMIT
+pub const PENDING: Map<Addr, Commitment> = Map::new(PENDING_COMMITS_KEY);
+pub const ACCEPTED: Map<Addr, Commitment> = Map::new(ACCEPTED_COMMITS_KEY);
+pub const COMMITS: Map<Addr, Commitment> = Map::new(COMMITS_KEY);

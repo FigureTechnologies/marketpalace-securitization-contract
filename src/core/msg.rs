@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Coin};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -9,8 +9,10 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    ProposeSubscription { securities: Vec<SecurityCommitment> },
-    AcceptSubscription { subscriptions: Vec<Addr> },
+    ProposeCommitment { securities: Vec<SecurityCommitment> },
+    AcceptCommitment { commitments: Vec<Addr> },
+    DepositInitialDrawdown { securities: Vec<SecurityCommitment> },
+    WithdrawCommitment {},
 }
 
 #[cw_serde]
@@ -35,13 +37,10 @@ pub struct Security {
     pub amount: u128,
     pub minimum_amount: u128,
     pub security_type: SecurityType,
+    pub price_per_unit: Coin,
 }
 
 impl Security {
-    pub fn get_commitment_name(&self, contract: &Addr) -> String {
-        format! {"{}.{}.commitment", contract, self.name}
-    }
-
     pub fn get_investment_name(&self, contract: &Addr) -> String {
         format! {"{}.{}.investment", contract, self.name}
     }

@@ -4,25 +4,29 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         msg::ExecuteMsg,
-        state::STATE,
     },
     util::validate::{Validate, ValidateResult},
 };
 
-use self::accept_subscriptions::accept_subscriptions;
+use self::deposit_initial_drawdown::deposit_initial_drawdown;
+use self::propose_commitment::propose_commitment;
+use self::{accept_commitments::accept_commitments, withdraw_commitment::withdraw_commitment};
 
-mod accept_subscriptions;
-mod propose_subscription;
+mod accept_commitments;
+mod deposit_initial_drawdown;
+mod propose_commitment;
+mod withdraw_commitment;
 
 pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
-    let _state = STATE.load(deps.storage)?;
     match msg {
-        ExecuteMsg::ProposeSubscription { securities } => {
-            propose_subscription::propose_subscription(deps, info.sender, securities)
+        ExecuteMsg::ProposeCommitment { securities } => {
+            propose_commitment(deps, info.sender, securities)
         }
-        ExecuteMsg::AcceptSubscription { subscriptions } => {
-            accept_subscriptions(env, deps, subscriptions)
+        ExecuteMsg::AcceptCommitment { commitments } => accept_commitments(env, deps, commitments),
+        ExecuteMsg::DepositInitialDrawdown { securities } => {
+            deposit_initial_drawdown(deps, info.sender, info.funds, securities)
         }
+        ExecuteMsg::WithdrawCommitment {} => withdraw_commitment(),
     }
 }
 

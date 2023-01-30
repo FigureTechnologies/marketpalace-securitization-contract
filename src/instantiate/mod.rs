@@ -10,7 +10,7 @@ use crate::{
         aliases::{ProvDepsMut, ProvTxResponse},
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
         msg::InstantiateMsg,
-        state::{State, SECURITY_TYPES, STATE},
+        state::{State, SECURITIES_LIST, SECURITIES_MAP, STATE},
     },
     util::validate::{Validate, ValidateResult},
 };
@@ -22,23 +22,14 @@ pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: InstantiateMsg) 
 
     // Create the markers
     let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = Vec::new();
-    for security in msg.securities {
-        let commitment_name = security.get_commitment_name(&env.contract.address);
+    for security in &msg.securities {
         let investment_name = security.get_investment_name(&env.contract.address);
-        let mut commitment_marker = new_active_marker(
-            env.contract.address.clone(),
-            &commitment_name,
-            security.amount,
-        )?;
-        messages.append(&mut commitment_marker);
-        let mut investment_marker = new_active_marker(
-            env.contract.address.clone(),
-            &investment_name,
-            security.amount,
-        )?;
+        let mut investment_marker =
+            new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
         messages.append(&mut investment_marker);
-        SECURITY_TYPES.save(deps.storage, security.name.clone(), &security)?;
+        SECURITIES_MAP.save(deps.storage, security.name.clone(), security)?;
     }
+    SECURITIES_LIST.save(deps.storage, &msg.securities)?;
 
     Ok(Response::default().add_messages(messages))
 }
@@ -59,7 +50,7 @@ fn new_active_marker(
         grant_marker_access(denom, owner.clone(), permissions)?,
         finalize_marker(denom)?,
         activate_marker(denom)?,
-        withdraw_coins(denom, amount, denom, owner.clone())?,
+        withdraw_coins(denom, amount, denom, owner)?,
     ])
 }
 
