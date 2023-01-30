@@ -10,12 +10,12 @@ use crate::{
 
 use self::deposit_initial_drawdown::deposit_initial_drawdown;
 use self::propose_commitment::propose_commitment;
-use self::{accept_commitments::accept_commitments, withdraw_commitment::withdraw_commitment};
+use self::{accept_commitments::accept_commitments, withdraw_capital::withdraw_capital};
 
 mod accept_commitments;
 mod deposit_initial_drawdown;
 mod propose_commitment;
-mod withdraw_commitment;
+mod withdraw_capital;
 
 pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -26,7 +26,7 @@ pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> P
         ExecuteMsg::DepositInitialDrawdown { securities } => {
             deposit_initial_drawdown(deps, info.sender, info.funds, securities)
         }
-        ExecuteMsg::WithdrawCommitment {} => withdraw_commitment(),
+        ExecuteMsg::WithdrawCapital {} => withdraw_capital(info.sender()),
     }
 }
 

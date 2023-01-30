@@ -1,4 +1,4 @@
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Coin};
 use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -7,10 +7,9 @@ use crate::commitment::Commitment;
 
 use super::{
     constants::{
-        ACCEPTED_COMMITS_KEY, COMMITS_KEY, PENDING_COMMITS_KEY, SECURITIES_LIST_KEY,
-        SECURITIES_MAP_KEY, STATE_KEY,
+        AVAILABLE_CAPITAL_KEY, COMMITS_KEY, PAID_IN_CAPITAL_KEY, SECURITIES_MAP_KEY, STATE_KEY,
     },
-    msg::Security,
+    msg::{Security, SecurityCommitment},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -26,8 +25,7 @@ impl State {
 
 pub const STATE: Item<State> = Item::new(STATE_KEY);
 pub const SECURITIES_MAP: Map<String, Security> = Map::new(SECURITIES_MAP_KEY);
-pub const SECURITIES_LIST: Item<Vec<Security>> = Item::new(SECURITIES_LIST_KEY);
 // TODO Have a single COMMIT map, but move the state into COMMIT
-pub const PENDING: Map<Addr, Commitment> = Map::new(PENDING_COMMITS_KEY);
-pub const ACCEPTED: Map<Addr, Commitment> = Map::new(ACCEPTED_COMMITS_KEY);
 pub const COMMITS: Map<Addr, Commitment> = Map::new(COMMITS_KEY);
+pub const PAID_IN_CAPITAL: Map<Addr, Vec<SecurityCommitment>> = Map::new(PAID_IN_CAPITAL_KEY);
+pub const AVAILABLE_CAPITAL: Map<Addr, Vec<Coin>> = Map::new(AVAILABLE_CAPITAL_KEY);

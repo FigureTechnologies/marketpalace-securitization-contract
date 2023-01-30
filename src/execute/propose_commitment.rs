@@ -5,7 +5,7 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         msg::SecurityCommitment,
-        state::PENDING,
+        state::COMMITS,
     },
 };
 
@@ -20,6 +20,6 @@ pub fn propose_commitment(
 
     // Maybe we want to verify that they actually have the funds they are committing?
 
-    PENDING.save(deps.storage, lp, &commitment)?;
+    COMMITS.save(deps.storage, lp, &commitment)?;
     Ok(Response::new())
 }

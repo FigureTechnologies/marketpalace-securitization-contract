@@ -10,7 +10,7 @@ use crate::{
         aliases::{ProvDepsMut, ProvTxResponse},
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
         msg::InstantiateMsg,
-        state::{State, SECURITIES_LIST, SECURITIES_MAP, STATE},
+        state::{State, SECURITIES_MAP, STATE},
     },
     util::validate::{Validate, ValidateResult},
 };
@@ -29,7 +29,6 @@ pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: InstantiateMsg) 
         messages.append(&mut investment_marker);
         SECURITIES_MAP.save(deps.storage, security.name.clone(), security)?;
     }
-    SECURITIES_LIST.save(deps.storage, &msg.securities)?;
 
     Ok(Response::default().add_messages(messages))
 }

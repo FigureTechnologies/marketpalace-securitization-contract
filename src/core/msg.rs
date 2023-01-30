@@ -12,7 +12,7 @@ pub enum ExecuteMsg {
     ProposeCommitment { securities: Vec<SecurityCommitment> },
     AcceptCommitment { commitments: Vec<Addr> },
     DepositInitialDrawdown { securities: Vec<SecurityCommitment> },
-    WithdrawCommitment {},
+    WithdrawCapital {},
 }
 
 #[cw_serde]

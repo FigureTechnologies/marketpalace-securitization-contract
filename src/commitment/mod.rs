@@ -7,11 +7,16 @@ use crate::core::msg::SecurityCommitment;
 pub struct Commitment {
     pub lp: Addr,
     pub commitments: Vec<SecurityCommitment>,
+    pub state: CommitmentState,
 }
 
 impl Commitment {
     pub fn new(lp: Addr, commitments: Vec<SecurityCommitment>) -> Self {
-        Commitment { lp, commitments }
+        Commitment {
+            lp,
+            commitments,
+            state: CommitmentState::PENDING,
+        }
     }
 
     pub fn clear(&mut self) {
@@ -19,4 +24,11 @@ impl Commitment {
             commitment.amount = 0;
         }
     }
+}
+
+#[cw_serde]
+pub enum CommitmentState {
+    PENDING,
+    ACCEPTED,
+    SETTLED,
 }

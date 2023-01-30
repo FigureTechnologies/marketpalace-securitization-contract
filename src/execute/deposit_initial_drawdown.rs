@@ -1,9 +1,12 @@
 use cosmwasm_std::{Addr, Coin, Order, Response, StdResult};
 
-use crate::core::{
-    aliases::{ProvDepsMut, ProvTxResponse},
-    msg::SecurityCommitment,
-    state::{ACCEPTED, COMMITS, SECURITIES_MAP},
+use crate::{
+    commitment::CommitmentState,
+    core::{
+        aliases::{ProvDepsMut, ProvTxResponse},
+        msg::SecurityCommitment,
+        state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP},
+    },
 };
 
 pub fn deposit_initial_drawdown(
@@ -12,9 +15,14 @@ pub fn deposit_initial_drawdown(
     funds: Vec<Coin>,
     initial_drawdown: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
-    ACCEPTED.load(deps.storage, sender.clone())?;
+    let commitment = COMMITS.load(deps.storage, sender.clone())?;
+    if commitment.state != CommitmentState::PENDING {
+        // TODO
+        // Throw an error
+    }
 
     if !drawdown_met(&deps, &initial_drawdown) {
+        // TODO
         // Throw an error
     }
 
@@ -22,13 +30,15 @@ pub fn deposit_initial_drawdown(
     let expected_funds = calculate_funds(&deps, &initial_drawdown);
     let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
     if expected_funds.len() != funds.len() || !has_funds {
+        // TODO
         // Throw an error
     }
 
-    // Update the commitment with the initial drawdown
-    let mut commit = COMMITS.load(deps.storage, sender.clone())?;
-    commit.commitments = initial_drawdown;
-    COMMITS.save(deps.storage, sender, &commit)?;
+    // Update the paid in capital with the initial drawdown
+    PAID_IN_CAPITAL.save(deps.storage, sender.clone(), &initial_drawdown)?;
+
+    // Update the capital for the gp.
+    AVAILABLE_CAPITAL.save(deps.storage, sender, &funds)?;
 
     Ok(Response::default())
 }
@@ -56,6 +66,8 @@ fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) 
         if drawdown.amount < security.minimum_amount {
             return false;
         }
+
+        // TODO Do we need to check maximum?
     }
 
     true
