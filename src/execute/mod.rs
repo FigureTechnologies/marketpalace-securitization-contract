@@ -26,7 +26,7 @@ pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> P
         ExecuteMsg::DepositInitialDrawdown { securities } => {
             deposit_initial_drawdown(deps, info.sender, info.funds, securities)
         }
-        ExecuteMsg::WithdrawCapital {} => withdraw_capital(deps, info.sender),
+        ExecuteMsg::WithdrawCapital {} => withdraw_capital(deps, env, info.sender),
     }
 }
 

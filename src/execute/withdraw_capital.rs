@@ -1,5 +1,5 @@
 use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, StdResult};
-use provwasm_std::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
+use provwasm_std::{mint_marker_supply, withdraw_coins};
 
 use crate::{
     commitment::CommitmentState,
@@ -20,6 +20,7 @@ pub fn withdraw_capital(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResp
 }
 
 fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String) -> ProvTxResponse {
+    let mut messages = vec![];
     let mut response = Response::new();
     let keys: StdResult<Vec<_>> = AVAILABLE_CAPITAL
         .keys(deps.storage, None, None, cosmwasm_std::Order::Ascending)
@@ -42,23 +43,24 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
 
         AVAILABLE_CAPITAL.remove(deps.storage, key.clone());
 
-        let mut paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone()).unwrap();
+        let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone()).unwrap();
         if paid_in_capital == commitment.commitments && commitment.state == CommitmentState::SETTLED
         {
             commitment.state = CommitmentState::INVESTED;
 
             // We can now mint the investment token and send it to them
-            for security in commitment.commitments {
+            for security in &commitment.commitments {
                 let investment_name =
                     to::security_to_investment_name(&security.name, &env.contract.address);
-                let mint_msg = mint_marker_supply(security.amount, investment_name)?;
+                let mint_msg = mint_marker_supply(security.amount, &investment_name)?;
                 let withdraw_msg = withdraw_coins(
-                    investment_name,
+                    &investment_name,
                     security.amount,
-                    investment_name,
+                    &investment_name,
                     key.clone(),
                 )?;
-                response.add_messages(vec![mint_msg, withdraw_msg]);
+                messages.push(mint_msg);
+                messages.push(withdraw_msg);
             }
         }
 
@@ -69,14 +71,19 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
     }
 
     if !send_amount.amount.is_zero() {
-        response.add_message(BankMsg::Send {
+        response = response.add_message(BankMsg::Send {
             to_address: sender.to_string(),
             amount: vec![send_amount],
         });
     }
-    Ok(response)
+    Ok(response.add_messages(messages))
 }
 
-fn lp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String) -> ProvTxResponse {
+fn lp_withdraw(
+    _deps: ProvDepsMut,
+    _env: Env,
+    _sender: Addr,
+    _capital_denom: String,
+) -> ProvTxResponse {
     Ok(Response::default())
 }
