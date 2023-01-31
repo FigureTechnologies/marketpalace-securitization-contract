@@ -29,12 +29,10 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
 
     let mut send_amount = Coin::new(0, capital_denom);
     for key in keys {
-        // TODO Add error check
-        let capital = AVAILABLE_CAPITAL.load(deps.storage, key.clone()).unwrap();
+        let capital = AVAILABLE_CAPITAL.load(deps.storage, key.clone())?;
 
         // Update commitment as settled if it's in accepted.
-        // TODO Add error check
-        let mut commitment = COMMITS.load(deps.storage, key.clone()).unwrap();
+        let mut commitment = COMMITS.load(deps.storage, key.clone())?;
         if commitment.state == CommitmentState::ACCEPTED {
             commitment.state = CommitmentState::SETTLED;
         }
@@ -43,7 +41,7 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
 
         AVAILABLE_CAPITAL.remove(deps.storage, key.clone());
 
-        let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone()).unwrap();
+        let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone())?;
         if paid_in_capital == commitment.commitments && commitment.state == CommitmentState::SETTLED
         {
             commitment.state = CommitmentState::INVESTED;
@@ -65,9 +63,7 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
         }
 
         // TODO Add error check
-        COMMITS
-            .save(deps.storage, key.clone(), &commitment)
-            .unwrap();
+        COMMITS.save(deps.storage, key.clone(), &commitment)?;
     }
 
     if !send_amount.amount.is_zero() {
@@ -86,4 +82,42 @@ fn lp_withdraw(
     _capital_denom: String,
 ) -> ProvTxResponse {
     Ok(Response::default())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_funds_are_empty() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_accepted_commits_change_to_settled() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_pending_commits_throw_error() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_invested_commits_are_not_changed_to_settled() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_available_capital_is_cleared() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_completed_commits_are_changed_to_invested_and_reward() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_correct_amount_is_withdrawn() {
+        assert!(false);
+    }
 }

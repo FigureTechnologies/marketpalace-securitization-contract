@@ -91,3 +91,61 @@ fn calculate_funds(
 
     vec![sum]
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_calculate_funds_empty_initial_drawdown() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_calculate_funds_is_successful() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_calculate_funds_invalid_security() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_drawdown_met_with_not_all_securities() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_drawdown_met_with_invalid_security() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_drawdown_met_with_amount_less_than_minimum() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_drawdown_met_is_successful() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_handle_throws_error_with_invalid_commitment_state() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_handle_throws_error_when_initial_drawdown_not_met() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_handle_throws_error_when_not_enough_funds() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_handle_is_successful() {
+        assert!(false);
+    }
+}

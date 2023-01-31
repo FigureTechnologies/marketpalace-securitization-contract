@@ -68,3 +68,26 @@ impl Validate for InstantiateMsg {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_new_active_marker_creates_and_activates_marker() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_new_active_marker_throws_errors_on_invalid_marker_txs() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_handle_sets_the_contract_version() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_success() {
+        assert!(false);
+    }
+}

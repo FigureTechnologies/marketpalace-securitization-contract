@@ -31,3 +31,31 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
     }
     Ok(Response::new())
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_handle_funds_are_empty() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_sender_must_be_gp() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_all_commitment_states_must_be_pending() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_paid_in_capital_is_set() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_all_states_are_updated_to_accepted() {
+        assert!(false);
+    }
+}
