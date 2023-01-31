@@ -22,7 +22,9 @@ pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> P
         ExecuteMsg::ProposeCommitment { securities } => {
             propose_commitment(deps, info.sender, securities)
         }
-        ExecuteMsg::AcceptCommitment { commitments } => accept_commitments(env, deps, commitments),
+        ExecuteMsg::AcceptCommitment { commitments } => {
+            accept_commitments(deps, info.sender, commitments)
+        }
         ExecuteMsg::DepositInitialDrawdown { securities } => {
             deposit_initial_drawdown(deps, info.sender, info.funds, securities)
         }

@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 
-use crate::core::msg::SecurityCommitment;
+use crate::core::security::SecurityCommitment;
 
 #[cw_serde]
 pub struct Commitment {
@@ -19,7 +19,7 @@ impl Commitment {
         }
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear_amounts(&mut self) {
         for commitment in &mut self.commitments {
             commitment.amount = 0;
         }

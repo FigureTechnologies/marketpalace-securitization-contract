@@ -4,7 +4,7 @@ use crate::{
     commitment::CommitmentState,
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
-        msg::SecurityCommitment,
+        security::SecurityCommitment,
         state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
     },
 };
@@ -67,8 +67,6 @@ fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) 
         if drawdown.amount < security.minimum_amount {
             return false;
         }
-
-        // TODO Do we need to check maximum?
     }
 
     true

@@ -4,7 +4,7 @@ use crate::{
     commitment::Commitment,
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
-        msg::SecurityCommitment,
+        security::SecurityCommitment,
         state::COMMITS,
     },
 };

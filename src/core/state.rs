@@ -9,7 +9,7 @@ use super::{
     constants::{
         AVAILABLE_CAPITAL_KEY, COMMITS_KEY, PAID_IN_CAPITAL_KEY, SECURITIES_MAP_KEY, STATE_KEY,
     },
-    msg::{Security, SecurityCommitment},
+    security::{Security, SecurityCommitment},
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
