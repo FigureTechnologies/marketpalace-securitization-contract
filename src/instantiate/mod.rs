@@ -18,9 +18,14 @@ use crate::{
     },
 };
 
-pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: InstantiateMsg) -> ProvTxResponse {
+pub fn handle(
+    deps: ProvDepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> ProvTxResponse {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    let state = State::new(info.sender, msg.capital_denom);
+    let state = State::new(info.sender, msg.capital_denom, msg.rules);
     STATE.save(deps.storage, &state)?;
 
     // Create the markers

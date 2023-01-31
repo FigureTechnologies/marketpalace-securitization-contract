@@ -8,11 +8,7 @@ use crate::{
     },
 };
 
-pub fn accept_commitments(
-    deps: ProvDepsMut,
-    sender: Addr,
-    commitments: Vec<Addr>,
-) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
     if sender != state.gp {
         // TODO Throw an error

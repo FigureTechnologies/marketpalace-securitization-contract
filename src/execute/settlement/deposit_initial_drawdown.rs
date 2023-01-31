@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-pub fn deposit_initial_drawdown(
+pub fn handle(
     deps: ProvDepsMut,
     sender: Addr,
     funds: Vec<Coin>,

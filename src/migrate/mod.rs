@@ -8,7 +8,7 @@ use crate::{
     util::validate::{Validate, ValidateResult},
 };
 
-pub fn run(_deps: ProvDepsMut, _env: Env, _msg: MigrateMsg) -> ProvTxResponse {
+pub fn handle(_deps: ProvDepsMut, _env: Env, _msg: MigrateMsg) -> ProvTxResponse {
     Ok(Response::new())
 }
 

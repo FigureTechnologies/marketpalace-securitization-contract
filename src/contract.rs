@@ -15,25 +15,25 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> ProvTxResponse {
     msg.validate()?;
-    instantiate::run(deps, env, info, msg)
+    instantiate::handle(deps, env, info, msg)
 }
 
 #[entry_point]
 pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
     msg.validate()?;
-    query::run(deps, env, msg)
+    query::handle(deps, env, msg)
 }
 
 #[entry_point]
 pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     msg.validate()?;
-    execute::run(deps, env, info, msg)
+    execute::handle(deps, env, info, msg)
 }
 
 #[entry_point]
 pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) -> ProvTxResponse {
     msg.validate()?;
-    migrate::run(deps, env, msg)
+    migrate::handle(deps, env, msg)
 }
 
 #[cfg(test)]

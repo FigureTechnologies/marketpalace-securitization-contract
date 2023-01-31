@@ -8,7 +8,7 @@ use crate::{
     util::validate::{Validate, ValidateResult},
 };
 
-pub fn run(_deps: ProvDeps, _env: Env, _msg: QueryMsg) -> ProvQueryResponse {
+pub fn handle(_deps: ProvDeps, _env: Env, _msg: QueryMsg) -> ProvQueryResponse {
     Ok(Binary(Vec::new()))
 }
 

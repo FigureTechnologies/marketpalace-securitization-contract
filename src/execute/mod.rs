@@ -8,27 +8,25 @@ use crate::{
     util::validate::{Validate, ValidateResult},
 };
 
-use self::deposit_initial_drawdown::deposit_initial_drawdown;
-use self::propose_commitment::propose_commitment;
-use self::{accept_commitments::accept_commitments, withdraw_capital::withdraw_capital};
-
-mod accept_commitments;
-mod deposit_initial_drawdown;
-mod propose_commitment;
+use self::{
+    settlement::accept_commitments, settlement::deposit_initial_drawdown,
+    settlement::propose_commitment,
+};
+mod settlement;
 mod withdraw_capital;
 
-pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
         ExecuteMsg::ProposeCommitment { securities } => {
-            propose_commitment(deps, info.sender, securities)
+            propose_commitment::handle(deps, info.sender, securities)
         }
         ExecuteMsg::AcceptCommitment { commitments } => {
-            accept_commitments(deps, info.sender, commitments)
+            accept_commitments::handle(deps, info.sender, commitments)
         }
         ExecuteMsg::DepositInitialDrawdown { securities } => {
-            deposit_initial_drawdown(deps, info.sender, info.funds, securities)
+            deposit_initial_drawdown::handle(deps, info.sender, info.funds, securities)
         }
-        ExecuteMsg::WithdrawCapital {} => withdraw_capital(deps, env, info.sender),
+        ExecuteMsg::WithdrawCapital {} => withdraw_capital::handle(deps, env, info.sender),
     }
 }
 

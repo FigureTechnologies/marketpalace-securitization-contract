@@ -10,7 +10,7 @@ use crate::{
     util::to,
 };
 
-pub fn withdraw_capital(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
     if sender == state.gp {
         gp_withdraw(deps, env, sender, state.capital_denom)

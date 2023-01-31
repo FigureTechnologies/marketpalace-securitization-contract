@@ -7,17 +7,28 @@ pub struct Security {
     pub name: String,
     pub amount: u128,
     pub security_type: SecurityType,
-
     pub minimum_amount: u128,
     pub price_per_unit: Coin,
 }
 
 #[cw_serde]
 #[derive(Eq)]
+pub struct FundSecurity {}
+
+#[cw_serde]
+#[derive(Eq)]
+pub struct PrimarySecurity {}
+
+#[cw_serde]
+#[derive(Eq)]
+pub struct TrancheSecurity {}
+
+#[cw_serde]
+#[derive(Eq)]
 pub enum SecurityType {
-    Fund,
-    Primary,
-    Tranche,
+    Fund(FundSecurity),
+    Primary(PrimarySecurity),
+    Tranche(TrancheSecurity),
 }
 
 #[cw_serde]
