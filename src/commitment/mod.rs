@@ -31,4 +31,5 @@ pub enum CommitmentState {
     PENDING,
     ACCEPTED,
     SETTLED,
+    INVESTED,
 }

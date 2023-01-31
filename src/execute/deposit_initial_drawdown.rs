@@ -1,11 +1,11 @@
-use cosmwasm_std::{Addr, Coin, Order, Response, StdResult};
+use cosmwasm_std::{Addr, Coin, Order, Response, StdResult, Uint128};
 
 use crate::{
     commitment::CommitmentState,
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         msg::SecurityCommitment,
-        state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP},
+        state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
     },
 };
 
@@ -16,7 +16,8 @@ pub fn deposit_initial_drawdown(
     initial_drawdown: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
     let commitment = COMMITS.load(deps.storage, sender.clone())?;
-    if commitment.state != CommitmentState::PENDING {
+    let state = STATE.load(deps.storage)?;
+    if commitment.state != CommitmentState::ACCEPTED {
         // TODO
         // Throw an error
     }
@@ -27,7 +28,7 @@ pub fn deposit_initial_drawdown(
     }
 
     // Check that the correct of funds passed in exactly match expected
-    let expected_funds = calculate_funds(&deps, &initial_drawdown);
+    let expected_funds = calculate_funds(&deps, &initial_drawdown, &state.capital_denom);
     let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
     if expected_funds.len() != funds.len() || !has_funds {
         // TODO
@@ -73,42 +74,22 @@ fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) 
     true
 }
 
-// This allows us to calculate funds that has multiple types of coins
-// The security type is guaranteed to be there because of the previous function check
-// We calculate the funds by doing the following...
-// For each security we calculate its cost by getting its commitment amount and multiplying it by the number of units
-// Then add it to the end of the list if the denom does not exist in sum already
-// If it already exists in sum then we create a new sum list with this added to the already existing coin in the list.
-fn calculate_funds(deps: &ProvDepsMut, initial_drawdown: &[SecurityCommitment]) -> Vec<Coin> {
-    let mut sum: Vec<Coin> = vec![];
+// We are strict that all capital must be in the same denom
+fn calculate_funds(
+    deps: &ProvDepsMut,
+    initial_drawdown: &[SecurityCommitment],
+    capital_denom: &String,
+) -> Vec<Coin> {
+    let mut sum = Coin::new(0, capital_denom);
 
     for security_commitment in initial_drawdown {
         let security = SECURITIES_MAP
             .load(deps.storage, security_commitment.name.clone())
             .unwrap();
 
-        let cost = Coin::new(
-            security_commitment.amount * security.price_per_unit.amount.u128(),
-            security.price_per_unit.denom.clone(),
-        );
-
-        if !sum
-            .iter()
-            .any(|coin| coin.denom == security.price_per_unit.denom)
-        {
-            sum.push(cost);
-        } else {
-            sum = sum
-                .into_iter()
-                .map(|mut coin| {
-                    if coin.denom == security.price_per_unit.denom {
-                        coin.amount += cost.amount;
-                    }
-                    coin
-                })
-                .collect();
-        }
+        let cost = Uint128::from(security_commitment.amount) * security.price_per_unit.amount;
+        sum.amount += cost;
     }
 
-    sum
+    vec![sum]
 }

@@ -9,12 +9,12 @@ use crate::{
 };
 
 pub fn accept_commitments(_env: Env, deps: ProvDepsMut, commitments: Vec<Addr>) -> ProvTxResponse {
+    // TODO Check that we are the GP
     for lp in commitments {
         let mut commitment = COMMITS.load(deps.storage, lp.clone())?;
 
         if commitment.state != CommitmentState::PENDING {
-            // TODO
-            // Throw an error
+            // TODO Throw an error
         }
 
         commitment.state = CommitmentState::ACCEPTED;

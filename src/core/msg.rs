@@ -5,6 +5,7 @@ use cosmwasm_std::{Addr, Coin};
 pub struct InstantiateMsg {
     pub gp: Addr,
     pub securities: Vec<Security>,
+    pub capital_denom: String,
 }
 
 #[cw_serde]
@@ -38,12 +39,6 @@ pub struct Security {
     pub minimum_amount: u128,
     pub security_type: SecurityType,
     pub price_per_unit: Coin,
-}
-
-impl Security {
-    pub fn get_investment_name(&self, contract: &Addr) -> String {
-        format! {"{}.{}.investment", contract, self.name}
-    }
 }
 
 #[cw_serde]

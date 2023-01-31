@@ -12,18 +12,22 @@ use crate::{
         msg::InstantiateMsg,
         state::{State, SECURITIES_MAP, STATE},
     },
-    util::validate::{Validate, ValidateResult},
+    util::{
+        to,
+        validate::{Validate, ValidateResult},
+    },
 };
 
 pub fn run(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: InstantiateMsg) -> ProvTxResponse {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    let state = State::new(info.sender);
+    let state = State::new(info.sender, msg.capital_denom);
     STATE.save(deps.storage, &state)?;
 
     // Create the markers
     let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = Vec::new();
     for security in &msg.securities {
-        let investment_name = security.get_investment_name(&env.contract.address);
+        let investment_name =
+            to::security_to_investment_name(&security.name, &env.contract.address);
         let mut investment_marker =
             new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
         messages.append(&mut investment_marker);

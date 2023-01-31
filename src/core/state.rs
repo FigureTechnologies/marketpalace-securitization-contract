@@ -15,11 +15,12 @@ use super::{
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct State {
     pub gp: Addr,
+    pub capital_denom: String,
 }
 
 impl State {
-    pub fn new(gp: Addr) -> Self {
-        Self { gp }
+    pub fn new(gp: Addr, capital_denom: String) -> Self {
+        Self { gp, capital_denom }
     }
 }
 
