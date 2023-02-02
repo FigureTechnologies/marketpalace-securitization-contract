@@ -9,7 +9,9 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
+        error::ContractError,
         msg::InstantiateMsg,
+        security,
         state::{State, SECURITIES_MAP, STATE},
     },
     util::{
@@ -65,6 +67,18 @@ fn new_active_marker(
 impl Validate for InstantiateMsg {
     fn validate(&self) -> ValidateResult {
         // Add validation checks
+        if self.securities.len() == 0 {
+            return Err(ContractError::InvalidSecurityList {});
+        }
+
+        let same_type = self
+            .securities
+            .iter()
+            .all(|security| security.security_type == self.securities[0].security_type);
+        if !same_type {
+            return Err(ContractError::InvalidSecurityList {});
+        }
+
         Ok(())
     }
 }

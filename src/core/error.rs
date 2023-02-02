@@ -10,6 +10,9 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+
+    #[error("Invalid security list")]
+    InvalidSecurityList {},
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {
