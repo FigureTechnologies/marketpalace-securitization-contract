@@ -33,18 +33,16 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
 
         // Update commitment as settled if it's in accepted.
         let mut commitment = COMMITS.load(deps.storage, key.clone())?;
-        if commitment.state == CommitmentState::ACCEPTED {
-            commitment.state = CommitmentState::SETTLED;
-        }
 
         send_amount.amount += capital[0].amount;
 
         AVAILABLE_CAPITAL.remove(deps.storage, key.clone());
 
         let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone())?;
-        if paid_in_capital == commitment.commitments && commitment.state == CommitmentState::SETTLED
+        if paid_in_capital == commitment.commitments
+            && commitment.state == CommitmentState::ACCEPTED
         {
-            commitment.state = CommitmentState::INVESTED;
+            commitment.state = CommitmentState::SETTLED;
 
             // We can now mint the investment token and send it to them
             for security in &commitment.commitments {
@@ -62,7 +60,6 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
             }
         }
 
-        // TODO Add error check
         COMMITS.save(deps.storage, key.clone(), &commitment)?;
     }
 

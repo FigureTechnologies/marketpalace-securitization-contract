@@ -1,3 +1,3 @@
 pub mod accept_commitments;
-pub mod deposit_initial_drawdown;
+pub mod deposit_commitment;
 pub mod propose_commitment;

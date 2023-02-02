@@ -13,7 +13,7 @@ pub fn handle(
     deps: ProvDepsMut,
     sender: Addr,
     funds: Vec<Coin>,
-    initial_drawdown: Vec<SecurityCommitment>,
+    deposit: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
     let commitment = COMMITS.load(deps.storage, sender.clone())?;
     let state = STATE.load(deps.storage)?;
@@ -22,24 +22,71 @@ pub fn handle(
         // Throw an error
     }
 
-    if !drawdown_met(&deps, &initial_drawdown) {
+    if !drawdown_met(&deps, &deposit) {
         // TODO
         // Throw an error
     }
 
     // Check that the correct of funds passed in exactly match expected
-    let expected_funds = calculate_funds(&deps, &initial_drawdown, &state.capital_denom);
+    let expected_funds = calculate_funds(&deps, &deposit, &state.capital_denom);
     let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
     if expected_funds.len() != funds.len() || !has_funds {
         // TODO
         // Throw an error
     }
 
-    // Update the paid in capital with the initial drawdown
-    PAID_IN_CAPITAL.save(deps.storage, sender.clone(), &initial_drawdown)?;
+    // If there is no entry for PAID_IN_CAPITAL then the commitment goes in as the entry
+    // If there is an entry then we update the entry by adding each type of deposit security to the appropriate paid security
+    PAID_IN_CAPITAL.update(
+        deps.storage,
+        sender.clone(),
+        |already_committed| -> StdResult<Vec<SecurityCommitment>> {
+            match already_committed {
+                None => Ok(deposit),
+                Some(mut already_committed) => {
+                    for deposit_security in deposit {
+                        already_committed = already_committed
+                            .into_iter()
+                            .map(|mut commitment_security| {
+                                if commitment_security.name == deposit_security.name {
+                                    commitment_security.amount += deposit_security.amount;
+                                }
+                                commitment_security
+                            })
+                            .collect();
+                    }
+                    Ok(already_committed)
+                }
+            }
+        },
+    )?;
 
-    // Update the capital for the gp.
-    AVAILABLE_CAPITAL.save(deps.storage, sender, &funds)?;
+    // If there is no entry for AVAILABLE_CAPITAL then the deposit goes in as the entry
+    // If there is an entry then we update the entry by adding each type of fund coin to the appropriate available capital coin
+    // Realistically, there will be only one type of coin in the fund.
+    AVAILABLE_CAPITAL.update(
+        deps.storage,
+        sender.clone(),
+        |available_capital| -> StdResult<Vec<Coin>> {
+            match available_capital {
+                None => Ok(funds),
+                Some(mut available_capital) => {
+                    for fund_coin in funds {
+                        available_capital = available_capital
+                            .into_iter()
+                            .map(|mut capital_coin| {
+                                if capital_coin.denom == fund_coin.denom {
+                                    capital_coin.amount += fund_coin.amount;
+                                }
+                                capital_coin
+                            })
+                            .collect();
+                    }
+                    Ok(available_capital)
+                }
+            }
+        },
+    )?;
 
     Ok(Response::default())
 }

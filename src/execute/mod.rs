@@ -9,11 +9,10 @@ use crate::{
 };
 
 use self::{
-    settlement::accept_commitments, settlement::deposit_initial_drawdown,
-    settlement::propose_commitment,
+    settlement::accept_commitments, settlement::deposit_commitment, settlement::propose_commitment,
 };
 mod settlement;
-mod withdraw_capital;
+mod withdraw_commitments;
 
 pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -23,10 +22,10 @@ pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -
         ExecuteMsg::AcceptCommitment { commitments } => {
             accept_commitments::handle(deps, info.sender, commitments)
         }
-        ExecuteMsg::DepositInitialDrawdown { securities } => {
-            deposit_initial_drawdown::handle(deps, info.sender, info.funds, securities)
+        ExecuteMsg::DepositCommitment { securities } => {
+            deposit_commitment::handle(deps, info.sender, info.funds, securities)
         }
-        ExecuteMsg::WithdrawCapital {} => withdraw_capital::handle(deps, env, info.sender),
+        ExecuteMsg::WithdrawCommitments {} => withdraw_commitments::handle(deps, env, info.sender),
     }
 }
 

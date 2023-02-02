@@ -18,8 +18,8 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     ProposeCommitment { securities: Vec<SecurityCommitment> },
     AcceptCommitment { commitments: Vec<Addr> },
-    DepositInitialDrawdown { securities: Vec<SecurityCommitment> },
-    WithdrawCapital {},
+    DepositCommitment { securities: Vec<SecurityCommitment> },
+    WithdrawCommitments {},
 }
 
 #[cw_serde]
