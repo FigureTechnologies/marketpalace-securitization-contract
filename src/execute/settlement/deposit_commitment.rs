@@ -18,21 +18,18 @@ pub fn handle(
     let commitment = COMMITS.load(deps.storage, sender.clone())?;
     let state = STATE.load(deps.storage)?;
     if commitment.state != CommitmentState::ACCEPTED {
-        // TODO
-        // Throw an error
+        return Err(crate::core::error::ContractError::InvalidCommitmentState {});
     }
 
     if !drawdown_met(&deps, &deposit) {
-        // TODO
-        // Throw an error
+        return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
     // Check that the correct of funds passed in exactly match expected
     let expected_funds = calculate_funds(&deps, &deposit, &state.capital_denom);
     let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
     if expected_funds.len() != funds.len() || !has_funds {
-        // TODO
-        // Throw an error
+        return Err(crate::core::error::ContractError::FundMismatch {});
     }
 
     // If there is no entry for PAID_IN_CAPITAL then the commitment goes in as the entry
