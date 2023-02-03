@@ -11,7 +11,6 @@ use crate::{
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
         error::ContractError,
         msg::InstantiateMsg,
-        security,
         state::{State, SECURITIES_MAP, STATE},
     },
     util::{
@@ -68,7 +67,7 @@ impl Validate for InstantiateMsg {
     fn validate(&self) -> ValidateResult {
         // Add validation checks
         if self.securities.len() == 0 {
-            return Err(ContractError::InvalidSecurityList {});
+            return Err(ContractError::EmptySecurityList {});
         }
 
         let same_type = self
@@ -80,6 +79,10 @@ impl Validate for InstantiateMsg {
         }
 
         Ok(())
+    }
+
+    fn requires_funds(&self) -> bool {
+        false
     }
 }
 

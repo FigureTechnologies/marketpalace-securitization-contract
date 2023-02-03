@@ -16,4 +16,8 @@ impl Validate for QueryMsg {
     fn validate(&self) -> ValidateResult {
         Ok(())
     }
+
+    fn requires_funds(&self) -> bool {
+        false
+    }
 }

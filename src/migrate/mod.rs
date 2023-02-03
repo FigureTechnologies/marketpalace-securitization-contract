@@ -16,4 +16,8 @@ impl Validate for MigrateMsg {
     fn validate(&self) -> ValidateResult {
         Ok(())
     }
+
+    fn requires_funds(&self) -> bool {
+        false
+    }
 }

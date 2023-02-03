@@ -4,6 +4,7 @@ use crate::{
     commitment::CommitmentState,
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
+        error::ContractError,
         state::{COMMITS, PAID_IN_CAPITAL, STATE},
     },
 };
@@ -11,7 +12,7 @@ use crate::{
 pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
     if sender != state.gp {
-        // TODO Throw an error
+        return Err(crate::core::error::ContractError::Unauthorized {});
     }
 
     for lp in commitments {
@@ -19,6 +20,7 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
 
         if commitment.state != CommitmentState::PENDING {
             // TODO Throw an error
+            return Err(ContractError::InvalidCommitmentState {});
         }
 
         commitment.state = CommitmentState::ACCEPTED;
