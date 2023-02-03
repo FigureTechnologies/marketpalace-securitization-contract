@@ -23,6 +23,9 @@ pub enum ContractError {
     #[error("Invalid security commitment")]
     InvalidSecurityCommitment {},
 
+    #[error("Invalid security commitment amount")]
+    InvalidSecurityCommitmentAmount {},
+
     #[error("Empty accepted commitment list")]
     EmptyAcceptedCommitmentList {},
 

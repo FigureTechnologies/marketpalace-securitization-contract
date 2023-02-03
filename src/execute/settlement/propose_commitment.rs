@@ -5,13 +5,17 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         security::SecurityCommitment,
-        state::COMMITS,
+        state::{COMMITS, SECURITIES_MAP},
     },
 };
 
 pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>) -> ProvTxResponse {
-    // TODO We probably want to validate the minimums
-    // TODO We want to check to make sure there are no funds
+    for commitment in &commitments {
+        let security = SECURITIES_MAP.load(deps.storage, commitment.name.clone())?;
+        if commitment.amount < security.minimum_amount {
+            return Err(crate::core::error::ContractError::InvalidSecurityCommitmentAmount {});
+        }
+    }
 
     let commitment = Commitment::new(lp.clone(), commitments);
 
