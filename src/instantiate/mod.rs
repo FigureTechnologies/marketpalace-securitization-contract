@@ -81,8 +81,11 @@ impl Validate for InstantiateMsg {
         Ok(())
     }
 
-    fn requires_funds(&self) -> bool {
-        false
+    fn validate_msg_funds(&self, funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
+        if !funds.is_empty() {
+            return Err(ContractError::UnexpectedFunds {});
+        }
+        Ok(())
     }
 }
 

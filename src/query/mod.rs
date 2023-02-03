@@ -17,7 +17,7 @@ impl Validate for QueryMsg {
         Ok(())
     }
 
-    fn requires_funds(&self) -> bool {
-        false
+    fn validate_msg_funds(&self, _funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
+        Ok(())
     }
 }

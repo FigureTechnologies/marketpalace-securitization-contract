@@ -59,10 +59,20 @@ impl Validate for ExecuteMsg {
         Ok(())
     }
 
-    fn requires_funds(&self) -> bool {
+    fn validate_msg_funds(&self, funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
         return match self {
-            ExecuteMsg::DepositCommitment { securities: _ } => true,
-            _ => false,
+            ExecuteMsg::DepositCommitment { securities: _ } => {
+                if funds.is_empty() {
+                    return Err(ContractError::MissingFunds {});
+                }
+                return Ok(());
+            }
+            _ => {
+                if !funds.is_empty() {
+                    return Err(ContractError::UnexpectedFunds {});
+                }
+                Ok(())
+            }
         };
     }
 }
