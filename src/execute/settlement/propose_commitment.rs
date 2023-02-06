@@ -1,13 +1,12 @@
 use cosmwasm_std::{Addr, Response};
 
-use crate::{
-    commitment::Commitment,
-    core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
-        security::SecurityCommitment,
-        state::{COMMITS, SECURITIES_MAP},
-    },
+use crate::core::{
+    aliases::{ProvDepsMut, ProvTxResponse},
+    security::SecurityCommitment,
+    state::{COMMITS, SECURITIES_MAP},
 };
+
+use super::commitment::Commitment;
 
 pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>) -> ProvTxResponse {
     for commitment in &commitments {

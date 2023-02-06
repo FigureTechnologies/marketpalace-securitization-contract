@@ -1,13 +1,12 @@
 use cosmwasm_std::{Addr, Response};
 
-use crate::{
-    commitment::CommitmentState,
-    core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
-        error::ContractError,
-        state::{COMMITS, PAID_IN_CAPITAL, STATE},
-    },
+use crate::core::{
+    aliases::{ProvDepsMut, ProvTxResponse},
+    error::ContractError,
+    state::{COMMITS, PAID_IN_CAPITAL, STATE},
 };
+
+use super::commitment::CommitmentState;
 
 pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
@@ -19,7 +18,6 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
         let mut commitment = COMMITS.load(deps.storage, lp.clone())?;
 
         if commitment.state != CommitmentState::PENDING {
-            // TODO Throw an error
             return Err(ContractError::InvalidCommitmentState {});
         }
 

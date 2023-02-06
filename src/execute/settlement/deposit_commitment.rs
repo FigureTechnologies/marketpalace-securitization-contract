@@ -1,13 +1,12 @@
 use cosmwasm_std::{Addr, Coin, Order, Response, StdResult, Uint128};
 
-use crate::{
-    commitment::CommitmentState,
-    core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
-        security::SecurityCommitment,
-        state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
-    },
+use crate::core::{
+    aliases::{ProvDepsMut, ProvTxResponse},
+    security::SecurityCommitment,
+    state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
 };
+
+use super::commitment::CommitmentState;
 
 pub fn handle(
     deps: ProvDepsMut,

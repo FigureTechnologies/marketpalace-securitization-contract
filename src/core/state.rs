@@ -3,7 +3,7 @@ use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::commitment::Commitment;
+use crate::execute::settlement::commitment::Commitment;
 
 use super::{
     constants::{

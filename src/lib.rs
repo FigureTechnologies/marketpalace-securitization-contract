@@ -1,4 +1,3 @@
-pub mod commitment;
 pub mod contract;
 pub mod core;
 pub mod execute;

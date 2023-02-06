@@ -11,9 +11,9 @@ use crate::{
 
 use self::{
     settlement::accept_commitments, settlement::deposit_commitment, settlement::propose_commitment,
+    settlement::withdraw_commitments,
 };
-mod settlement;
-mod withdraw_commitments;
+pub mod settlement;
 
 pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {

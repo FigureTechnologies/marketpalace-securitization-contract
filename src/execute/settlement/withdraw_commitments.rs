@@ -2,13 +2,14 @@ use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, StdResult};
 use provwasm_std::{mint_marker_supply, withdraw_coins};
 
 use crate::{
-    commitment::CommitmentState,
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, STATE},
     },
     util::to,
 };
+
+use super::commitment::CommitmentState;
 
 pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
