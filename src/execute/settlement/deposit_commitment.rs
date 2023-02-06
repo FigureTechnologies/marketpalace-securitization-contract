@@ -24,15 +24,52 @@ pub fn handle(
         return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
-    // Check that the correct of funds passed in exactly match expected
+    // Validate that we have the funds
     let expected_funds = calculate_funds(&deps, &deposit, &state.capital_denom);
     let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
     if expected_funds.len() != funds.len() || !has_funds {
         return Err(crate::core::error::ContractError::FundMismatch {});
     }
 
-    // If there is no entry for PAID_IN_CAPITAL then the commitment goes in as the entry
-    // If there is an entry then we update the entry by adding each type of deposit security to the appropriate paid security
+    Ok(update_capital(deps, sender, funds, deposit)?)
+}
+
+// The purpose of this function is to add new_commitment to commitments.
+// We do this by finding the security commitment that has the same name as new_commitment,
+// and then we add the new_commitment.amount to the commitment.amount.
+//
+// Note this modifies commitments
+fn add_security_commitment(
+    new_commitment: &SecurityCommitment,
+    commitments: &mut Vec<SecurityCommitment>,
+) {
+    for commitment in commitments.iter_mut() {
+        if commitment.name == new_commitment.name {
+            commitment.amount += new_commitment.amount;
+        }
+    }
+}
+
+// The purpose of this function is to add a coin to capital.
+// We do this by finding the coin that has the same name as new_coin,
+// and then we add the new_coin.amount to the coin.amount.
+//
+// Note this modifies capital
+fn add_to_capital(new_coin: &Coin, capital: &mut Vec<Coin>) {
+    for coin in capital.iter_mut() {
+        if coin.denom == new_coin.denom {
+            coin.amount += new_coin.amount;
+        }
+    }
+}
+
+// This updates the AVAILABLE_CAPITAL and the PAID_IN_CAPITAL
+fn update_capital(
+    deps: ProvDepsMut,
+    sender: Addr,
+    funds: Vec<Coin>,
+    deposit: Vec<SecurityCommitment>,
+) -> ProvTxResponse {
     PAID_IN_CAPITAL.update(
         deps.storage,
         sender.clone(),
@@ -40,16 +77,8 @@ pub fn handle(
             match already_committed {
                 None => Ok(deposit),
                 Some(mut already_committed) => {
-                    for deposit_security in deposit {
-                        already_committed = already_committed
-                            .into_iter()
-                            .map(|mut commitment_security| {
-                                if commitment_security.name == deposit_security.name {
-                                    commitment_security.amount += deposit_security.amount;
-                                }
-                                commitment_security
-                            })
-                            .collect();
+                    for deposit_security in &deposit {
+                        add_security_commitment(deposit_security, &mut already_committed);
                     }
                     Ok(already_committed)
                 }
@@ -57,9 +86,6 @@ pub fn handle(
         },
     )?;
 
-    // If there is no entry for AVAILABLE_CAPITAL then the deposit goes in as the entry
-    // If there is an entry then we update the entry by adding each type of fund coin to the appropriate available capital coin
-    // Realistically, there will be only one type of coin in the fund.
     AVAILABLE_CAPITAL.update(
         deps.storage,
         sender.clone(),
@@ -67,23 +93,14 @@ pub fn handle(
             match available_capital {
                 None => Ok(funds),
                 Some(mut available_capital) => {
-                    for fund_coin in funds {
-                        available_capital = available_capital
-                            .into_iter()
-                            .map(|mut capital_coin| {
-                                if capital_coin.denom == fund_coin.denom {
-                                    capital_coin.amount += fund_coin.amount;
-                                }
-                                capital_coin
-                            })
-                            .collect();
+                    for fund_coin in &funds {
+                        add_to_capital(fund_coin, &mut available_capital);
                     }
                     Ok(available_capital)
                 }
             }
         },
     )?;
-
     Ok(Response::default())
 }
 
