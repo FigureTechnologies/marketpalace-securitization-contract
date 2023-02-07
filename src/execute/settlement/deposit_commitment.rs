@@ -2,6 +2,7 @@ use cosmwasm_std::{Addr, Coin, Order, Response, StdResult, Uint128};
 
 use crate::core::{
     aliases::{ProvDepsMut, ProvTxResponse},
+    error::ContractError,
     security::SecurityCommitment,
     state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
 };
@@ -31,7 +32,8 @@ pub fn handle(
         return Err(crate::core::error::ContractError::FundMismatch {});
     }
 
-    Ok(update_capital(deps, sender, funds, deposit)?)
+    update_capital(deps, sender, funds, deposit)?;
+    Ok(Response::default())
 }
 
 // The purpose of this function is to add new_commitment to commitments.
@@ -69,7 +71,7 @@ fn update_capital(
     sender: Addr,
     funds: Vec<Coin>,
     deposit: Vec<SecurityCommitment>,
-) -> ProvTxResponse {
+) -> Result<(), ContractError> {
     PAID_IN_CAPITAL.update(
         deps.storage,
         sender.clone(),
@@ -101,7 +103,8 @@ fn update_capital(
             }
         },
     )?;
-    Ok(Response::default())
+
+    Ok(())
 }
 
 // The purpose of this function is to make sure we have a valid drawdown.
