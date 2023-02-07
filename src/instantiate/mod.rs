@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, CosmosMsg, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Addr, Coin, CosmosMsg, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use provwasm_std::{
     activate_marker, create_marker, finalize_marker, grant_marker_access, withdraw_coins,
@@ -66,7 +66,7 @@ fn new_active_marker(
 impl Validate for InstantiateMsg {
     fn validate(&self) -> ValidateResult {
         // Add validation checks
-        if self.securities.len() == 0 {
+        if self.securities.is_empty() {
             return Err(ContractError::EmptySecurityList {});
         }
 
@@ -81,7 +81,7 @@ impl Validate for InstantiateMsg {
         Ok(())
     }
 
-    fn validate_msg_funds(&self, funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
+    fn validate_msg_funds(&self, funds: &[Coin]) -> ValidateResult {
         if !funds.is_empty() {
             return Err(ContractError::UnexpectedFunds {});
         }

@@ -1,4 +1,4 @@
-use cosmwasm_std::{Env, Response};
+use cosmwasm_std::{Coin, Env, Response};
 
 use crate::{
     core::{
@@ -17,7 +17,7 @@ impl Validate for MigrateMsg {
         Ok(())
     }
 
-    fn validate_msg_funds(&self, _funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
+    fn validate_msg_funds(&self, _funds: &[Coin]) -> ValidateResult {
         Ok(())
     }
 }

@@ -1,4 +1,4 @@
-use cosmwasm_std::{Env, MessageInfo};
+use cosmwasm_std::{Coin, Env, MessageInfo};
 
 use crate::{
     core::{
@@ -34,7 +34,7 @@ impl Validate for ExecuteMsg {
     fn validate(&self) -> ValidateResult {
         match self {
             ExecuteMsg::ProposeCommitment { securities } => {
-                if securities.len() == 0 {
+                if securities.is_empty() {
                     return Err(ContractError::EmptySecurityCommitmentList {});
                 }
                 if securities.iter().any(|commitment| commitment.amount == 0) {
@@ -42,12 +42,12 @@ impl Validate for ExecuteMsg {
                 }
             }
             ExecuteMsg::AcceptCommitment { commitments } => {
-                if commitments.len() == 0 {
+                if commitments.is_empty() {
                     return Err(ContractError::EmptyAcceptedCommitmentList {});
                 }
             }
             ExecuteMsg::DepositCommitment { securities } => {
-                if securities.len() == 0 {
+                if securities.is_empty() {
                     return Err(ContractError::EmptySecurityCommitmentList {});
                 }
                 if securities.iter().any(|commitment| commitment.amount == 0) {
@@ -59,13 +59,13 @@ impl Validate for ExecuteMsg {
         Ok(())
     }
 
-    fn validate_msg_funds(&self, funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
-        return match self {
+    fn validate_msg_funds(&self, funds: &[Coin]) -> ValidateResult {
+        match self {
             ExecuteMsg::DepositCommitment { securities: _ } => {
                 if funds.is_empty() {
                     return Err(ContractError::MissingFunds {});
                 }
-                return Ok(());
+                Ok(())
             }
             _ => {
                 if !funds.is_empty() {
@@ -73,6 +73,6 @@ impl Validate for ExecuteMsg {
                 }
                 Ok(())
             }
-        };
+        }
     }
 }

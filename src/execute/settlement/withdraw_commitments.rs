@@ -62,9 +62,7 @@ fn is_settling(
     commitment: &Commitment,
 ) -> Result<bool, ContractError> {
     let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone())?;
-    return Ok(
-        paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED
-    );
+    Ok(paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED)
 }
 
 fn remove_deposited_capital(
@@ -73,7 +71,7 @@ fn remove_deposited_capital(
 ) -> Result<Uint128, ContractError> {
     let capital = AVAILABLE_CAPITAL.load(storage, key.clone())?;
     AVAILABLE_CAPITAL.remove(storage, key.clone());
-    return Ok(capital[0].amount);
+    Ok(capital[0].amount)
 }
 
 fn transfer_investment_tokens(
@@ -94,7 +92,7 @@ fn transfer_investment_tokens(
         messages.push(mint_msg);
         messages.push(withdraw_msg);
     }
-    return Ok(messages);
+    Ok(messages)
 }
 
 #[cfg(test)]

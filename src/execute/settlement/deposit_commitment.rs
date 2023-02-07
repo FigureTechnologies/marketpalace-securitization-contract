@@ -26,13 +26,12 @@ pub fn handle(
     }
 
     // Validate that we have the funds
-    let expected_funds = calculate_funds(&deps, &deposit, &state.capital_denom);
-    let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
-    if expected_funds.len() != funds.len() || !has_funds {
+    if !funds_match_deposit(&deps, &funds, &deposit, &state.capital_denom) {
         return Err(crate::core::error::ContractError::FundMismatch {});
     }
 
-    update_capital(deps, sender, funds, deposit)?;
+    update_depositer_capital(deps, sender, funds, deposit)?;
+
     Ok(Response::default())
 }
 
@@ -43,7 +42,7 @@ pub fn handle(
 // Note this modifies commitments
 fn add_security_commitment(
     new_commitment: &SecurityCommitment,
-    commitments: &mut Vec<SecurityCommitment>,
+    commitments: &mut [SecurityCommitment],
 ) {
     for commitment in commitments.iter_mut() {
         if commitment.name == new_commitment.name {
@@ -57,7 +56,7 @@ fn add_security_commitment(
 // and then we add the new_coin.amount to the coin.amount.
 //
 // Note this modifies capital
-fn add_to_capital(new_coin: &Coin, capital: &mut Vec<Coin>) {
+fn add_to_capital(new_coin: &Coin, capital: &mut [Coin]) {
     for coin in capital.iter_mut() {
         if coin.denom == new_coin.denom {
             coin.amount += new_coin.amount;
@@ -65,8 +64,19 @@ fn add_to_capital(new_coin: &Coin, capital: &mut Vec<Coin>) {
     }
 }
 
+fn funds_match_deposit(
+    deps: &ProvDepsMut,
+    funds: &Vec<Coin>,
+    deposit: &[SecurityCommitment],
+    capital_denom: &String,
+) -> bool {
+    let expected_funds = calculate_funds(deps, deposit, capital_denom);
+    let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
+    expected_funds.len() == funds.len() && has_funds
+}
+
 // This updates the AVAILABLE_CAPITAL and the PAID_IN_CAPITAL
-fn update_capital(
+fn update_depositer_capital(
     deps: ProvDepsMut,
     sender: Addr,
     funds: Vec<Coin>,
@@ -90,7 +100,7 @@ fn update_capital(
 
     AVAILABLE_CAPITAL.update(
         deps.storage,
-        sender.clone(),
+        sender,
         |available_capital| -> StdResult<Vec<Coin>> {
             match available_capital {
                 None => Ok(funds),

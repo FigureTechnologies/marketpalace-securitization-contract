@@ -1,4 +1,4 @@
-use cosmwasm_std::{Binary, Env};
+use cosmwasm_std::{Binary, Coin, Env};
 
 use crate::{
     core::{
@@ -17,7 +17,7 @@ impl Validate for QueryMsg {
         Ok(())
     }
 
-    fn validate_msg_funds(&self, _funds: &Vec<cosmwasm_std::Coin>) -> ValidateResult {
+    fn validate_msg_funds(&self, _funds: &[Coin]) -> ValidateResult {
         Ok(())
     }
 }
