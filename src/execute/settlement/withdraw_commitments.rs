@@ -1,23 +1,24 @@
-use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, StdResult};
+use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, StdResult, Storage, Uint128};
 use provwasm_std::{mint_marker_supply, withdraw_coins};
 
 use crate::{
     core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
+        aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
+        error::ContractError,
         state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, STATE},
     },
     util::to,
 };
 
-use super::commitment::CommitmentState;
+use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
-    if sender == state.gp {
-        gp_withdraw(deps, env, sender, state.capital_denom)
-    } else {
-        lp_withdraw(deps, env, sender, state.capital_denom)
+    if sender != state.gp {
+        return Err(ContractError::Unauthorized {});
     }
+
+    gp_withdraw(deps, env, sender, state.capital_denom)
 }
 
 fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String) -> ProvTxResponse {
@@ -30,35 +31,17 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
 
     let mut send_amount = Coin::new(0, capital_denom);
     for key in keys {
-        let capital = AVAILABLE_CAPITAL.load(deps.storage, key.clone())?;
-
-        // Update commitment as settled if it's in accepted.
         let mut commitment = COMMITS.load(deps.storage, key.clone())?;
+        send_amount.amount += remove_deposited_capital(deps.storage, &key)?;
 
-        send_amount.amount += capital[0].amount;
-
-        AVAILABLE_CAPITAL.remove(deps.storage, key.clone());
-
-        let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone())?;
-        if paid_in_capital == commitment.commitments
-            && commitment.state == CommitmentState::ACCEPTED
-        {
+        if is_settling(&deps, &key, &commitment)? {
             commitment.state = CommitmentState::SETTLED;
 
-            // We can now mint the investment token and send it to them
-            for security in &commitment.commitments {
-                let investment_name =
-                    to::security_to_investment_name(&security.name, &env.contract.address);
-                let mint_msg = mint_marker_supply(security.amount, &investment_name)?;
-                let withdraw_msg = withdraw_coins(
-                    &investment_name,
-                    security.amount,
-                    &investment_name,
-                    key.clone(),
-                )?;
-                messages.push(mint_msg);
-                messages.push(withdraw_msg);
-            }
+            messages.extend(transfer_investment_tokens(
+                &commitment,
+                &key,
+                &env.contract.address,
+            )?);
         }
 
         COMMITS.save(deps.storage, key.clone(), &commitment)?;
@@ -73,13 +56,45 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
     Ok(response.add_messages(messages))
 }
 
-fn lp_withdraw(
-    _deps: ProvDepsMut,
-    _env: Env,
-    _sender: Addr,
-    _capital_denom: String,
-) -> ProvTxResponse {
-    Ok(Response::default())
+fn is_settling(
+    deps: &ProvDepsMut,
+    key: &Addr,
+    commitment: &Commitment,
+) -> Result<bool, ContractError> {
+    let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone())?;
+    return Ok(
+        paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED
+    );
+}
+
+fn remove_deposited_capital(
+    storage: &mut dyn Storage,
+    key: &Addr,
+) -> Result<Uint128, ContractError> {
+    let capital = AVAILABLE_CAPITAL.load(storage, key.clone())?;
+    AVAILABLE_CAPITAL.remove(storage, key.clone());
+    return Ok(capital[0].amount);
+}
+
+fn transfer_investment_tokens(
+    commitment: &Commitment,
+    recipient: &Addr,
+    contract: &Addr,
+) -> Result<Vec<ProvMsg>, ContractError> {
+    let mut messages = vec![];
+    for security in &commitment.commitments {
+        let investment_name = to::security_to_investment_name(&security.name, contract);
+        let mint_msg = mint_marker_supply(security.amount, &investment_name)?;
+        let withdraw_msg = withdraw_coins(
+            &investment_name,
+            security.amount,
+            &investment_name,
+            recipient.clone(),
+        )?;
+        messages.push(mint_msg);
+        messages.push(withdraw_msg);
+    }
+    return Ok(messages);
 }
 
 #[cfg(test)]
