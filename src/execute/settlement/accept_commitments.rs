@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Response};
+use cosmwasm_std::{Addr, Response, Storage};
 
 use crate::core::{
     aliases::{ProvDepsMut, ProvTxResponse},
@@ -6,7 +6,7 @@ use crate::core::{
     state::{COMMITS, PAID_IN_CAPITAL, STATE},
 };
 
-use super::commitment::CommitmentState;
+use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
     let state = STATE.load(deps.storage)?;
@@ -24,12 +24,18 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
         commitment.state = CommitmentState::ACCEPTED;
         COMMITS.save(deps.storage, lp.clone(), &commitment)?;
 
-        // Create a new commit that can be updated when the LP deposits
-        let mut commit = commitment.clone();
-        commit.clear_amounts();
-        PAID_IN_CAPITAL.save(deps.storage, lp.clone(), &commit.commitments)?;
+        track_paid_capital(deps.storage, commitment)?;
     }
     Ok(Response::new())
+}
+
+fn track_paid_capital(
+    storage: &mut dyn Storage,
+    mut commitment: Commitment,
+) -> Result<(), ContractError> {
+    commitment.clear_amounts();
+    PAID_IN_CAPITAL.save(storage, commitment.lp, &commitment.commitments)?;
+    Ok(())
 }
 
 #[cfg(test)]

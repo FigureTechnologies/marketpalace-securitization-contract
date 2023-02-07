@@ -15,17 +15,19 @@ pub fn handle(
     funds: Vec<Coin>,
     deposit: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
-    let commitment = COMMITS.load(deps.storage, sender.clone())?;
     let state = STATE.load(deps.storage)?;
-    if commitment.state != CommitmentState::ACCEPTED {
+    if !is_accepted(&deps, &sender)? {
         return Err(crate::core::error::ContractError::InvalidCommitmentState {});
     }
+
+    // We probably want to check that we don't over commit
+    // If any are greater than the commitment
+    // This could also be enforced by a rule that you must pay exactly x amount
 
     if !drawdown_met(&deps, &deposit) {
         return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
-    // Validate that we have the funds
     if !funds_match_deposit(&deps, &funds, &deposit, &state.capital_denom) {
         return Err(crate::core::error::ContractError::FundMismatch {});
     }
@@ -33,6 +35,11 @@ pub fn handle(
     update_depositer_capital(deps, sender, funds, deposit)?;
 
     Ok(Response::default())
+}
+
+fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError> {
+    let commitment = COMMITS.load(deps.storage, sender.clone())?;
+    Ok(commitment.state == CommitmentState::ACCEPTED)
 }
 
 // The purpose of this function is to add new_commitment to commitments.
