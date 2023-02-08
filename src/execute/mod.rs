@@ -14,6 +14,7 @@ use self::{
     settlement::withdraw_commitments,
 };
 pub mod settlement;
+pub mod validate;
 
 pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -30,52 +31,25 @@ pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -
     }
 }
 
-impl Validate for ExecuteMsg {
-    fn validate(&self) -> ValidateResult {
-        match self {
-            ExecuteMsg::ProposeCommitment { securities } => {
-                if securities.is_empty() {
-                    return Err(ContractError::EmptySecurityCommitmentList {});
-                }
-                if securities.iter().any(|commitment| commitment.amount == 0) {
-                    return Err(ContractError::InvalidSecurityCommitment {});
-                }
-            }
-            ExecuteMsg::AcceptCommitment { commitments } => {
-                if commitments.is_empty() {
-                    return Err(ContractError::EmptyAcceptedCommitmentList {});
-                }
-            }
-            ExecuteMsg::DepositCommitment { securities } => {
-                if securities.is_empty() {
-                    return Err(ContractError::EmptySecurityCommitmentList {});
-                }
-                if securities.iter().any(|commitment| commitment.amount == 0) {
-                    return Err(ContractError::InvalidSecurityCommitment {});
-                }
-            }
-            ExecuteMsg::WithdrawCommitments {} => {}
-        };
-        Ok(())
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_propose_commitment() {
+        assert!(false);
     }
 
-    fn validate_msg_funds(&self, funds: &[Coin]) -> ValidateResult {
-        match self {
-            ExecuteMsg::DepositCommitment { securities: _ } => {
-                if funds.is_empty() {
-                    return Err(ContractError::MissingFunds {});
-                }
-                Ok(())
-            }
-            _ => {
-                if !funds.is_empty() {
-                    return Err(ContractError::UnexpectedFunds {});
-                }
-                Ok(())
-            }
-        }
+    #[test]
+    fn test_accept_commitment() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_deposit_commitment() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_withdraw_commitment() {
+        assert!(false);
     }
 }
-
-#[cfg(tests)]
-mod test {}
