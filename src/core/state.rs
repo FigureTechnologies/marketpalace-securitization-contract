@@ -40,3 +40,31 @@ pub const SECURITIES_MAP: Map<String, Security> = Map::new(SECURITIES_MAP_KEY);
 pub const COMMITS: Map<Addr, Commitment> = Map::new(COMMITS_KEY);
 pub const PAID_IN_CAPITAL: Map<Addr, Vec<SecurityCommitment>> = Map::new(PAID_IN_CAPITAL_KEY);
 pub const AVAILABLE_CAPITAL: Map<Addr, Vec<Coin>> = Map::new(AVAILABLE_CAPITAL_KEY);
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::Addr;
+
+    use crate::core::{
+        rules::{InvestmentVehicleRule, SettlementDate},
+        state::State,
+    };
+
+    #[test]
+    fn test_new_state() {
+        let expected_addr = Addr::unchecked("address");
+        let expected_capital_denom = "nhash";
+        let expected_rules = vec![InvestmentVehicleRule::SettlementDate {
+            0: SettlementDate {},
+        }];
+        let state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            expected_rules.clone(),
+        );
+
+        assert_eq!(expected_addr, state.gp);
+        assert_eq!(expected_capital_denom, state.capital_denom);
+        assert_eq!(expected_rules, state.rules);
+    }
+}

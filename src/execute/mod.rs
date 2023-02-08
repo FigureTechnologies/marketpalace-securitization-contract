@@ -76,3 +76,6 @@ impl Validate for ExecuteMsg {
         }
     }
 }
+
+#[cfg(tests)]
+mod test {}
