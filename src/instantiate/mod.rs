@@ -56,7 +56,7 @@ fn new_active_marker(
     ];
     Ok(vec![
         create_marker(amount, denom.clone(), MarkerType::Coin)?,
-        grant_marker_access(denom, owner.clone(), permissions)?,
+        grant_marker_access(denom, owner, permissions)?,
         finalize_marker(denom)?,
         activate_marker(denom)?,
     ])
