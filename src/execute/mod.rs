@@ -1,12 +1,8 @@
-use cosmwasm_std::{Coin, Env, MessageInfo};
+use cosmwasm_std::{Env, MessageInfo};
 
-use crate::{
-    core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
-        error::ContractError,
-        msg::ExecuteMsg,
-    },
-    util::validate::{Validate, ValidateResult},
+use crate::core::{
+    aliases::{ProvDepsMut, ProvTxResponse},
+    msg::ExecuteMsg,
 };
 
 use self::{

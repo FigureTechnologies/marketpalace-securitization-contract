@@ -1,22 +1,20 @@
-use cosmwasm_std::{Addr, Coin, CosmosMsg, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Addr, CosmosMsg, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use provwasm_std::{
     activate_marker, create_marker, finalize_marker, grant_marker_access, withdraw_coins,
     MarkerAccess, MarkerType, ProvenanceMsg,
 };
 
+pub mod validate;
+
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
-        error::ContractError,
         msg::InstantiateMsg,
         state::{State, SECURITIES_MAP, STATE},
     },
-    util::{
-        to,
-        validate::{Validate, ValidateResult},
-    },
+    util::to,
 };
 
 pub fn handle(
@@ -61,32 +59,6 @@ fn new_active_marker(
         activate_marker(denom)?,
         withdraw_coins(denom, amount, denom, owner)?,
     ])
-}
-
-impl Validate for InstantiateMsg {
-    fn validate(&self) -> ValidateResult {
-        // Add validation checks
-        if self.securities.is_empty() {
-            return Err(ContractError::EmptySecurityList {});
-        }
-
-        let same_type = self
-            .securities
-            .iter()
-            .all(|security| security.security_type == self.securities[0].security_type);
-        if !same_type {
-            return Err(ContractError::InvalidSecurityList {});
-        }
-
-        Ok(())
-    }
-
-    fn validate_msg_funds(&self, funds: &[Coin]) -> ValidateResult {
-        if !funds.is_empty() {
-            return Err(ContractError::UnexpectedFunds {});
-        }
-        Ok(())
-    }
 }
 
 #[cfg(test)]

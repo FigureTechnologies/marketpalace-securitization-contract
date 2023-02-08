@@ -35,11 +35,14 @@ pub enum ContractError {
     #[error("Missing required funds")]
     MissingFunds {},
 
-    #[error("Mismatch in the expected number of funds and the actual sent funds.")]
+    #[error("Mismatch in the expected number of funds and the actual sent funds")]
     FundMismatch {},
 
     #[error("Unexpected funds were added to this transaction")]
     UnexpectedFunds {},
+
+    #[error("The capital denom is invalid")]
+    InvalidCapitalDenom {},
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {
