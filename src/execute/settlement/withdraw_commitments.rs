@@ -18,11 +18,16 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
         return Err(ContractError::Unauthorized {});
     }
 
-    gp_withdraw(deps, env, sender, state.capital_denom)
+    withdraw_commitments(deps, env, sender, state.capital_denom)
 }
 
-fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String) -> ProvTxResponse {
-    let mut messages = vec![];
+fn withdraw_commitments(
+    deps: ProvDepsMut,
+    env: Env,
+    sender: Addr,
+    capital_denom: String,
+) -> ProvTxResponse {
+    let mut messages: Vec<ProvMsg> = vec![];
     let mut response = Response::new();
     let keys: StdResult<Vec<_>> = AVAILABLE_CAPITAL
         .keys(deps.storage, None, None, cosmwasm_std::Order::Ascending)
@@ -30,21 +35,10 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
     let keys = keys.unwrap();
 
     let mut send_amount = Coin::new(0, capital_denom);
-    for key in keys {
-        let mut commitment = COMMITS.load(deps.storage, key.clone())?;
-        send_amount.amount += remove_deposited_capital(deps.storage, &key)?;
-
-        if is_settling(&deps, &key, &commitment)? {
-            commitment.state = CommitmentState::SETTLED;
-
-            messages.extend(transfer_investment_tokens(
-                &commitment,
-                &key,
-                &env.contract.address,
-            )?);
-        }
-
-        COMMITS.save(deps.storage, key.clone(), &commitment)?;
+    for key in &keys {
+        let withdraw = process_withdraw(deps.storage, key, &env.contract.address)?;
+        messages.extend(withdraw.0);
+        send_amount.amount += withdraw.1;
     }
 
     if !send_amount.amount.is_zero() {
@@ -56,12 +50,31 @@ fn gp_withdraw(deps: ProvDepsMut, env: Env, sender: Addr, capital_denom: String)
     Ok(response.add_messages(messages))
 }
 
+fn process_withdraw(
+    storage: &mut dyn Storage,
+    lp: &Addr,
+    receiver: &Addr,
+) -> Result<(Vec<ProvMsg>, Uint128), ContractError> {
+    let mut commitment = COMMITS.load(storage, lp.clone())?;
+    let amount = remove_deposited_capital(storage, lp)?;
+    let mut messages = vec![];
+
+    if is_settling(storage, lp, &commitment)? {
+        commitment.state = CommitmentState::SETTLED;
+
+        messages.extend(transfer_investment_tokens(&commitment, lp, receiver)?);
+    }
+
+    COMMITS.save(storage, lp.clone(), &commitment)?;
+    Ok((messages, amount))
+}
+
 fn is_settling(
-    deps: &ProvDepsMut,
+    storage: &dyn Storage,
     key: &Addr,
     commitment: &Commitment,
 ) -> Result<bool, ContractError> {
-    let paid_in_capital = PAID_IN_CAPITAL.load(deps.storage, key.clone())?;
+    let paid_in_capital = PAID_IN_CAPITAL.load(storage, key.clone())?;
     Ok(paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED)
 }
 
