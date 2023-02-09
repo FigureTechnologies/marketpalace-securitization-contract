@@ -64,4 +64,9 @@ mod tests {
     fn test_all_states_are_updated_to_accepted() {
         assert!(false);
     }
+
+    #[test]
+    fn test_cannot_accept_security_when_total_supply_is_greater_than_amount() {
+        assert!(false);
+    }
 }
