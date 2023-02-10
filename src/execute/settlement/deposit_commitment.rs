@@ -180,11 +180,11 @@ mod tests {
     use crate::{
         core::{
             security::{FundSecurity, Security, SecurityCommitment},
-            state::{COMMITS, SECURITIES_MAP},
+            state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP},
         },
         execute::settlement::{
             commitment::{Commitment, CommitmentState},
-            deposit_commitment::add_security_commitment,
+            deposit_commitment::{add_security_commitment, update_depositer_capital},
         },
     };
 
@@ -487,10 +487,6 @@ mod tests {
         assert_eq!(false, res);
     }
 
-    // number of commitments don't match
-    // invalid security type
-    // Minimum not met
-    // Successful case
     #[test]
     fn test_drawdown_met_can_handle_empty() {
         let mut deps = mock_dependencies(&[]);
@@ -594,11 +590,63 @@ mod tests {
 
     #[test]
     fn test_update_depositer_capital_new_entry() {
-        assert!(false);
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let capital_denom = "denom".to_string();
+        let funds = vec![Coin::new(10, &capital_denom)];
+        let deposit = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 5,
+        }];
+        update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
+            .expect("should be successful");
+
+        let paid_capital = PAID_IN_CAPITAL
+            .load(deps.as_mut().storage, lp.clone())
+            .unwrap();
+        let available_capital = AVAILABLE_CAPITAL
+            .load(deps.as_mut().storage, lp.clone())
+            .unwrap();
+
+        assert_eq!(paid_capital, deposit);
+        assert_eq!(available_capital, funds);
     }
 
     #[test]
     fn test_update_depositer_capital_update_entry() {
-        assert!(false);
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let capital_denom = "denom".to_string();
+        let funds = vec![Coin::new(10, &capital_denom)];
+        let deposit = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 5,
+        }];
+
+        PAID_IN_CAPITAL
+            .save(deps.as_mut().storage, lp.clone(), &deposit)
+            .unwrap();
+        AVAILABLE_CAPITAL
+            .save(deps.as_mut().storage, lp.clone(), &funds)
+            .unwrap();
+
+        update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
+            .expect("should be successful");
+
+        let paid_capital = PAID_IN_CAPITAL
+            .load(deps.as_mut().storage, lp.clone())
+            .unwrap();
+        let available_capital = AVAILABLE_CAPITAL
+            .load(deps.as_mut().storage, lp.clone())
+            .unwrap();
+
+        assert_eq!(
+            paid_capital[0],
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 10,
+            }
+        );
+        assert_eq!(available_capital[0], Coin::new(20, &capital_denom));
     }
 }
