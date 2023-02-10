@@ -188,7 +188,7 @@ mod tests {
         },
     };
 
-    use super::{add_to_capital, calculate_funds, funds_match_deposit, is_accepted};
+    use super::{add_to_capital, calculate_funds, drawdown_met, funds_match_deposit, is_accepted};
 
     #[test]
     fn test_add_to_capital_works_with_empty() {
@@ -485,5 +485,120 @@ mod tests {
 
         let res = funds_match_deposit(&deps.as_mut(), &funds, &deposit, &capital_denom).unwrap();
         assert_eq!(false, res);
+    }
+
+    // number of commitments don't match
+    // invalid security type
+    // Minimum not met
+    // Successful case
+    #[test]
+    fn test_drawdown_met_can_handle_empty() {
+        let mut deps = mock_dependencies(&[]);
+        let initial_drawdown = vec![];
+        let res = drawdown_met(&deps.as_mut(), &initial_drawdown);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn test_drawdown_security_length_doesnt_match() {
+        let mut deps = mock_dependencies(&[]);
+        let commitment = vec![];
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                "Security1".to_string(),
+                &Security {
+                    name: "Security1".to_string(),
+                    amount: 5,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(10, "denom".to_string()),
+                },
+            )
+            .unwrap();
+        let res = drawdown_met(&deps.as_mut(), &commitment);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn test_drawdown_invalid_security() {
+        let mut deps = mock_dependencies(&[]);
+        let commitment = vec![SecurityCommitment {
+            name: "Security2".to_string(),
+            amount: 5,
+        }];
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                "Security1".to_string(),
+                &Security {
+                    name: "Security1".to_string(),
+                    amount: 5,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(10, "denom".to_string()),
+                },
+            )
+            .unwrap();
+        let res = drawdown_met(&deps.as_mut(), &commitment);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn test_drawdown_security_minimum_not_met() {
+        let mut deps = mock_dependencies(&[]);
+        let commitment = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 1,
+        }];
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                "Security1".to_string(),
+                &Security {
+                    name: "Security1".to_string(),
+                    amount: 5,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 4,
+                    price_per_unit: Coin::new(10, "denom".to_string()),
+                },
+            )
+            .unwrap();
+        let res = drawdown_met(&deps.as_mut(), &commitment);
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn test_drawdown_success() {
+        let mut deps = mock_dependencies(&[]);
+        let commitment = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 1,
+        }];
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                "Security1".to_string(),
+                &Security {
+                    name: "Security1".to_string(),
+                    amount: 5,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(10, "denom".to_string()),
+                },
+            )
+            .unwrap();
+        let res = drawdown_met(&deps.as_mut(), &commitment);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn test_update_depositer_capital_new_entry() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_update_depositer_capital_update_entry() {
+        assert!(false);
     }
 }
