@@ -28,58 +28,13 @@ pub fn handle(
         return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
-    if !funds_match_deposit(&deps, &funds, &deposit, &state.capital_denom) {
+    if !funds_match_deposit(&deps, &funds, &deposit, &state.capital_denom)? {
         return Err(crate::core::error::ContractError::FundMismatch {});
     }
 
     update_depositer_capital(deps, sender, funds, deposit)?;
 
     Ok(Response::default())
-}
-
-fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError> {
-    let commitment = COMMITS.load(deps.storage, sender.clone())?;
-    Ok(commitment.state == CommitmentState::ACCEPTED)
-}
-
-// The purpose of this function is to add new_commitment to commitments.
-// We do this by finding the security commitment that has the same name as new_commitment,
-// and then we add the new_commitment.amount to the commitment.amount.
-//
-// Note this modifies commitments
-fn add_security_commitment(
-    new_commitment: &SecurityCommitment,
-    commitments: &mut [SecurityCommitment],
-) {
-    for commitment in commitments.iter_mut() {
-        if commitment.name == new_commitment.name {
-            commitment.amount += new_commitment.amount;
-        }
-    }
-}
-
-// The purpose of this function is to add a coin to capital.
-// We do this by finding the coin that has the same name as new_coin,
-// and then we add the new_coin.amount to the coin.amount.
-//
-// Note this modifies capital
-fn add_to_capital(new_coin: &Coin, capital: &mut [Coin]) {
-    for coin in capital.iter_mut() {
-        if coin.denom == new_coin.denom {
-            coin.amount += new_coin.amount;
-        }
-    }
-}
-
-fn funds_match_deposit(
-    deps: &ProvDepsMut,
-    funds: &Vec<Coin>,
-    deposit: &[SecurityCommitment],
-    capital_denom: &String,
-) -> bool {
-    let expected_funds = calculate_funds(deps, deposit, capital_denom);
-    let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
-    expected_funds.len() == funds.len() && has_funds
 }
 
 // This updates the AVAILABLE_CAPITAL and the PAID_IN_CAPITAL
@@ -152,80 +107,289 @@ fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) 
     true
 }
 
+fn funds_match_deposit(
+    deps: &ProvDepsMut,
+    funds: &Vec<Coin>,
+    deposit: &[SecurityCommitment],
+    capital_denom: &String,
+) -> Result<bool, ContractError> {
+    let expected_funds = calculate_funds(deps, deposit, capital_denom)?;
+    let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
+    Ok(expected_funds.len() == funds.len() && has_funds)
+}
+
 // We are strict that all capital must be in the same denom
 fn calculate_funds(
     deps: &ProvDepsMut,
     initial_drawdown: &[SecurityCommitment],
     capital_denom: &String,
-) -> Vec<Coin> {
+) -> Result<Vec<Coin>, ContractError> {
     let mut sum = Coin::new(0, capital_denom);
 
     for security_commitment in initial_drawdown {
-        let security = SECURITIES_MAP
-            .load(deps.storage, security_commitment.name.clone())
-            .unwrap();
+        let security = SECURITIES_MAP.load(deps.storage, security_commitment.name.clone())?;
 
         let cost = Uint128::from(security_commitment.amount) * security.price_per_unit.amount;
         sum.amount += cost;
     }
 
-    vec![sum]
+    Ok(vec![sum])
+}
+
+fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError> {
+    let commitment = COMMITS.load(deps.storage, sender.clone())?;
+    Ok(commitment.state == CommitmentState::ACCEPTED)
+}
+
+// The purpose of this function is to add new_commitment to commitments.
+// We do this by finding the security commitment that has the same name as new_commitment,
+// and then we add the new_commitment.amount to the commitment.amount.
+//
+// Note this modifies commitments
+fn add_security_commitment(
+    new_commitment: &SecurityCommitment,
+    commitments: &mut [SecurityCommitment],
+) {
+    for commitment in commitments.iter_mut() {
+        if commitment.name == new_commitment.name {
+            commitment.amount += new_commitment.amount;
+            break;
+        }
+    }
+}
+
+// The purpose of this function is to add a coin to capital.
+// We do this by finding the coin that has the same name as new_coin,
+// and then we add the new_coin.amount to the coin.amount.
+//
+// Note this modifies capital
+fn add_to_capital(new_coin: &Coin, capital: &mut [Coin]) {
+    for coin in capital.iter_mut() {
+        if coin.denom == new_coin.denom {
+            coin.amount += new_coin.amount;
+            break;
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::{Addr, Coin};
+    use provwasm_mocks::mock_dependencies;
+
+    use crate::{
+        core::{
+            security::{FundSecurity, Security, SecurityCommitment},
+            state::{COMMITS, SECURITIES_MAP},
+        },
+        execute::settlement::{
+            commitment::{Commitment, CommitmentState},
+            deposit_commitment::add_security_commitment,
+        },
+    };
+
+    use super::{add_to_capital, calculate_funds, is_accepted};
+
     #[test]
-    fn test_calculate_funds_empty_initial_drawdown() {
-        assert!(false);
+    fn test_add_to_capital_works_with_empty() {
+        let denom = "denom".to_string();
+        let coin = Coin::new(100, denom);
+        let mut capital = vec![];
+        add_to_capital(&coin, &mut capital);
+
+        assert_eq!(0, capital.len());
     }
 
     #[test]
-    fn test_calculate_funds_is_successful() {
-        assert!(false);
+    fn test_add_to_capital_updates_first_capital() {
+        let denom = "denom".to_string();
+        let coin = Coin::new(100, denom.clone());
+        let mut capital = vec![Coin::new(100, denom.clone()), Coin::new(100, denom.clone())];
+        add_to_capital(&coin, &mut capital);
+
+        assert_eq!(2, capital.len());
+        assert_eq!(Coin::new(200, denom.clone()), capital[0]);
+        assert_eq!(Coin::new(100, denom.clone()), capital[1]);
     }
 
     #[test]
-    fn test_calculate_funds_invalid_security() {
-        assert!(false);
+    fn test_add_to_capital_ignores_invalid_coin() {
+        let denom = "denom".to_string();
+        let denom2 = "denom2".to_string();
+        let coin = Coin::new(100, denom.clone());
+        let mut capital = vec![
+            Coin::new(100, denom2.clone()),
+            Coin::new(100, denom.clone()),
+        ];
+        add_to_capital(&coin, &mut capital);
+
+        assert_eq!(2, capital.len());
+        assert_eq!(Coin::new(100, denom2.clone()), capital[0]);
+        assert_eq!(Coin::new(200, denom.clone()), capital[1]);
     }
 
     #[test]
-    fn test_drawdown_met_with_not_all_securities() {
-        assert!(false);
+    fn test_add_security_commitment_with_empty() {
+        let new_commitment = SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 5,
+        };
+        let mut commitments = vec![];
+
+        add_security_commitment(&new_commitment, &mut commitments);
+        assert_eq!(0, commitments.len());
     }
 
     #[test]
-    fn test_drawdown_met_with_invalid_security() {
-        assert!(false);
+    fn test_add_security_commitment_updates_first_capital() {
+        let new_commitment = SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 5,
+        };
+        let mut commitments = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 7,
+            },
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 5,
+            },
+        ];
+
+        add_security_commitment(&new_commitment, &mut commitments);
+        assert_eq!(2, commitments.len());
+        assert_eq!(12, commitments[0].amount);
+        assert_eq!(5, commitments[1].amount);
     }
 
     #[test]
-    fn test_drawdown_met_with_amount_less_than_minimum() {
-        assert!(false);
+    fn test_add_security_commitment_ignores_invalid_name() {
+        let new_commitment = SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 5,
+        };
+        let mut commitments = vec![
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 7,
+            },
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 5,
+            },
+        ];
+
+        add_security_commitment(&new_commitment, &mut commitments);
+        assert_eq!(2, commitments.len());
+        assert_eq!(7, commitments[0].amount);
+        assert_eq!(10, commitments[1].amount);
     }
 
     #[test]
-    fn test_drawdown_met_is_successful() {
-        assert!(false);
+    fn test_is_accepted_throws_error_on_invalid_lp() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        is_accepted(&deps.as_mut(), &sender).unwrap_err();
     }
 
     #[test]
-    fn test_handle_throws_error_with_invalid_commitment_state() {
-        assert!(false);
+    fn test_is_accepted_should_return_false_on_invalid_state() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        COMMITS
+            .save(
+                deps.as_mut().storage,
+                sender.clone(),
+                &Commitment::new(sender.clone(), vec![]),
+            )
+            .unwrap();
+        let res = is_accepted(&deps.as_mut(), &sender).unwrap();
+        assert_eq!(false, res);
     }
 
     #[test]
-    fn test_handle_throws_error_when_initial_drawdown_not_met() {
-        assert!(false);
+    fn test_is_accepted_should_return_true_on_accepted() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let mut commitment = Commitment::new(sender.clone(), vec![]);
+        commitment.state = CommitmentState::ACCEPTED;
+        COMMITS
+            .save(deps.as_mut().storage, sender.clone(), &commitment)
+            .unwrap();
+        let res = is_accepted(&deps.as_mut(), &sender).unwrap();
+        assert_eq!(true, res);
     }
 
     #[test]
-    fn test_handle_throws_error_when_not_enough_funds() {
-        assert!(false);
+    fn test_calculate_funds_should_throw_error_with_invalid_security() {
+        let mut deps = mock_dependencies(&[]);
+        let capital_denom = "denom".to_string();
+        let securities = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 5,
+        }];
+
+        calculate_funds(&deps.as_mut(), &securities, &capital_denom)
+            .expect_err("should throw error");
     }
 
     #[test]
-    fn test_handle_is_successful() {
-        assert!(false);
+    fn test_calculate_funds_should_work_with_empty() {
+        let mut deps = mock_dependencies(&[]);
+        let capital_denom = "denom".to_string();
+        let securities = vec![];
+
+        let funds = calculate_funds(&deps.as_mut(), &securities, &capital_denom).unwrap();
+        assert_eq!(vec![Coin::new(0, capital_denom)], funds);
+    }
+
+    #[test]
+    fn test_caluclate_funds_works_with_multiple_securities() {
+        let mut deps = mock_dependencies(&[]);
+        let capital_denom = "denom".to_string();
+        let securities = vec![
+            Security {
+                name: "Security1".to_string(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(10, capital_denom.clone()),
+            },
+            Security {
+                name: "Security2".to_string(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(5, capital_denom.clone()),
+            },
+        ];
+        let commitments = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 5,
+            },
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 7,
+            },
+        ];
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                securities[0].name.clone(),
+                &securities[0],
+            )
+            .unwrap();
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                securities[1].name.clone(),
+                &securities[1],
+            )
+            .unwrap();
+
+        let funds = calculate_funds(&deps.as_mut(), &commitments, &capital_denom).unwrap();
+        assert_eq!(vec![Coin::new(85, capital_denom)], funds);
     }
 }
