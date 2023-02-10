@@ -188,7 +188,7 @@ mod tests {
         },
     };
 
-    use super::{add_to_capital, calculate_funds, is_accepted};
+    use super::{add_to_capital, calculate_funds, funds_match_deposit, is_accepted};
 
     #[test]
     fn test_add_to_capital_works_with_empty() {
@@ -391,5 +391,99 @@ mod tests {
 
         let funds = calculate_funds(&deps.as_mut(), &commitments, &capital_denom).unwrap();
         assert_eq!(vec![Coin::new(85, capital_denom)], funds);
+    }
+
+    #[test]
+    fn test_funds_match_deposit() {
+        let mut deps = mock_dependencies(&[]);
+        let capital_denom = "denom".to_string();
+        let funds = vec![Coin::new(100, &capital_denom)];
+        let deposit = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 1,
+            },
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 2,
+            },
+        ];
+
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                deposit[0].name.clone(),
+                &Security {
+                    name: deposit[0].name.clone(),
+                    amount: 10,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(50, &capital_denom),
+                },
+            )
+            .unwrap();
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                deposit[1].name.clone(),
+                &Security {
+                    name: deposit[1].name.clone(),
+                    amount: 10,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(25, &capital_denom),
+                },
+            )
+            .unwrap();
+
+        let res = funds_match_deposit(&deps.as_mut(), &funds, &deposit, &capital_denom).unwrap();
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn test_funds_match_deposit_should_fail_with_fund_amount_mismatch() {
+        let mut deps = mock_dependencies(&[]);
+        let capital_denom = "denom".to_string();
+        let funds = vec![Coin::new(120, &capital_denom)];
+        let deposit = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 1,
+            },
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 2,
+            },
+        ];
+
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                deposit[0].name.clone(),
+                &Security {
+                    name: deposit[0].name.clone(),
+                    amount: 10,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(50, &capital_denom),
+                },
+            )
+            .unwrap();
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                deposit[1].name.clone(),
+                &Security {
+                    name: deposit[1].name.clone(),
+                    amount: 10,
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(25, &capital_denom),
+                },
+            )
+            .unwrap();
+
+        let res = funds_match_deposit(&deps.as_mut(), &funds, &deposit, &capital_denom).unwrap();
+        assert_eq!(false, res);
     }
 }
