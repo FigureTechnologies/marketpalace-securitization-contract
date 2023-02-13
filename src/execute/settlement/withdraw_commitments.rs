@@ -116,7 +116,7 @@ mod tests {
             state::{State, AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, STATE},
         },
         execute::settlement::commitment::{Commitment, CommitmentState},
-        util::to,
+        util::{self, to},
     };
 
     use super::{
@@ -472,13 +472,8 @@ mod tests {
     fn test_handle_must_be_gp() {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
-        let gp = Addr::unchecked("gp");
-        let capital_denom = "denom".to_string();
-        let rules = vec![];
 
-        STATE
-            .save(deps.as_mut().storage, &State::new(gp, capital_denom, rules))
-            .unwrap();
+        util::testing::setup_test_state(deps.as_mut().storage);
 
         let error = handle(deps.as_mut(), mock_env(), sender).unwrap_err();
         assert_eq!(

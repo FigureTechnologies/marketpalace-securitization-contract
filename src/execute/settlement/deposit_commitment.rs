@@ -9,10 +9,6 @@ use crate::core::{
 
 use super::commitment::CommitmentState;
 
-// Sender is not in accepted state
-// Drawdown not met
-// funds don't match
-// Valid
 pub fn handle(
     deps: ProvDepsMut,
     sender: Addr,
@@ -190,6 +186,7 @@ mod tests {
             commitment::{Commitment, CommitmentState},
             deposit_commitment::{add_security_commitment, update_depositer_capital},
         },
+        util::{self, testing::setup_test_state},
     };
 
     use super::{
@@ -663,16 +660,7 @@ mod tests {
         let funds = vec![];
         let deposit = vec![];
 
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State {
-                    gp: Addr::unchecked("gp"),
-                    capital_denom: "denom".to_string(),
-                    rules: vec![],
-                },
-            )
-            .unwrap();
+        util::testing::setup_test_state(deps.as_mut().storage);
         COMMITS
             .save(
                 deps.as_mut().storage,
@@ -700,16 +688,7 @@ mod tests {
         let mut commitment = Commitment::new(sender.clone(), vec![]);
         commitment.state = CommitmentState::ACCEPTED;
 
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State {
-                    gp: Addr::unchecked("gp"),
-                    capital_denom: "denom".to_string(),
-                    rules: vec![],
-                },
-            )
-            .unwrap();
+        setup_test_state(deps.as_mut().storage);
         COMMITS
             .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
             .unwrap();
@@ -739,16 +718,8 @@ mod tests {
         );
         commitment.state = CommitmentState::ACCEPTED;
 
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State {
-                    gp: Addr::unchecked("gp"),
-                    capital_denom: "denom".to_string(),
-                    rules: vec![],
-                },
-            )
-            .unwrap();
+        setup_test_state(deps.as_mut().storage);
+
         COMMITS
             .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
             .unwrap();
@@ -792,16 +763,7 @@ mod tests {
         );
         commitment.state = CommitmentState::ACCEPTED;
 
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State {
-                    gp: Addr::unchecked("gp"),
-                    capital_denom: "denom".to_string(),
-                    rules: vec![],
-                },
-            )
-            .unwrap();
+        setup_test_state(deps.as_mut().storage);
         COMMITS
             .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
             .unwrap();
