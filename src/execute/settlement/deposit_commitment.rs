@@ -9,6 +9,10 @@ use crate::core::{
 
 use super::commitment::CommitmentState;
 
+// Sender is not in accepted state
+// Drawdown not met
+// funds don't match
+// Valid
 pub fn handle(
     deps: ProvDepsMut,
     sender: Addr,
@@ -179,8 +183,8 @@ mod tests {
 
     use crate::{
         core::{
-            security::{FundSecurity, Security, SecurityCommitment},
-            state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP},
+            security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
+            state::{State, AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
         },
         execute::settlement::{
             commitment::{Commitment, CommitmentState},
@@ -188,7 +192,9 @@ mod tests {
         },
     };
 
-    use super::{add_to_capital, calculate_funds, drawdown_met, funds_match_deposit, is_accepted};
+    use super::{
+        add_to_capital, calculate_funds, drawdown_met, funds_match_deposit, handle, is_accepted,
+    };
 
     #[test]
     fn test_add_to_capital_works_with_empty() {
@@ -648,5 +654,174 @@ mod tests {
             }
         );
         assert_eq!(available_capital[0], Coin::new(20, &capital_denom));
+    }
+
+    #[test]
+    fn test_handle_should_throw_error_with_invalid_state() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let funds = vec![];
+        let deposit = vec![];
+
+        STATE
+            .save(
+                deps.as_mut().storage,
+                &State {
+                    gp: Addr::unchecked("gp"),
+                    capital_denom: "denom".to_string(),
+                    rules: vec![],
+                },
+            )
+            .unwrap();
+        COMMITS
+            .save(
+                deps.as_mut().storage,
+                Addr::unchecked("lp"),
+                &Commitment::new(sender.clone(), vec![]),
+            )
+            .unwrap();
+
+        let error = handle(deps.as_mut(), sender, funds, deposit).expect_err("should throw error");
+        assert_eq!(
+            crate::core::error::ContractError::InvalidCommitmentState {}.to_string(),
+            error.to_string()
+        );
+    }
+
+    #[test]
+    fn test_handle_should_throw_error_when_drawdown_not_met() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let funds = vec![Coin::new(10, "capital_denom".to_string())];
+        let deposit = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 10,
+        }];
+        let mut commitment = Commitment::new(sender.clone(), vec![]);
+        commitment.state = CommitmentState::ACCEPTED;
+
+        STATE
+            .save(
+                deps.as_mut().storage,
+                &State {
+                    gp: Addr::unchecked("gp"),
+                    capital_denom: "denom".to_string(),
+                    rules: vec![],
+                },
+            )
+            .unwrap();
+        COMMITS
+            .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
+            .unwrap();
+
+        let error = handle(deps.as_mut(), sender, funds, deposit).expect_err("should throw error");
+        assert_eq!(
+            crate::core::error::ContractError::InvalidSecurityCommitment {}.to_string(),
+            error.to_string()
+        );
+    }
+
+    #[test]
+    fn test_handle_should_throw_error_when_funds_mismatch() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let funds = vec![Coin::new(10, "capital_denom".to_string())];
+        let deposit = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 2,
+        }];
+        let mut commitment = Commitment::new(
+            sender.clone(),
+            vec![SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 10,
+            }],
+        );
+        commitment.state = CommitmentState::ACCEPTED;
+
+        STATE
+            .save(
+                deps.as_mut().storage,
+                &State {
+                    gp: Addr::unchecked("gp"),
+                    capital_denom: "denom".to_string(),
+                    rules: vec![],
+                },
+            )
+            .unwrap();
+        COMMITS
+            .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
+            .unwrap();
+
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                "Security1".to_string(),
+                &Security {
+                    name: "Security1".to_string(),
+                    amount: 10,
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(10, "denom".to_string()),
+                },
+            )
+            .unwrap();
+
+        let error = handle(deps.as_mut(), sender, funds, deposit).expect_err("should throw error");
+        assert_eq!(
+            crate::core::error::ContractError::FundMismatch {}.to_string(),
+            error.to_string()
+        );
+    }
+
+    #[test]
+    fn test_handle_should_work() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let funds = vec![Coin::new(20, "denom".to_string())];
+        let deposit = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 2,
+        }];
+        let mut commitment = Commitment::new(
+            sender.clone(),
+            vec![SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 10,
+            }],
+        );
+        commitment.state = CommitmentState::ACCEPTED;
+
+        STATE
+            .save(
+                deps.as_mut().storage,
+                &State {
+                    gp: Addr::unchecked("gp"),
+                    capital_denom: "denom".to_string(),
+                    rules: vec![],
+                },
+            )
+            .unwrap();
+        COMMITS
+            .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
+            .unwrap();
+
+        SECURITIES_MAP
+            .save(
+                deps.as_mut().storage,
+                "Security1".to_string(),
+                &Security {
+                    name: "Security1".to_string(),
+                    amount: 10,
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                    minimum_amount: 1,
+                    price_per_unit: Coin::new(10, "denom".to_string()),
+                },
+            )
+            .unwrap();
+
+        let response =
+            handle(deps.as_mut(), sender, funds, deposit).expect("Should not throw error");
+        assert_eq!(0, response.messages.len(),);
     }
 }
