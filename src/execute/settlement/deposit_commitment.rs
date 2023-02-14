@@ -7,7 +7,7 @@ use crate::{
         security::SecurityCommitment,
     },
     storage::{
-        available_capital::AVAILABLE_CAPITAL, commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL,
+        available_capital::add_capital, commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL,
         securities::SECURITIES_MAP, state::STATE,
     },
 };
@@ -65,21 +65,7 @@ fn update_depositer_capital(
         },
     )?;
 
-    AVAILABLE_CAPITAL.update(
-        deps.storage,
-        sender,
-        |available_capital| -> StdResult<Vec<Coin>> {
-            match available_capital {
-                None => Ok(funds),
-                Some(mut available_capital) => {
-                    for fund_coin in &funds {
-                        add_to_capital(fund_coin, &mut available_capital);
-                    }
-                    Ok(available_capital)
-                }
-            }
-        },
-    )?;
+    add_capital(deps.storage, sender, funds)?;
 
     Ok(())
 }
@@ -163,80 +149,27 @@ fn add_security_commitment(
     }
 }
 
-// The purpose of this function is to add a coin to capital.
-// We do this by finding the coin that has the same name as new_coin,
-// and then we add the new_coin.amount to the coin.amount.
-//
-// Note this modifies capital
-fn add_to_capital(new_coin: &Coin, capital: &mut [Coin]) {
-    for coin in capital.iter_mut() {
-        if coin.denom == new_coin.denom {
-            coin.amount += new_coin.amount;
-            break;
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Coin};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
-        core::security::{self, FundSecurity, Security, SecurityCommitment, TrancheSecurity},
+        core::security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
         execute::settlement::{
-            self,
             commitment::{Commitment, CommitmentState},
             deposit_commitment::{add_security_commitment, update_depositer_capital},
         },
         storage::{
-            available_capital::AVAILABLE_CAPITAL, commits::COMMITS,
-            paid_in_capital::PAID_IN_CAPITAL, securities::SECURITIES_MAP,
+            available_capital::{self},
+            commits::COMMITS,
+            paid_in_capital::PAID_IN_CAPITAL,
+            securities::SECURITIES_MAP,
         },
-        util::{self, testing::SettlementTester},
+        util::testing::SettlementTester,
     };
 
-    use super::{
-        add_to_capital, calculate_funds, drawdown_met, funds_match_deposit, handle, is_accepted,
-    };
-
-    #[test]
-    fn test_add_to_capital_works_with_empty() {
-        let denom = "denom".to_string();
-        let coin = Coin::new(100, denom);
-        let mut capital = vec![];
-        add_to_capital(&coin, &mut capital);
-
-        assert_eq!(0, capital.len());
-    }
-
-    #[test]
-    fn test_add_to_capital_updates_first_capital() {
-        let denom = "denom".to_string();
-        let coin = Coin::new(100, denom.clone());
-        let mut capital = vec![Coin::new(100, denom.clone()), Coin::new(100, denom.clone())];
-        add_to_capital(&coin, &mut capital);
-
-        assert_eq!(2, capital.len());
-        assert_eq!(Coin::new(200, denom.clone()), capital[0]);
-        assert_eq!(Coin::new(100, denom.clone()), capital[1]);
-    }
-
-    #[test]
-    fn test_add_to_capital_ignores_invalid_coin() {
-        let denom = "denom".to_string();
-        let denom2 = "denom2".to_string();
-        let coin = Coin::new(100, denom.clone());
-        let mut capital = vec![
-            Coin::new(100, denom2.clone()),
-            Coin::new(100, denom.clone()),
-        ];
-        add_to_capital(&coin, &mut capital);
-
-        assert_eq!(2, capital.len());
-        assert_eq!(Coin::new(100, denom2.clone()), capital[0]);
-        assert_eq!(Coin::new(200, denom.clone()), capital[1]);
-    }
+    use super::{calculate_funds, drawdown_met, funds_match_deposit, handle, is_accepted};
 
     #[test]
     fn test_add_security_commitment_with_empty() {
@@ -613,9 +546,7 @@ mod tests {
         let paid_capital = PAID_IN_CAPITAL
             .load(deps.as_mut().storage, lp.clone())
             .unwrap();
-        let available_capital = AVAILABLE_CAPITAL
-            .load(deps.as_mut().storage, lp.clone())
-            .unwrap();
+        let available_capital = available_capital::get_capital(deps.as_mut().storage, lp).unwrap();
 
         assert_eq!(paid_capital, deposit);
         assert_eq!(available_capital, funds);
@@ -635,9 +566,7 @@ mod tests {
         PAID_IN_CAPITAL
             .save(deps.as_mut().storage, lp.clone(), &deposit)
             .unwrap();
-        AVAILABLE_CAPITAL
-            .save(deps.as_mut().storage, lp.clone(), &funds)
-            .unwrap();
+        available_capital::add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
             .expect("should be successful");
@@ -645,9 +574,8 @@ mod tests {
         let paid_capital = PAID_IN_CAPITAL
             .load(deps.as_mut().storage, lp.clone())
             .unwrap();
-        let available_capital = AVAILABLE_CAPITAL
-            .load(deps.as_mut().storage, lp.clone())
-            .unwrap();
+        let available_capital =
+            available_capital::get_capital(deps.as_mut().storage, lp.clone()).unwrap();
 
         assert_eq!(
             paid_capital[0],

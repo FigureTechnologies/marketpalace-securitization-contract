@@ -49,3 +49,9 @@ impl SettlementTester {
         }
     }
 }
+
+impl Default for SettlementTester {
+    fn default() -> Self {
+        Self::new()
+    }
+}

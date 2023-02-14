@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, StdResult, Storage, Uint128};
+use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, Storage, Uint128};
 use provwasm_std::{mint_marker_supply, withdraw_coins};
 
 use crate::{
@@ -7,7 +7,9 @@ use crate::{
         error::ContractError,
     },
     storage::{
-        available_capital::AVAILABLE_CAPITAL, commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL,
+        available_capital::{self},
+        commits::COMMITS,
+        paid_in_capital::PAID_IN_CAPITAL,
         state::STATE,
     },
     util::to,
@@ -32,10 +34,7 @@ fn withdraw_commitments(
 ) -> ProvTxResponse {
     let mut messages: Vec<ProvMsg> = vec![];
     let mut response = Response::new();
-    let keys: StdResult<Vec<_>> = AVAILABLE_CAPITAL
-        .keys(deps.storage, None, None, cosmwasm_std::Order::Ascending)
-        .collect();
-    let lps = keys.unwrap();
+    let lps = available_capital::get_lps(deps.storage)?;
 
     let mut send_amount = Coin::new(0, capital_denom);
     for lp in &lps {
@@ -59,7 +58,7 @@ fn process_withdraw(
     contract: &Addr,
 ) -> Result<(Vec<ProvMsg>, Uint128), ContractError> {
     let mut commitment = COMMITS.load(storage, lp.clone())?;
-    let amount = remove_deposited_capital(storage, lp)?;
+    let capital = available_capital::remove_capital(storage, lp.clone())?;
     let mut messages = vec![];
 
     if is_settling(storage, &commitment)? {
@@ -69,7 +68,7 @@ fn process_withdraw(
     }
 
     COMMITS.save(storage, lp.clone(), &commitment)?;
-    Ok((messages, amount))
+    Ok((messages, capital.amount))
 }
 
 fn transfer_investment_tokens(
@@ -92,15 +91,6 @@ fn transfer_investment_tokens(
     Ok(messages)
 }
 
-fn remove_deposited_capital(
-    storage: &mut dyn Storage,
-    key: &Addr,
-) -> Result<Uint128, ContractError> {
-    let capital = AVAILABLE_CAPITAL.load(storage, key.clone())?;
-    AVAILABLE_CAPITAL.remove(storage, key.clone());
-    Ok(capital[0].amount)
-}
-
 fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> Result<bool, ContractError> {
     let paid_in_capital = PAID_IN_CAPITAL.load(storage, commitment.lp.clone())?;
     Ok(paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED)
@@ -116,15 +106,15 @@ mod tests {
         core::{error::ContractError, security::SecurityCommitment},
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::{
-            available_capital::AVAILABLE_CAPITAL, commits::COMMITS,
+            available_capital::{self},
+            commits::COMMITS,
             paid_in_capital::PAID_IN_CAPITAL,
         },
-        util::{self, testing::SettlementTester, to},
+        util::{testing::SettlementTester, to},
     };
 
     use super::{
-        handle, is_settling, process_withdraw, remove_deposited_capital,
-        transfer_investment_tokens, withdraw_commitments,
+        handle, is_settling, process_withdraw, transfer_investment_tokens, withdraw_commitments,
     };
 
     #[test]
@@ -194,29 +184,6 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_deposit_capital_success() {
-        let mut deps = mock_dependencies(&[]);
-        let lp = Addr::unchecked("bad address");
-        let funds = vec![Coin::new(50, "denom".to_string())];
-        AVAILABLE_CAPITAL
-            .save(deps.as_mut().storage, lp.clone(), &funds)
-            .unwrap();
-
-        let removed = remove_deposited_capital(deps.as_mut().storage, &lp).unwrap();
-        assert_eq!(Uint128::new(50), removed);
-        AVAILABLE_CAPITAL
-            .load(deps.as_mut().storage, lp.clone())
-            .unwrap_err();
-    }
-
-    #[test]
-    fn test_remove_deposit_handles_invalid_lp() {
-        let mut deps = mock_dependencies(&[]);
-        let lp = Addr::unchecked("bad address");
-        remove_deposited_capital(deps.as_mut().storage, &lp).unwrap_err();
-    }
-
-    #[test]
     fn test_transfer_investment_tokens_success() {
         let contract = Addr::unchecked("contract");
         let mut settlement_tester = SettlementTester::new();
@@ -282,13 +249,12 @@ mod tests {
             .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
             .unwrap();
 
-        AVAILABLE_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                commitment.lp.clone(),
-                &vec![Coin::new(100, "denom".to_string())],
-            )
-            .unwrap();
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(100, "denom".to_string())],
+        )
+        .unwrap();
 
         PAID_IN_CAPITAL
             .save(
@@ -313,7 +279,7 @@ mod tests {
         assert_eq!(Uint128::new(100), amount);
         assert_eq!(
             false,
-            AVAILABLE_CAPITAL.has(deps.as_mut().storage, commitment.lp)
+            available_capital::has_lp(deps.as_mut().storage, commitment.lp)
         );
     }
 
@@ -331,13 +297,12 @@ mod tests {
             .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
             .unwrap();
 
-        AVAILABLE_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                commitment.lp.clone(),
-                &vec![Coin::new(100, "denom".to_string())],
-            )
-            .unwrap();
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(100, "denom".to_string())],
+        )
+        .unwrap();
 
         PAID_IN_CAPITAL
             .save(
@@ -358,7 +323,7 @@ mod tests {
         assert_eq!(Uint128::new(100), amount);
         assert_eq!(
             false,
-            AVAILABLE_CAPITAL.has(deps.as_mut().storage, commitment.lp)
+            available_capital::has_lp(deps.as_mut().storage, commitment.lp)
         );
     }
 
@@ -385,13 +350,12 @@ mod tests {
             .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
             .unwrap();
 
-        AVAILABLE_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                commitment.lp.clone(),
-                &vec![Coin::new(100, &capital_denom)],
-            )
-            .unwrap();
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(100, &capital_denom)],
+        )
+        .unwrap();
 
         PAID_IN_CAPITAL
             .save(
