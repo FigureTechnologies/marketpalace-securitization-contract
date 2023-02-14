@@ -7,7 +7,7 @@ use crate::{
     },
     storage::{
         commits::{self},
-        paid_in_capital::PAID_IN_CAPITAL,
+        paid_in_capital::{self},
         state::STATE,
     },
 };
@@ -45,8 +45,7 @@ fn track_paid_capital(
     mut commitment: Commitment,
 ) -> Result<(), ContractError> {
     commitment.clear_amounts();
-    PAID_IN_CAPITAL.save(storage, commitment.lp, &commitment.commitments)?;
-    Ok(())
+    paid_in_capital::set(storage, commitment.lp, &commitment.commitments)
 }
 
 #[cfg(test)]
@@ -59,7 +58,7 @@ mod tests {
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::{
             commits::{self},
-            paid_in_capital::PAID_IN_CAPITAL,
+            paid_in_capital::{self},
             state::{State, STATE},
         },
         util::testing::SettlementTester,
@@ -106,9 +105,7 @@ mod tests {
         let commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
 
         track_paid_capital(deps.as_mut().storage, commitment.clone()).unwrap();
-        let paid_capital = PAID_IN_CAPITAL
-            .load(deps.as_mut().storage, commitment.lp)
-            .unwrap();
+        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp).unwrap();
         for capital in &paid_capital {
             assert_eq!(0, capital.amount);
         }
@@ -130,9 +127,7 @@ mod tests {
         assert_eq!(CommitmentState::ACCEPTED, added_commitment.state);
 
         // We need to check capital
-        let paid_capital = PAID_IN_CAPITAL
-            .load(deps.as_mut().storage, commitment.lp)
-            .unwrap();
+        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp).unwrap();
         for capital in &paid_capital {
             assert_eq!(0, capital.amount);
         }

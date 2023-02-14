@@ -15,3 +15,6 @@ pub fn get(storage: &dyn Storage, lp: Addr) -> Result<Commitment, ContractError>
 pub fn set(storage: &mut dyn Storage, commitment: &Commitment) -> Result<(), ContractError> {
     Ok(COMMITS.save(storage, commitment.lp.clone(), commitment)?)
 }
+
+#[cfg(test)]
+mod tests {}

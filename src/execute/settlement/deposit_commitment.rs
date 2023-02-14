@@ -7,9 +7,9 @@ use crate::{
         security::SecurityCommitment,
     },
     storage::{
-        available_capital::add_capital,
+        available_capital::{self},
         commits::{self},
-        paid_in_capital::PAID_IN_CAPITAL,
+        paid_in_capital::{self},
         securities::SECURITIES_MAP,
         state::STATE,
     },
@@ -52,24 +52,8 @@ fn update_depositer_capital(
     funds: Vec<Coin>,
     deposit: Vec<SecurityCommitment>,
 ) -> Result<(), ContractError> {
-    PAID_IN_CAPITAL.update(
-        deps.storage,
-        sender.clone(),
-        |already_committed| -> StdResult<Vec<SecurityCommitment>> {
-            match already_committed {
-                None => Ok(deposit),
-                Some(mut already_committed) => {
-                    for deposit_security in &deposit {
-                        add_security_commitment(deposit_security, &mut already_committed);
-                    }
-                    Ok(already_committed)
-                }
-            }
-        },
-    )?;
-
-    add_capital(deps.storage, sender, funds)?;
-
+    paid_in_capital::add_payment(deps.storage, sender.clone(), deposit)?;
+    available_capital::add_capital(deps.storage, sender, funds)?;
     Ok(())
 }
 
@@ -135,23 +119,6 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
     Ok(commitment.state == CommitmentState::ACCEPTED)
 }
 
-// The purpose of this function is to add new_commitment to commitments.
-// We do this by finding the security commitment that has the same name as new_commitment,
-// and then we add the new_commitment.amount to the commitment.amount.
-//
-// Note this modifies commitments
-fn add_security_commitment(
-    new_commitment: &SecurityCommitment,
-    commitments: &mut [SecurityCommitment],
-) {
-    for commitment in commitments.iter_mut() {
-        if commitment.name == new_commitment.name {
-            commitment.amount += new_commitment.amount;
-            break;
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Coin};
@@ -161,75 +128,18 @@ mod tests {
         core::security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
         execute::settlement::{
             commitment::{Commitment, CommitmentState},
-            deposit_commitment::{add_security_commitment, update_depositer_capital},
+            deposit_commitment::update_depositer_capital,
         },
         storage::{
             available_capital::{self},
             commits::{self},
-            paid_in_capital::PAID_IN_CAPITAL,
+            paid_in_capital::{self},
             securities::SECURITIES_MAP,
         },
         util::testing::SettlementTester,
     };
 
     use super::{calculate_funds, drawdown_met, funds_match_deposit, handle, is_accepted};
-
-    #[test]
-    fn test_add_security_commitment_with_empty() {
-        let mut settlement_tester = SettlementTester::new();
-        settlement_tester.create_security_commitments(1);
-        let new_commitment = settlement_tester.security_commitments[0].clone();
-        let mut commitments = vec![];
-
-        add_security_commitment(&new_commitment, &mut commitments);
-        assert_eq!(0, commitments.len());
-    }
-
-    #[test]
-    fn test_add_security_commitment_updates_first_capital() {
-        let new_commitment = SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: 5,
-        };
-        let mut commitments = vec![
-            SecurityCommitment {
-                name: "Security1".to_string(),
-                amount: 7,
-            },
-            SecurityCommitment {
-                name: "Security1".to_string(),
-                amount: 5,
-            },
-        ];
-
-        add_security_commitment(&new_commitment, &mut commitments);
-        assert_eq!(2, commitments.len());
-        assert_eq!(12, commitments[0].amount);
-        assert_eq!(5, commitments[1].amount);
-    }
-
-    #[test]
-    fn test_add_security_commitment_ignores_invalid_name() {
-        let new_commitment = SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: 5,
-        };
-        let mut commitments = vec![
-            SecurityCommitment {
-                name: "Security2".to_string(),
-                amount: 7,
-            },
-            SecurityCommitment {
-                name: "Security1".to_string(),
-                amount: 5,
-            },
-        ];
-
-        add_security_commitment(&new_commitment, &mut commitments);
-        assert_eq!(2, commitments.len());
-        assert_eq!(7, commitments[0].amount);
-        assert_eq!(10, commitments[1].amount);
-    }
 
     #[test]
     fn test_is_accepted_throws_error_on_invalid_lp() {
@@ -539,9 +449,7 @@ mod tests {
         update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
             .expect("should be successful");
 
-        let paid_capital = PAID_IN_CAPITAL
-            .load(deps.as_mut().storage, lp.clone())
-            .unwrap();
+        let paid_capital = paid_in_capital::get(&deps.storage, lp.clone()).unwrap();
         let available_capital = available_capital::get_capital(deps.as_mut().storage, lp).unwrap();
 
         assert_eq!(paid_capital, deposit);
@@ -559,17 +467,13 @@ mod tests {
             amount: 5,
         }];
 
-        PAID_IN_CAPITAL
-            .save(deps.as_mut().storage, lp.clone(), &deposit)
-            .unwrap();
+        paid_in_capital::set(deps.as_mut().storage, lp.clone(), &deposit).unwrap();
         available_capital::add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
             .expect("should be successful");
 
-        let paid_capital = PAID_IN_CAPITAL
-            .load(deps.as_mut().storage, lp.clone())
-            .unwrap();
+        let paid_capital = paid_in_capital::get(&deps.storage, lp.clone()).unwrap();
         let available_capital =
             available_capital::get_capital(deps.as_mut().storage, lp.clone()).unwrap();
 

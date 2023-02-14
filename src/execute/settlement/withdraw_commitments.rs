@@ -9,7 +9,7 @@ use crate::{
     storage::{
         available_capital::{self},
         commits::{self},
-        paid_in_capital::PAID_IN_CAPITAL,
+        paid_in_capital::{self},
         state::STATE,
     },
     util::to,
@@ -92,7 +92,7 @@ fn transfer_investment_tokens(
 }
 
 fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> Result<bool, ContractError> {
-    let paid_in_capital = PAID_IN_CAPITAL.load(storage, commitment.lp.clone())?;
+    let paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone())?;
     Ok(paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED)
 }
 
@@ -107,8 +107,8 @@ mod tests {
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::{
             available_capital::{self},
-            commits::{self, COMMITS},
-            paid_in_capital::PAID_IN_CAPITAL,
+            commits::{self},
+            paid_in_capital::{self},
         },
         util::{testing::SettlementTester, to},
     };
@@ -126,13 +126,12 @@ mod tests {
         let mut commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
-        PAID_IN_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                lp.clone(),
-                &settlement_tester.security_commitments,
-            )
-            .unwrap();
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            lp.clone(),
+            &settlement_tester.security_commitments,
+        )
+        .unwrap();
         let settling = is_settling(&deps.storage, &commitment).unwrap();
         assert_eq!(true, settling);
     }
@@ -145,13 +144,12 @@ mod tests {
         let mut commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::SETTLED;
-        PAID_IN_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                lp.clone(),
-                &settlement_tester.security_commitments,
-            )
-            .unwrap();
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            lp.clone(),
+            &settlement_tester.security_commitments,
+        )
+        .unwrap();
         let settling = is_settling(&deps.storage, &commitment).unwrap();
         assert_eq!(false, settling);
     }
@@ -176,9 +174,7 @@ mod tests {
         commitment.state = CommitmentState::ACCEPTED;
         let mut capital = commitment.clone();
         capital.clear_amounts();
-        PAID_IN_CAPITAL
-            .save(deps.as_mut().storage, lp.clone(), &capital.commitments)
-            .unwrap();
+        paid_in_capital::set(deps.as_mut().storage, lp.clone(), &capital.commitments).unwrap();
         let settling = is_settling(&deps.storage, &commitment).unwrap();
         assert_eq!(false, settling);
     }
@@ -252,22 +248,21 @@ mod tests {
         )
         .unwrap();
 
-        PAID_IN_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                commitment.lp.clone(),
-                &vec![
-                    SecurityCommitment {
-                        name: settlement_tester.security_commitments[0].name.clone(),
-                        amount: 1,
-                    },
-                    SecurityCommitment {
-                        name: settlement_tester.security_commitments[1].name.clone(),
-                        amount: 1,
-                    },
-                ],
-            )
-            .unwrap();
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            &vec![
+                SecurityCommitment {
+                    name: settlement_tester.security_commitments[0].name.clone(),
+                    amount: 1,
+                },
+                SecurityCommitment {
+                    name: settlement_tester.security_commitments[1].name.clone(),
+                    amount: 1,
+                },
+            ],
+        )
+        .unwrap();
 
         let (messages, amount) =
             process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
@@ -298,14 +293,12 @@ mod tests {
         )
         .unwrap();
 
-        PAID_IN_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                commitment.lp.clone(),
-                &settlement_tester.security_commitments,
-            )
-            .unwrap();
-
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            &settlement_tester.security_commitments,
+        )
+        .unwrap();
         let (messages, amount) =
             process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
 
@@ -347,13 +340,12 @@ mod tests {
         )
         .unwrap();
 
-        PAID_IN_CAPITAL
-            .save(
-                deps.as_mut().storage,
-                commitment.lp.clone(),
-                &settlement_tester.security_commitments.clone(),
-            )
-            .unwrap();
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            &settlement_tester.security_commitments.clone(),
+        )
+        .unwrap();
 
         let res = withdraw_commitments(
             deps.as_mut(),
