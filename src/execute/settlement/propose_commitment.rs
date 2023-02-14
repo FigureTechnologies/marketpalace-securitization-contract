@@ -1,9 +1,11 @@
 use cosmwasm_std::{Addr, Response};
 
-use crate::core::{
-    aliases::{ProvDepsMut, ProvTxResponse},
-    security::SecurityCommitment,
-    state::{COMMITS, SECURITIES_MAP},
+use crate::{
+    core::{
+        aliases::{ProvDepsMut, ProvTxResponse},
+        security::SecurityCommitment,
+    },
+    storage::{commits::COMMITS, securities::SECURITIES_MAP},
 };
 
 use super::commitment::Commitment;
@@ -31,9 +33,9 @@ mod test {
         core::{
             error::ContractError,
             security::{FundSecurity, Security, SecurityCommitment},
-            state::{COMMITS, SECURITIES_MAP},
         },
         execute::{propose_commitment::handle, settlement::commitment::CommitmentState},
+        storage::{commits::COMMITS, securities::SECURITIES_MAP},
         util::testing::SettlementTester,
     };
 

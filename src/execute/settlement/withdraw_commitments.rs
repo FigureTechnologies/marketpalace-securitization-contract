@@ -5,7 +5,10 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
         error::ContractError,
-        state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, STATE},
+    },
+    storage::{
+        available_capital::AVAILABLE_CAPITAL, commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL,
+        state::STATE,
     },
     util::to,
 };
@@ -110,12 +113,12 @@ mod tests {
     use provwasm_std::{mint_marker_supply, withdraw_coins};
 
     use crate::{
-        core::{
-            error::ContractError,
-            security::SecurityCommitment,
-            state::{State, AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, STATE},
-        },
+        core::{error::ContractError, security::SecurityCommitment},
         execute::settlement::commitment::{Commitment, CommitmentState},
+        storage::{
+            available_capital::AVAILABLE_CAPITAL, commits::COMMITS,
+            paid_in_capital::PAID_IN_CAPITAL,
+        },
         util::{self, testing::SettlementTester, to},
     };
 

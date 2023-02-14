@@ -1,10 +1,15 @@
 use cosmwasm_std::{Addr, Coin, Order, Response, StdResult, Uint128};
 
-use crate::core::{
-    aliases::{ProvDepsMut, ProvTxResponse},
-    error::ContractError,
-    security::SecurityCommitment,
-    state::{AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
+use crate::{
+    core::{
+        aliases::{ProvDepsMut, ProvTxResponse},
+        error::ContractError,
+        security::SecurityCommitment,
+    },
+    storage::{
+        available_capital::AVAILABLE_CAPITAL, commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL,
+        securities::SECURITIES_MAP, state::STATE,
+    },
 };
 
 use super::commitment::CommitmentState;
@@ -178,14 +183,15 @@ mod tests {
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
-        core::{
-            security::{self, FundSecurity, Security, SecurityCommitment, TrancheSecurity},
-            state::{State, AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
-        },
+        core::security::{self, FundSecurity, Security, SecurityCommitment, TrancheSecurity},
         execute::settlement::{
             self,
             commitment::{Commitment, CommitmentState},
             deposit_commitment::{add_security_commitment, update_depositer_capital},
+        },
+        storage::{
+            available_capital::AVAILABLE_CAPITAL, commits::COMMITS,
+            paid_in_capital::PAID_IN_CAPITAL, securities::SECURITIES_MAP,
         },
         util::{self, testing::SettlementTester},
     };

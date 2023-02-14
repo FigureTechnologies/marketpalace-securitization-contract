@@ -1,8 +1,8 @@
 use cosmwasm_std::{Addr, Storage};
 
-use crate::core::{
-    security::SecurityCommitment,
-    state::{State, STATE},
+use crate::{
+    core::security::SecurityCommitment,
+    storage::state::{State, STATE},
 };
 
 pub fn setup_tests() {

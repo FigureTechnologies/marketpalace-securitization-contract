@@ -12,7 +12,10 @@ use crate::{
         aliases::{ProvDepsMut, ProvTxResponse},
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
         msg::InstantiateMsg,
-        state::{State, SECURITIES_MAP, STATE},
+    },
+    storage::{
+        securities::SECURITIES_MAP,
+        state::{State, STATE},
     },
     util::to,
 };
@@ -76,6 +79,8 @@ mod tests {
         MarkerType,
     };
 
+    use crate::storage::securities::SECURITIES_MAP;
+    use crate::storage::state::STATE;
     use crate::{
         contract::instantiate,
         core::{
@@ -83,7 +88,6 @@ mod tests {
             msg::InstantiateMsg,
             rules::InvestmentVehicleRule,
             security::{Security, TrancheSecurity},
-            state::{SECURITIES_MAP, STATE},
         },
         instantiate::new_active_marker,
     };

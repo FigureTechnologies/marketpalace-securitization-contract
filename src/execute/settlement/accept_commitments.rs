@@ -1,9 +1,11 @@
 use cosmwasm_std::{Addr, Response, Storage};
 
-use crate::core::{
-    aliases::{ProvDepsMut, ProvTxResponse},
-    error::ContractError,
-    state::{COMMITS, PAID_IN_CAPITAL, STATE},
+use crate::{
+    core::{
+        aliases::{ProvDepsMut, ProvTxResponse},
+        error::ContractError,
+    },
+    storage::{commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL, state::STATE},
 };
 
 use super::commitment::{Commitment, CommitmentState};
@@ -49,11 +51,13 @@ mod tests {
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
-        core::{
-            error::ContractError,
-            state::{State, COMMITS, PAID_IN_CAPITAL, STATE},
-        },
+        core::error::ContractError,
         execute::settlement::commitment::{Commitment, CommitmentState},
+        storage::{
+            commits::COMMITS,
+            paid_in_capital::PAID_IN_CAPITAL,
+            state::{State, STATE},
+        },
         util::testing::SettlementTester,
     };
 
