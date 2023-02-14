@@ -116,7 +116,7 @@ mod tests {
             state::{State, AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, STATE},
         },
         execute::settlement::commitment::{Commitment, CommitmentState},
-        util::{self, to},
+        util::{self, testing::SettlementTester, to},
     };
 
     use super::{
@@ -127,15 +127,18 @@ mod tests {
     #[test]
     fn test_is_settling_success() {
         let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
         let lp = Addr::unchecked("bad address");
-        let security_commitment: Vec<SecurityCommitment> = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 50,
-        }];
-        let mut commitment = Commitment::new(lp.clone(), security_commitment.clone());
+        let mut commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
         PAID_IN_CAPITAL
-            .save(deps.as_mut().storage, lp.clone(), &security_commitment)
+            .save(
+                deps.as_mut().storage,
+                lp.clone(),
+                &settlement_tester.security_commitments,
+            )
             .unwrap();
         let settling = is_settling(&deps.storage, &commitment).unwrap();
         assert_eq!(true, settling);
@@ -144,12 +147,17 @@ mod tests {
     #[test]
     fn test_is_settling_fails_on_already_settled() {
         let mut deps = mock_dependencies(&[]);
+        let settlement_tester = SettlementTester::new();
         let lp = Addr::unchecked("bad address");
-        let security_commitment: Vec<SecurityCommitment> = vec![];
-        let mut commitment = Commitment::new(lp.clone(), security_commitment.clone());
+        let mut commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::SETTLED;
         PAID_IN_CAPITAL
-            .save(deps.as_mut().storage, lp.clone(), &security_commitment)
+            .save(
+                deps.as_mut().storage,
+                lp.clone(),
+                &settlement_tester.security_commitments,
+            )
             .unwrap();
         let settling = is_settling(&deps.storage, &commitment).unwrap();
         assert_eq!(false, settling);
@@ -158,21 +166,20 @@ mod tests {
     #[test]
     fn test_is_settling_handles_invalid_lp() {
         let deps = mock_dependencies(&[]);
+        let settlement_tester = SettlementTester::new();
         let lp = Addr::unchecked("bad address");
-        let security_commitment: Vec<SecurityCommitment> = vec![];
-        let commitment = Commitment::new(lp.clone(), security_commitment);
+        let commitment = Commitment::new(lp.clone(), settlement_tester.security_commitments);
         is_settling(&deps.storage, &commitment).unwrap_err();
     }
 
     #[test]
     fn test_is_settling_fails_on_missing_capital() {
         let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
         let lp = Addr::unchecked("bad address");
-        let security_commitment: Vec<SecurityCommitment> = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 50,
-        }];
-        let mut commitment = Commitment::new(lp.clone(), security_commitment.clone());
+        let mut commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
         let mut capital = commitment.clone();
         capital.clear_amounts();
@@ -209,20 +216,11 @@ mod tests {
     #[test]
     fn test_transfer_investment_tokens_success() {
         let contract = Addr::unchecked("contract");
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
-        let commitment = Commitment::new(
-            lp.clone(),
-            vec![
-                SecurityCommitment {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                },
-                SecurityCommitment {
-                    name: "Security2".to_string(),
-                    amount: 7,
-                },
-            ],
-        );
+        let commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         let mut expected = vec![];
         for commitment in &commitment.commitments {
             let investment_name = to::security_to_investment_name(&commitment.name, &contract);
@@ -254,21 +252,11 @@ mod tests {
     #[test]
     fn test_process_withdraw_fails_when_available_capital_doesnt_exist() {
         let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
         let contract = Addr::unchecked("contract");
-        let commitment = Commitment::new(
-            lp,
-            vec![
-                SecurityCommitment {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                },
-                SecurityCommitment {
-                    name: "Security2".to_string(),
-                    amount: 7,
-                },
-            ],
-        );
+        let commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
 
         COMMITS
             .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
@@ -280,21 +268,11 @@ mod tests {
     #[test]
     fn test_process_withdraw_not_settled() {
         let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
         let contract = Addr::unchecked("contract");
-        let mut commitment = Commitment::new(
-            lp,
-            vec![
-                SecurityCommitment {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                },
-                SecurityCommitment {
-                    name: "Security2".to_string(),
-                    amount: 7,
-                },
-            ],
-        );
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
 
         COMMITS
@@ -315,11 +293,11 @@ mod tests {
                 commitment.lp.clone(),
                 &vec![
                     SecurityCommitment {
-                        name: "Security1".to_string(),
+                        name: settlement_tester.security_commitments[0].name.clone(),
                         amount: 1,
                     },
                     SecurityCommitment {
-                        name: "Security2".to_string(),
+                        name: settlement_tester.security_commitments[1].name.clone(),
                         amount: 1,
                     },
                 ],
@@ -339,21 +317,11 @@ mod tests {
     #[test]
     fn test_process_withdraw_settled() {
         let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
         let contract = Addr::unchecked("contract");
-        let mut commitment = Commitment::new(
-            lp,
-            vec![
-                SecurityCommitment {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                },
-                SecurityCommitment {
-                    name: "Security2".to_string(),
-                    amount: 7,
-                },
-            ],
-        );
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
 
         COMMITS
@@ -372,16 +340,7 @@ mod tests {
             .save(
                 deps.as_mut().storage,
                 commitment.lp.clone(),
-                &vec![
-                    SecurityCommitment {
-                        name: "Security1".to_string(),
-                        amount: 5,
-                    },
-                    SecurityCommitment {
-                        name: "Security2".to_string(),
-                        amount: 7,
-                    },
-                ],
+                &settlement_tester.security_commitments,
             )
             .unwrap();
 
@@ -412,21 +371,11 @@ mod tests {
     #[test]
     fn test_withdraw_commitments_with_settled() {
         let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
         let capital_denom = "denom".to_string();
-        let mut commitment = Commitment::new(
-            lp,
-            vec![
-                SecurityCommitment {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                },
-                SecurityCommitment {
-                    name: "Security2".to_string(),
-                    amount: 7,
-                },
-            ],
-        );
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
 
         COMMITS
@@ -445,16 +394,7 @@ mod tests {
             .save(
                 deps.as_mut().storage,
                 commitment.lp.clone(),
-                &vec![
-                    SecurityCommitment {
-                        name: "Security1".to_string(),
-                        amount: 5,
-                    },
-                    SecurityCommitment {
-                        name: "Security2".to_string(),
-                        amount: 7,
-                    },
-                ],
+                &settlement_tester.security_commitments.clone(),
             )
             .unwrap();
 
@@ -473,7 +413,8 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
 
-        util::testing::setup_test_state(deps.as_mut().storage);
+        let settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
 
         let error = handle(deps.as_mut(), mock_env(), sender).unwrap_err();
         assert_eq!(

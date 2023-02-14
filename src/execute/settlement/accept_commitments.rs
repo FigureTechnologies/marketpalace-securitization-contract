@@ -51,10 +51,10 @@ mod tests {
     use crate::{
         core::{
             error::ContractError,
-            security::{self, Security, SecurityCommitment},
             state::{State, COMMITS, PAID_IN_CAPITAL, STATE},
         },
         execute::settlement::commitment::{Commitment, CommitmentState},
+        util::testing::SettlementTester,
     };
 
     use super::{accept_commitment, handle, track_paid_capital};
@@ -71,11 +71,10 @@ mod tests {
     fn test_accepted_commit_must_be_pending() {
         let lp = Addr::unchecked("address");
         let mut deps = mock_dependencies(&[]);
-        let security_commitments = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 0,
-        }];
-        let mut commitment = Commitment::new(lp.clone(), security_commitments);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let mut commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
         COMMITS
             .save(deps.as_mut().storage, lp.clone(), &commitment)
@@ -96,19 +95,9 @@ mod tests {
     fn test_track_paid_capital_makes_an_empty_entry() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("address");
-        let commitment = Commitment::new(
-            lp,
-            vec![
-                SecurityCommitment {
-                    name: "Security 1".to_string(),
-                    amount: 5,
-                },
-                SecurityCommitment {
-                    name: "Security 2".to_string(),
-                    amount: 7,
-                },
-            ],
-        );
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
+        let commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
 
         track_paid_capital(deps.as_mut().storage, commitment.clone()).unwrap();
         let paid_capital = PAID_IN_CAPITAL
@@ -123,11 +112,10 @@ mod tests {
     fn test_accept_commit_succeeds() {
         let lp = Addr::unchecked("address");
         let mut deps = mock_dependencies(&[]);
-        let security_commitments = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 0,
-        }];
-        let commitment = Commitment::new(lp.clone(), security_commitments);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         COMMITS
             .save(deps.as_mut().storage, lp.clone(), &commitment)
             .unwrap();
@@ -152,29 +140,24 @@ mod tests {
         let lp1 = Addr::unchecked("lp1");
         let lp2 = Addr::unchecked("lp2");
         let mut deps = mock_dependencies(&[]);
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State::new(gp.clone(), "denom".to_string(), vec![]),
-            )
-            .unwrap();
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
 
-        let security_commitments1 = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 3,
-        }];
-        let security_commitments2 = vec![SecurityCommitment {
-            name: "Security 2".to_string(),
-            amount: 2,
-        }];
+        settlement_tester.create_security_commitments(2);
 
         // Add these to the supported types
-        let commitment1 = Commitment::new(lp1.clone(), security_commitments1);
+        let commitment1 = Commitment::new(
+            lp1.clone(),
+            vec![settlement_tester.security_commitments[0].clone()],
+        );
         COMMITS
             .save(deps.as_mut().storage, lp1.clone(), &commitment1)
             .unwrap();
 
-        let commitment2 = Commitment::new(lp2.clone(), security_commitments2);
+        let commitment2 = Commitment::new(
+            lp2.clone(),
+            vec![settlement_tester.security_commitments[1].clone()],
+        );
         COMMITS
             .save(deps.as_mut().storage, lp2.clone(), &commitment2)
             .unwrap();

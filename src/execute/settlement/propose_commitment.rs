@@ -34,25 +34,25 @@ mod test {
             state::{COMMITS, SECURITIES_MAP},
         },
         execute::{propose_commitment::handle, settlement::commitment::CommitmentState},
+        util::testing::SettlementTester,
     };
 
     #[test]
     fn test_minimums_are_met() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("address");
-        let commitments = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 0,
-        }];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let commitments = settlement_tester.security_commitments.clone();
         SECURITIES_MAP
             .save(
                 &mut deps.storage,
                 commitments[0].name.clone(),
                 &Security {
-                    name: "Security 1".to_string(),
+                    name: commitments[0].name.clone(),
                     amount: 10,
                     security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
+                    minimum_amount: commitments[0].amount + 1,
                     price_per_unit: Coin::new(5, "denom".to_string()),
                 },
             )
@@ -69,10 +69,9 @@ mod test {
     fn test_all_securities_exist() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("address");
-        let commitments = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 0,
-        }];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let commitments = settlement_tester.security_commitments.clone();
         handle(deps.as_mut(), lp, commitments).unwrap_err();
     }
 
@@ -80,19 +79,18 @@ mod test {
     fn test_commit_is_added_on_success() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("address");
-        let commitments = vec![SecurityCommitment {
-            name: "Security 1".to_string(),
-            amount: 5,
-        }];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let commitments = settlement_tester.security_commitments.clone();
         SECURITIES_MAP
             .save(
                 &mut deps.storage,
                 commitments[0].name.clone(),
                 &Security {
-                    name: "Security 1".to_string(),
+                    name: commitments[0].name.clone(),
                     amount: 10,
                     security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
+                    minimum_amount: commitments[0].amount,
                     price_per_unit: Coin::new(5, "denom".to_string()),
                 },
             )

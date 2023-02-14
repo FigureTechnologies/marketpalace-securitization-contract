@@ -179,14 +179,15 @@ mod tests {
 
     use crate::{
         core::{
-            security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
+            security::{self, FundSecurity, Security, SecurityCommitment, TrancheSecurity},
             state::{State, AVAILABLE_CAPITAL, COMMITS, PAID_IN_CAPITAL, SECURITIES_MAP, STATE},
         },
         execute::settlement::{
+            self,
             commitment::{Commitment, CommitmentState},
             deposit_commitment::{add_security_commitment, update_depositer_capital},
         },
-        util::{self, testing::setup_test_state},
+        util::{self, testing::SettlementTester},
     };
 
     use super::{
@@ -233,10 +234,9 @@ mod tests {
 
     #[test]
     fn test_add_security_commitment_with_empty() {
-        let new_commitment = SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: 5,
-        };
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let new_commitment = settlement_tester.security_commitments[0].clone();
         let mut commitments = vec![];
 
         add_security_commitment(&new_commitment, &mut commitments);
@@ -659,8 +659,8 @@ mod tests {
         let sender = Addr::unchecked("lp");
         let funds = vec![];
         let deposit = vec![];
-
-        util::testing::setup_test_state(deps.as_mut().storage);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
         COMMITS
             .save(
                 deps.as_mut().storage,
@@ -681,14 +681,13 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
         let funds = vec![Coin::new(10, "capital_denom".to_string())];
-        let deposit = vec![SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: 10,
-        }];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let deposit = settlement_tester.security_commitments.clone();
         let mut commitment = Commitment::new(sender.clone(), vec![]);
         commitment.state = CommitmentState::ACCEPTED;
 
-        setup_test_state(deps.as_mut().storage);
+        settlement_tester.setup_test_state(deps.as_mut().storage);
         COMMITS
             .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
             .unwrap();
@@ -705,20 +704,15 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
         let funds = vec![Coin::new(10, "capital_denom".to_string())];
-        let deposit = vec![SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: 2,
-        }];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        settlement_tester.setup_test_state(deps.as_mut().storage);
+        let deposit = settlement_tester.security_commitments.clone();
         let mut commitment = Commitment::new(
             sender.clone(),
-            vec![SecurityCommitment {
-                name: "Security1".to_string(),
-                amount: 10,
-            }],
+            settlement_tester.security_commitments.clone(),
         );
         commitment.state = CommitmentState::ACCEPTED;
-
-        setup_test_state(deps.as_mut().storage);
 
         COMMITS
             .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
@@ -727,13 +721,13 @@ mod tests {
         SECURITIES_MAP
             .save(
                 deps.as_mut().storage,
-                "Security1".to_string(),
+                settlement_tester.security_commitments[0].name.clone(),
                 &Security {
-                    name: "Security1".to_string(),
-                    amount: 10,
+                    name: settlement_tester.security_commitments[0].name.clone(),
+                    amount: 100,
                     security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                     minimum_amount: 1,
-                    price_per_unit: Coin::new(10, "denom".to_string()),
+                    price_per_unit: Coin::new(10, "capital_denom".to_string()),
                 },
             )
             .unwrap();
@@ -749,21 +743,21 @@ mod tests {
     fn test_handle_should_work() {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
-        let funds = vec![Coin::new(20, "denom".to_string())];
-        let deposit = vec![SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: 2,
-        }];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
+        settlement_tester.create_security_commitments(1);
+        let funds = vec![Coin::new(
+            settlement_tester.security_commitments[0].amount,
+            "denom".to_string(),
+        )];
+
+        let deposit = settlement_tester.security_commitments.clone();
         let mut commitment = Commitment::new(
             sender.clone(),
-            vec![SecurityCommitment {
-                name: "Security1".to_string(),
-                amount: 10,
-            }],
+            settlement_tester.security_commitments.clone(),
         );
         commitment.state = CommitmentState::ACCEPTED;
 
-        setup_test_state(deps.as_mut().storage);
         COMMITS
             .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
             .unwrap();
@@ -771,13 +765,13 @@ mod tests {
         SECURITIES_MAP
             .save(
                 deps.as_mut().storage,
-                "Security1".to_string(),
+                settlement_tester.security_commitments[0].name.clone(),
                 &Security {
-                    name: "Security1".to_string(),
-                    amount: 10,
+                    name: settlement_tester.security_commitments[0].name.clone(),
+                    amount: 1000,
                     security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                     minimum_amount: 1,
-                    price_per_unit: Coin::new(10, "denom".to_string()),
+                    price_per_unit: Coin::new(1, "denom".to_string()),
                 },
             )
             .unwrap();
