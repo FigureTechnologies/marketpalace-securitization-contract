@@ -5,7 +5,11 @@ use crate::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
     },
-    storage::{commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL, state::STATE},
+    storage::{
+        commits::{self},
+        paid_in_capital::PAID_IN_CAPITAL,
+        state::STATE,
+    },
 };
 
 use super::commitment::{Commitment, CommitmentState};
@@ -23,14 +27,14 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
 }
 
 fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), ContractError> {
-    let mut commitment = COMMITS.load(storage, lp.clone())?;
+    let mut commitment = commits::get(storage, lp)?;
 
     if commitment.state != CommitmentState::PENDING {
         return Err(ContractError::InvalidCommitmentState {});
     }
 
     commitment.state = CommitmentState::ACCEPTED;
-    COMMITS.save(storage, lp, &commitment)?;
+    commits::set(storage, &commitment)?;
 
     track_paid_capital(storage, commitment)?;
     Ok(())
@@ -54,7 +58,7 @@ mod tests {
         core::error::ContractError,
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::{
-            commits::COMMITS,
+            commits::{self},
             paid_in_capital::PAID_IN_CAPITAL,
             state::{State, STATE},
         },
@@ -80,9 +84,7 @@ mod tests {
         let mut commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
-        COMMITS
-            .save(deps.as_mut().storage, lp.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
         let error = accept_commitment(deps.as_mut().storage, lp).unwrap_err();
         assert_eq!(
             ContractError::InvalidCommitmentState {}.to_string(),
@@ -120,13 +122,11 @@ mod tests {
         settlement_tester.create_security_commitments(1);
         let commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
-        COMMITS
-            .save(deps.as_mut().storage, lp.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
         accept_commitment(deps.as_mut().storage, lp.clone()).unwrap();
 
         // We need to check the state
-        let added_commitment = COMMITS.load(deps.as_mut().storage, lp).unwrap();
+        let added_commitment = commits::get(&deps.storage, lp).unwrap();
         assert_eq!(CommitmentState::ACCEPTED, added_commitment.state);
 
         // We need to check capital
@@ -154,17 +154,13 @@ mod tests {
             lp1.clone(),
             vec![settlement_tester.security_commitments[0].clone()],
         );
-        COMMITS
-            .save(deps.as_mut().storage, lp1.clone(), &commitment1)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment1).unwrap();
 
         let commitment2 = Commitment::new(
             lp2.clone(),
             vec![settlement_tester.security_commitments[1].clone()],
         );
-        COMMITS
-            .save(deps.as_mut().storage, lp2.clone(), &commitment2)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment2).unwrap();
 
         handle(deps.as_mut(), gp, vec![lp1, lp2]).unwrap();
     }

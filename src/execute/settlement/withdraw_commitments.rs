@@ -8,7 +8,7 @@ use crate::{
     },
     storage::{
         available_capital::{self},
-        commits::COMMITS,
+        commits::{self},
         paid_in_capital::PAID_IN_CAPITAL,
         state::STATE,
     },
@@ -57,7 +57,7 @@ fn process_withdraw(
     lp: &Addr,
     contract: &Addr,
 ) -> Result<(Vec<ProvMsg>, Uint128), ContractError> {
-    let mut commitment = COMMITS.load(storage, lp.clone())?;
+    let mut commitment = commits::get(storage, lp.clone())?;
     let capital = available_capital::remove_capital(storage, lp.clone())?;
     let mut messages = vec![];
 
@@ -67,7 +67,7 @@ fn process_withdraw(
         messages.extend(transfer_investment_tokens(&commitment, contract)?);
     }
 
-    COMMITS.save(storage, lp.clone(), &commitment)?;
+    commits::set(storage, &commitment)?;
     Ok((messages, capital.amount))
 }
 
@@ -107,7 +107,7 @@ mod tests {
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::{
             available_capital::{self},
-            commits::COMMITS,
+            commits::{self, COMMITS},
             paid_in_capital::PAID_IN_CAPITAL,
         },
         util::{testing::SettlementTester, to},
@@ -228,9 +228,7 @@ mod tests {
         let contract = Addr::unchecked("contract");
         let commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
 
-        COMMITS
-            .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap_err();
     }
@@ -245,9 +243,7 @@ mod tests {
         let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
 
-        COMMITS
-            .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         available_capital::add_capital(
             deps.as_mut().storage,
@@ -293,9 +289,7 @@ mod tests {
         let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
 
-        COMMITS
-            .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         available_capital::add_capital(
             deps.as_mut().storage,
@@ -315,9 +309,7 @@ mod tests {
         let (messages, amount) =
             process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
 
-        let updated = COMMITS
-            .load(deps.as_mut().storage, commitment.lp.clone())
-            .unwrap();
+        let updated = commits::get(&deps.storage, commitment.lp.clone()).unwrap();
         assert_eq!(CommitmentState::SETTLED, updated.state);
         assert_eq!(4, messages.len());
         assert_eq!(Uint128::new(100), amount);
@@ -346,9 +338,7 @@ mod tests {
         let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
 
-        COMMITS
-            .save(deps.as_mut().storage, commitment.lp.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         available_capital::add_capital(
             deps.as_mut().storage,

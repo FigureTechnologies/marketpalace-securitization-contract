@@ -5,7 +5,10 @@ use crate::{
         aliases::{ProvDepsMut, ProvTxResponse},
         security::SecurityCommitment,
     },
-    storage::{commits::COMMITS, securities::SECURITIES_MAP},
+    storage::{
+        commits::{self},
+        securities::SECURITIES_MAP,
+    },
 };
 
 use super::commitment::Commitment;
@@ -18,9 +21,9 @@ pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>)
         }
     }
 
-    let commitment = Commitment::new(lp.clone(), commitments);
+    let commitment = Commitment::new(lp, commitments);
 
-    COMMITS.save(deps.storage, lp, &commitment)?;
+    commits::set(deps.storage, &commitment)?;
     Ok(Response::new())
 }
 
@@ -32,10 +35,13 @@ mod test {
     use crate::{
         core::{
             error::ContractError,
-            security::{FundSecurity, Security, SecurityCommitment},
+            security::{FundSecurity, Security},
         },
         execute::{propose_commitment::handle, settlement::commitment::CommitmentState},
-        storage::{commits::COMMITS, securities::SECURITIES_MAP},
+        storage::{
+            commits::{self},
+            securities::SECURITIES_MAP,
+        },
         util::testing::SettlementTester,
     };
 
@@ -99,7 +105,7 @@ mod test {
             .unwrap();
         handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
 
-        let commitment = COMMITS.load(&deps.storage, lp.clone()).unwrap();
+        let commitment = commits::get(&deps.storage, lp.clone()).unwrap();
         assert_eq!(commitments, commitment.commitments);
         assert_eq!(CommitmentState::PENDING, commitment.state);
         assert_eq!(lp, commitment.lp);

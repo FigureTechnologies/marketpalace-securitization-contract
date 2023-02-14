@@ -7,8 +7,11 @@ use crate::{
         security::SecurityCommitment,
     },
     storage::{
-        available_capital::add_capital, commits::COMMITS, paid_in_capital::PAID_IN_CAPITAL,
-        securities::SECURITIES_MAP, state::STATE,
+        available_capital::add_capital,
+        commits::{self},
+        paid_in_capital::PAID_IN_CAPITAL,
+        securities::SECURITIES_MAP,
+        state::STATE,
     },
 };
 
@@ -128,7 +131,7 @@ fn calculate_funds(
 }
 
 fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError> {
-    let commitment = COMMITS.load(deps.storage, sender.clone())?;
+    let commitment = commits::get(deps.storage, sender.clone())?;
     Ok(commitment.state == CommitmentState::ACCEPTED)
 }
 
@@ -162,7 +165,7 @@ mod tests {
         },
         storage::{
             available_capital::{self},
-            commits::COMMITS,
+            commits::{self},
             paid_in_capital::PAID_IN_CAPITAL,
             securities::SECURITIES_MAP,
         },
@@ -239,13 +242,8 @@ mod tests {
     fn test_is_accepted_should_return_false_on_invalid_state() {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
-        COMMITS
-            .save(
-                deps.as_mut().storage,
-                sender.clone(),
-                &Commitment::new(sender.clone(), vec![]),
-            )
-            .unwrap();
+        let commitment = Commitment::new(sender.clone(), vec![]);
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
         let res = is_accepted(&deps.as_mut(), &sender).unwrap();
         assert_eq!(false, res);
     }
@@ -256,9 +254,7 @@ mod tests {
         let sender = Addr::unchecked("lp");
         let mut commitment = Commitment::new(sender.clone(), vec![]);
         commitment.state = CommitmentState::ACCEPTED;
-        COMMITS
-            .save(deps.as_mut().storage, sender.clone(), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
         let res = is_accepted(&deps.as_mut(), &sender).unwrap();
         assert_eq!(true, res);
     }
@@ -595,13 +591,8 @@ mod tests {
         let deposit = vec![];
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
-        COMMITS
-            .save(
-                deps.as_mut().storage,
-                Addr::unchecked("lp"),
-                &Commitment::new(sender.clone(), vec![]),
-            )
-            .unwrap();
+        let commitment = Commitment::new(sender.clone(), vec![]);
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         let error = handle(deps.as_mut(), sender, funds, deposit).expect_err("should throw error");
         assert_eq!(
@@ -622,9 +613,7 @@ mod tests {
         commitment.state = CommitmentState::ACCEPTED;
 
         settlement_tester.setup_test_state(deps.as_mut().storage);
-        COMMITS
-            .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         let error = handle(deps.as_mut(), sender, funds, deposit).expect_err("should throw error");
         assert_eq!(
@@ -648,9 +637,7 @@ mod tests {
         );
         commitment.state = CommitmentState::ACCEPTED;
 
-        COMMITS
-            .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         SECURITIES_MAP
             .save(
@@ -692,9 +679,7 @@ mod tests {
         );
         commitment.state = CommitmentState::ACCEPTED;
 
-        COMMITS
-            .save(deps.as_mut().storage, Addr::unchecked("lp"), &commitment)
-            .unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         SECURITIES_MAP
             .save(
