@@ -10,7 +10,7 @@ use crate::{
         available_capital::{self},
         commits::{self},
         paid_in_capital::{self},
-        securities::SECURITIES_MAP,
+        securities::{self},
         state::STATE,
     },
 };
@@ -62,17 +62,14 @@ fn update_depositer_capital(
 // We check to make sure that every security commitment in the drawdown was specified at instantiation
 // We also make sure our initial drawdown has the minimum for each of these security commitments
 fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) -> bool {
-    let security_types: StdResult<Vec<_>> = SECURITIES_MAP
-        .keys(deps.storage, None, None, Order::Ascending)
-        .collect();
-    let security_types = security_types.unwrap();
+    let security_types = securities::get_security_types(deps.storage);
 
     if security_types.len() != initial_drawdown.len() {
         return false;
     }
 
     for drawdown in initial_drawdown {
-        let security = SECURITIES_MAP.load(deps.storage, drawdown.name.clone());
+        let security = securities::get(deps.storage, drawdown.name.clone());
         if security.is_err() {
             return false;
         }
@@ -105,7 +102,7 @@ fn calculate_funds(
     let mut sum = Coin::new(0, capital_denom);
 
     for security_commitment in initial_drawdown {
-        let security = SECURITIES_MAP.load(deps.storage, security_commitment.name.clone())?;
+        let security = securities::get(deps.storage, security_commitment.name.clone())?;
 
         let cost = Uint128::from(security_commitment.amount) * security.price_per_unit.amount;
         sum.amount += cost;
@@ -134,7 +131,7 @@ mod tests {
             available_capital::{self},
             commits::{self},
             paid_in_capital::{self},
-            securities::SECURITIES_MAP,
+            securities::{self},
         },
         util::testing::SettlementTester,
     };
@@ -222,20 +219,8 @@ mod tests {
                 amount: 7,
             },
         ];
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                securities[0].name.clone(),
-                &securities[0],
-            )
-            .unwrap();
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                securities[1].name.clone(),
-                &securities[1],
-            )
-            .unwrap();
+        securities::set(deps.as_mut().storage, &securities[0]).unwrap();
+        securities::set(deps.as_mut().storage, &securities[1]).unwrap();
 
         let funds = calculate_funds(&deps.as_mut(), &commitments, &capital_denom).unwrap();
         assert_eq!(vec![Coin::new(85, capital_denom)], funds);
@@ -257,32 +242,28 @@ mod tests {
             },
         ];
 
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                deposit[0].name.clone(),
-                &Security {
-                    name: deposit[0].name.clone(),
-                    amount: 10,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(50, &capital_denom),
-                },
-            )
-            .unwrap();
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                deposit[1].name.clone(),
-                &Security {
-                    name: deposit[1].name.clone(),
-                    amount: 10,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(25, &capital_denom),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: deposit[0].name.clone(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(50, &capital_denom),
+            },
+        )
+        .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: deposit[1].name.clone(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(25, &capital_denom),
+            },
+        )
+        .unwrap();
 
         let res = funds_match_deposit(&deps.as_mut(), &funds, &deposit, &capital_denom).unwrap();
         assert_eq!(true, res);
@@ -304,32 +285,28 @@ mod tests {
             },
         ];
 
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                deposit[0].name.clone(),
-                &Security {
-                    name: deposit[0].name.clone(),
-                    amount: 10,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(50, &capital_denom),
-                },
-            )
-            .unwrap();
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                deposit[1].name.clone(),
-                &Security {
-                    name: deposit[1].name.clone(),
-                    amount: 10,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(25, &capital_denom),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: deposit[0].name.clone(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(50, &capital_denom),
+            },
+        )
+        .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: deposit[1].name.clone(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(25, &capital_denom),
+            },
+        )
+        .unwrap();
 
         let res = funds_match_deposit(&deps.as_mut(), &funds, &deposit, &capital_denom).unwrap();
         assert_eq!(false, res);
@@ -347,19 +324,17 @@ mod tests {
     fn test_drawdown_security_length_doesnt_match() {
         let mut deps = mock_dependencies(&[]);
         let commitment = vec![];
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                "Security1".to_string(),
-                &Security {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(10, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: "Security1".to_string(),
+                amount: 5,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(10, "denom".to_string()),
+            },
+        )
+        .unwrap();
         let res = drawdown_met(&deps.as_mut(), &commitment);
         assert_eq!(false, res);
     }
@@ -371,19 +346,17 @@ mod tests {
             name: "Security2".to_string(),
             amount: 5,
         }];
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                "Security1".to_string(),
-                &Security {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(10, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: "Security1".to_string(),
+                amount: 5,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(10, "denom".to_string()),
+            },
+        )
+        .unwrap();
         let res = drawdown_met(&deps.as_mut(), &commitment);
         assert_eq!(false, res);
     }
@@ -395,19 +368,18 @@ mod tests {
             name: "Security1".to_string(),
             amount: 1,
         }];
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                "Security1".to_string(),
-                &Security {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 4,
-                    price_per_unit: Coin::new(10, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: "Security1".to_string(),
+                amount: 5,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 4,
+                price_per_unit: Coin::new(10, "denom".to_string()),
+            },
+        )
+        .unwrap();
+
         let res = drawdown_met(&deps.as_mut(), &commitment);
         assert_eq!(false, res);
     }
@@ -419,19 +391,17 @@ mod tests {
             name: "Security1".to_string(),
             amount: 1,
         }];
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                "Security1".to_string(),
-                &Security {
-                    name: "Security1".to_string(),
-                    amount: 5,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(10, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: "Security1".to_string(),
+                amount: 5,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(10, "denom".to_string()),
+            },
+        )
+        .unwrap();
         let res = drawdown_met(&deps.as_mut(), &commitment);
         assert_eq!(true, res);
     }
@@ -543,19 +513,17 @@ mod tests {
 
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                settlement_tester.security_commitments[0].name.clone(),
-                &Security {
-                    name: settlement_tester.security_commitments[0].name.clone(),
-                    amount: 100,
-                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(10, "capital_denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: settlement_tester.security_commitments[0].name.clone(),
+                amount: 100,
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(10, "capital_denom".to_string()),
+            },
+        )
+        .unwrap();
 
         let error = handle(deps.as_mut(), sender, funds, deposit).expect_err("should throw error");
         assert_eq!(
@@ -585,19 +553,17 @@ mod tests {
 
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
-        SECURITIES_MAP
-            .save(
-                deps.as_mut().storage,
-                settlement_tester.security_commitments[0].name.clone(),
-                &Security {
-                    name: settlement_tester.security_commitments[0].name.clone(),
-                    amount: 1000,
-                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                    minimum_amount: 1,
-                    price_per_unit: Coin::new(1, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: settlement_tester.security_commitments[0].name.clone(),
+                amount: 1000,
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: 1,
+                price_per_unit: Coin::new(1, "denom".to_string()),
+            },
+        )
+        .unwrap();
 
         let response =
             handle(deps.as_mut(), sender, funds, deposit).expect("Should not throw error");

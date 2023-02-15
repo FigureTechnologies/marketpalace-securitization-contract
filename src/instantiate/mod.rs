@@ -14,7 +14,7 @@ use crate::{
         msg::InstantiateMsg,
     },
     storage::{
-        securities::SECURITIES_MAP,
+        securities::{self},
         state::{State, STATE},
     },
     util::to,
@@ -38,7 +38,7 @@ pub fn handle(
         let mut investment_marker =
             new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
         messages.append(&mut investment_marker);
-        SECURITIES_MAP.save(deps.storage, security.name.clone(), security)?;
+        securities::set(deps.storage, security)?;
     }
 
     Ok(Response::default()
@@ -79,7 +79,7 @@ mod tests {
         MarkerType,
     };
 
-    use crate::storage::securities::SECURITIES_MAP;
+    use crate::storage::securities::{self};
     use crate::storage::state::STATE;
     use crate::{
         contract::instantiate,
@@ -189,9 +189,7 @@ mod tests {
 
         // Check the SECURITIES_MAP
         for security in securities {
-            let saved = SECURITIES_MAP
-                .load(&deps.storage, security.name.clone())
-                .unwrap();
+            let saved = securities::get(&deps.storage, security.name.clone()).unwrap();
             assert_eq!(security, saved);
         }
     }

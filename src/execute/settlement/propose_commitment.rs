@@ -7,7 +7,7 @@ use crate::{
     },
     storage::{
         commits::{self},
-        securities::SECURITIES_MAP,
+        securities::{self},
     },
 };
 
@@ -15,7 +15,7 @@ use super::commitment::Commitment;
 
 pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>) -> ProvTxResponse {
     for commitment in &commitments {
-        let security = SECURITIES_MAP.load(deps.storage, commitment.name.clone())?;
+        let security = securities::get(deps.storage, commitment.name.clone())?;
         if commitment.amount < security.minimum_amount {
             return Err(crate::core::error::ContractError::InvalidSecurityCommitmentAmount {});
         }
@@ -40,7 +40,7 @@ mod test {
         execute::{propose_commitment::handle, settlement::commitment::CommitmentState},
         storage::{
             commits::{self},
-            securities::SECURITIES_MAP,
+            securities::{self},
         },
         util::testing::SettlementTester,
     };
@@ -52,19 +52,17 @@ mod test {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let commitments = settlement_tester.security_commitments.clone();
-        SECURITIES_MAP
-            .save(
-                &mut deps.storage,
-                commitments[0].name.clone(),
-                &Security {
-                    name: commitments[0].name.clone(),
-                    amount: 10,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: commitments[0].amount + 1,
-                    price_per_unit: Coin::new(5, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            &mut deps.storage,
+            &Security {
+                name: commitments[0].name.clone(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: commitments[0].amount + 1,
+                price_per_unit: Coin::new(5, "denom".to_string()),
+            },
+        )
+        .unwrap();
         let res = handle(deps.as_mut(), lp, commitments).unwrap_err();
 
         assert_eq!(
@@ -90,19 +88,17 @@ mod test {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let commitments = settlement_tester.security_commitments.clone();
-        SECURITIES_MAP
-            .save(
-                &mut deps.storage,
-                commitments[0].name.clone(),
-                &Security {
-                    name: commitments[0].name.clone(),
-                    amount: 10,
-                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                    minimum_amount: commitments[0].amount,
-                    price_per_unit: Coin::new(5, "denom".to_string()),
-                },
-            )
-            .unwrap();
+        securities::set(
+            &mut deps.storage,
+            &Security {
+                name: commitments[0].name.clone(),
+                amount: 10,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: commitments[0].amount,
+                price_per_unit: Coin::new(5, "denom".to_string()),
+            },
+        )
+        .unwrap();
         handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
 
         let commitment = commits::get(&deps.storage, lp.clone()).unwrap();
