@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Storage};
 
 use crate::{
     core::security::SecurityCommitment,
-    storage::state::{State, STATE},
+    storage::state::{self, State},
 };
 
 pub fn setup_tests() {
@@ -28,16 +28,15 @@ impl SettlementTester {
     }
 
     pub fn setup_test_state(&self, storage: &mut dyn Storage) {
-        STATE
-            .save(
-                storage,
-                &State {
-                    gp: Addr::unchecked("gp"),
-                    capital_denom: "denom".to_string(),
-                    rules: vec![],
-                },
-            )
-            .unwrap();
+        state::set(
+            storage,
+            &State {
+                gp: Addr::unchecked("gp"),
+                capital_denom: "denom".to_string(),
+                rules: vec![],
+            },
+        )
+        .unwrap();
     }
 
     pub fn create_security_commitments(&mut self, amount: u32) {

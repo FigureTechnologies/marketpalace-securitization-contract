@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Coin, Order, Response, StdResult, Uint128};
+use cosmwasm_std::{Addr, Coin, Response, Uint128};
 
 use crate::{
     core::{
@@ -11,7 +11,7 @@ use crate::{
         commits::{self},
         paid_in_capital::{self},
         securities::{self},
-        state::STATE,
+        state::{self},
     },
 };
 
@@ -23,7 +23,7 @@ pub fn handle(
     funds: Vec<Coin>,
     deposit: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
-    let state = STATE.load(deps.storage)?;
+    let state = state::get(deps.storage)?;
     if !is_accepted(&deps, &sender)? {
         return Err(crate::core::error::ContractError::InvalidCommitmentState {});
     }

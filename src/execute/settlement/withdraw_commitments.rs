@@ -10,7 +10,7 @@ use crate::{
         available_capital::{self},
         commits::{self},
         paid_in_capital::{self},
-        state::STATE,
+        state::{self},
     },
     util::to,
 };
@@ -18,7 +18,7 @@ use crate::{
 use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
-    let state = STATE.load(deps.storage)?;
+    let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(ContractError::Unauthorized {});
     }

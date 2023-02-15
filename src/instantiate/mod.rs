@@ -15,7 +15,7 @@ use crate::{
     },
     storage::{
         securities::{self},
-        state::{State, STATE},
+        state::{self, State},
     },
     util::to,
 };
@@ -28,7 +28,7 @@ pub fn handle(
 ) -> ProvTxResponse {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     let state = State::new(msg.gp, msg.capital_denom, msg.rules);
-    STATE.save(deps.storage, &state)?;
+    state::set(deps.storage, &state)?;
 
     // Create the markers
     let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = Vec::new();
@@ -80,7 +80,7 @@ mod tests {
     };
 
     use crate::storage::securities::{self};
-    use crate::storage::state::STATE;
+    use crate::storage::state::{self};
     use crate::{
         contract::instantiate,
         core::{
@@ -182,7 +182,7 @@ mod tests {
         assert_eq!(CONTRACT_NAME, contract_version.contract);
 
         // Check the STATE
-        let state = STATE.load(&deps.storage).unwrap();
+        let state = state::get(&deps.storage).unwrap();
         assert_eq!(DEFAULT_CAPITAL_DENOM.to_string(), state.capital_denom);
         assert_eq!(Addr::unchecked(DEFAULT_GP), state.gp);
         assert_eq!(DEFAULT_RULES, state.rules);

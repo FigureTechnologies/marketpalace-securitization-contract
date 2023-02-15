@@ -8,14 +8,14 @@ use crate::{
     storage::{
         commits::{self},
         paid_in_capital::{self},
-        state::STATE,
+        state::{self},
     },
 };
 
 use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
-    let state = STATE.load(deps.storage)?;
+    let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(crate::core::error::ContractError::Unauthorized {});
     }
@@ -59,7 +59,7 @@ mod tests {
         storage::{
             commits::{self},
             paid_in_capital::{self},
-            state::{State, STATE},
+            state::{self, State},
         },
         util::testing::SettlementTester,
     };
@@ -164,12 +164,11 @@ mod tests {
     fn test_handle_succeeds_with_no_commits() {
         let gp = Addr::unchecked("gp");
         let mut deps = mock_dependencies(&[]);
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State::new(gp.clone(), "denom".to_string(), vec![]),
-            )
-            .unwrap();
+        state::set(
+            deps.as_mut().storage,
+            &State::new(gp.clone(), "denom".to_string(), vec![]),
+        )
+        .unwrap();
 
         handle(deps.as_mut(), gp, vec![]).unwrap();
     }
@@ -179,12 +178,11 @@ mod tests {
         let gp = Addr::unchecked("gp");
         let sender = Addr::unchecked("lp1");
         let mut deps = mock_dependencies(&[]);
-        STATE
-            .save(
-                deps.as_mut().storage,
-                &State::new(gp, "denom".to_string(), vec![]),
-            )
-            .unwrap();
+        state::set(
+            deps.as_mut().storage,
+            &State::new(gp, "denom".to_string(), vec![]),
+        )
+        .unwrap();
 
         let error = handle(deps.as_mut(), sender, vec![]).unwrap_err();
         assert_eq!(
