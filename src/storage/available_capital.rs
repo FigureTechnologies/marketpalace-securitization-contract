@@ -67,6 +67,8 @@ mod tests {
 
     use crate::storage::available_capital::{add_capital, add_to_capital, has_lp, remove_capital};
 
+    use super::{get_capital, get_lps};
+
     #[test]
     fn test_add_to_capital_works_with_empty() {
         let denom = "denom".to_string();
@@ -118,9 +120,89 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_deposit_handles_invalid_lp() {
+    fn test_remove_capital_handles_invalid_lp() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("bad address");
         remove_capital(deps.as_mut().storage, lp).unwrap_err();
+    }
+
+    #[test]
+    fn test_has_lp() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let funds = vec![Coin::new(50, "denom".to_string())];
+        add_capital(deps.as_mut().storage, lp.clone(), funds).unwrap();
+
+        assert!(has_lp(&deps.storage, lp));
+        assert!(!has_lp(&deps.storage, Addr::unchecked("bad address")));
+    }
+
+    #[test]
+    fn test_get_lps_not_empty() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let funds = vec![Coin::new(50, "denom".to_string())];
+        add_capital(deps.as_mut().storage, lp.clone(), funds).unwrap();
+
+        let lps = get_lps(&deps.storage).unwrap();
+        assert_eq!(1, lps.len());
+        assert_eq!(lp, lps[0]);
+
+        let lp2 = Addr::unchecked("lp2");
+        let funds2 = vec![Coin::new(50, "denom".to_string())];
+        add_capital(deps.as_mut().storage, lp2.clone(), funds2).unwrap();
+        let lps = get_lps(&deps.storage).unwrap();
+        assert_eq!(2, lps.len());
+        assert_eq!(lp, lps[0]);
+        assert_eq!(lp2, lps[1]);
+    }
+
+    #[test]
+    fn test_get_lps_empty() {
+        let deps = mock_dependencies(&[]);
+
+        let lps = get_lps(&deps.storage).unwrap();
+        assert_eq!(0, lps.len());
+    }
+
+    #[test]
+    fn test_get_capital_invalid() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("bad address");
+        get_capital(deps.as_mut().storage, lp).unwrap_err();
+    }
+
+    #[test]
+    fn test_get_capital_valid() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let funds = vec![Coin::new(50, "denom".to_string())];
+        add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
+
+        let capital = get_capital(deps.as_mut().storage, lp).unwrap();
+        assert_eq!(funds, capital);
+    }
+
+    #[test]
+    fn test_add_capital_new_entry() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let funds = vec![Coin::new(50, "denom".to_string())];
+        add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
+
+        let capital = get_capital(deps.as_mut().storage, lp).unwrap();
+        assert_eq!(funds, capital);
+    }
+
+    #[test]
+    fn test_add_capital_update_entry() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let funds = vec![Coin::new(50, "denom".to_string())];
+        add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
+        add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
+
+        let capital = get_capital(deps.as_mut().storage, lp).unwrap();
+        assert_eq!(vec![Coin::new(100, "denom".to_string())], capital);
     }
 }
