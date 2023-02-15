@@ -61,10 +61,16 @@ fn add_security_commitment(
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::Addr;
+    use provwasm_mocks::mock_dependencies;
+
     use crate::{
-        core::security::SecurityCommitment, storage::paid_in_capital::add_security_commitment,
+        core::security::SecurityCommitment,
+        storage::paid_in_capital::{add_security_commitment, get, set},
         util::testing::SettlementTester,
     };
+
+    use super::add_payment;
 
     #[test]
     fn test_add_security_commitment_with_empty() {
@@ -121,5 +127,86 @@ mod tests {
         assert_eq!(2, commitments.len());
         assert_eq!(7, commitments[0].amount);
         assert_eq!(10, commitments[1].amount);
+    }
+
+    #[test]
+    fn test_get_set() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+
+        let commitments = vec![
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 7,
+            },
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 5,
+            },
+        ];
+
+        set(deps.as_mut().storage, lp.clone(), &commitments).unwrap();
+        let obtained = get(&deps.storage, lp).unwrap();
+
+        assert_eq!(commitments, obtained);
+    }
+
+    #[test]
+    fn test_get_invalid() {
+        let deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        get(&deps.storage, lp).unwrap_err();
+    }
+
+    #[test]
+    fn add_payment_new_entry() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let commitments = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 5,
+            },
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 7,
+            },
+        ];
+        add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
+        let obtained = get(&deps.storage, lp).unwrap();
+
+        assert_eq!(commitments, obtained);
+    }
+
+    #[test]
+    fn add_payment_update_entry() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let commitments = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 5,
+            },
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 7,
+            },
+        ];
+        add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
+        add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
+        let obtained = get(&deps.storage, lp).unwrap();
+
+        let expected = vec![
+            SecurityCommitment {
+                name: "Security1".to_string(),
+                amount: 10,
+            },
+            SecurityCommitment {
+                name: "Security2".to_string(),
+                amount: 14,
+            },
+        ];
+
+        assert_eq!(expected, obtained);
     }
 }
