@@ -14,6 +14,7 @@ use crate::{
         msg::InstantiateMsg,
     },
     storage::{
+        remaining_securities,
         securities::{self},
         state::{self, State},
     },
@@ -39,6 +40,7 @@ pub fn handle(
             new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
         messages.append(&mut investment_marker);
         securities::set(deps.storage, security)?;
+        remaining_securities::set(deps.storage, security.name.clone(), security.amount)?;
     }
 
     Ok(Response::default()
@@ -79,6 +81,7 @@ mod tests {
         MarkerType,
     };
 
+    use crate::storage::remaining_securities;
     use crate::storage::securities::{self};
     use crate::storage::state::{self};
     use crate::{
@@ -191,6 +194,9 @@ mod tests {
         for security in securities {
             let saved = securities::get(&deps.storage, security.name.clone()).unwrap();
             assert_eq!(security, saved);
+            let remaining =
+                remaining_securities::get(&deps.storage, security.name.clone()).unwrap();
+            assert_eq!(security.amount, remaining);
         }
     }
 

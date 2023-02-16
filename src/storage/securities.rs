@@ -1,7 +1,11 @@
 use cosmwasm_std::{Order, StdResult, Storage};
 use cw_storage_plus::Map;
 
-use crate::core::{constants::SECURITIES_MAP_KEY, error::ContractError, security::Security};
+use crate::core::{
+    constants::{REMAINING_SECURITIES_KEY, SECURITIES_MAP_KEY},
+    error::ContractError,
+    security::Security,
+};
 
 // We store our securities that we configured on initialization
 pub const SECURITIES_MAP: Map<String, Security> = Map::new(SECURITIES_MAP_KEY);
