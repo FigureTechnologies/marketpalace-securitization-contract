@@ -46,6 +46,9 @@ pub enum ContractError {
 
     #[error("The deposit exceeds the commitment amount")]
     ExcessiveDeposit {},
+
+    #[error("The commitment will exceed the remaining amount of a security")]
+    CommitmentExceedsRemainingSecurityAmount {},
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {

@@ -8,6 +8,7 @@ use crate::{
     storage::{
         commits::{self},
         paid_in_capital::{self},
+        remaining_securities,
         state::{self},
     },
 };
@@ -23,6 +24,7 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
     for lp in commitments {
         accept_commitment(deps.storage, lp)?;
     }
+
     Ok(Response::new())
 }
 
@@ -31,6 +33,19 @@ fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), Contract
 
     if commitment.state != CommitmentState::PENDING {
         return Err(ContractError::InvalidCommitmentState {});
+    }
+
+    // Remove from remaining
+    for security_commitment in &commitment.commitments {
+        if !remaining_securities::subtract(
+            storage,
+            security_commitment.name.clone(),
+            security_commitment.amount,
+        )? {
+            return Err(
+                crate::core::error::ContractError::CommitmentExceedsRemainingSecurityAmount {},
+            );
+        }
     }
 
     commitment.state = CommitmentState::ACCEPTED;
@@ -59,6 +74,7 @@ mod tests {
         storage::{
             commits::{self},
             paid_in_capital::{self},
+            remaining_securities,
             state::{self, State},
         },
         util::testing::SettlementTester,
@@ -93,7 +109,25 @@ mod tests {
 
     #[test]
     fn test_accepted_commit_cannot_make_sum_of_securities_greater_than_the_amount() {
-        assert!(false);
+        let lp = Addr::unchecked("address");
+        let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            settlement_tester.security_commitments[0].name.clone(),
+            settlement_tester.security_commitments[0].amount - 1,
+        )
+        .unwrap();
+        let error = accept_commitment(deps.as_mut().storage, lp.clone()).unwrap_err();
+
+        assert_eq!(
+            ContractError::CommitmentExceedsRemainingSecurityAmount {}.to_string(),
+            error.to_string()
+        );
     }
 
     #[test]
@@ -120,6 +154,12 @@ mod tests {
         let commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, &commitment).unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            settlement_tester.security_commitments[0].name.clone(),
+            settlement_tester.security_commitments[0].amount,
+        )
+        .unwrap();
         accept_commitment(deps.as_mut().storage, lp.clone()).unwrap();
 
         // We need to check the state
@@ -150,12 +190,24 @@ mod tests {
             vec![settlement_tester.security_commitments[0].clone()],
         );
         commits::set(deps.as_mut().storage, &commitment1).unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            settlement_tester.security_commitments[0].name.clone(),
+            settlement_tester.security_commitments[0].amount,
+        )
+        .unwrap();
 
         let commitment2 = Commitment::new(
             lp2.clone(),
             vec![settlement_tester.security_commitments[1].clone()],
         );
         commits::set(deps.as_mut().storage, &commitment2).unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            settlement_tester.security_commitments[1].name.clone(),
+            settlement_tester.security_commitments[1].amount,
+        )
+        .unwrap();
 
         handle(deps.as_mut(), gp, vec![lp1, lp2]).unwrap();
     }

@@ -1,7 +1,7 @@
 use cosmwasm_std::{Storage, Uint128};
 use cw_storage_plus::Map;
 
-use crate::core::{constants::REMAINING_SECURITIES_KEY, error::ContractError, security::Security};
+use crate::core::{constants::REMAINING_SECURITIES_KEY, error::ContractError};
 
 // We store our securities that we configured on initialization
 pub const REMAINING_SECURITIES: Map<String, u128> = Map::new(REMAINING_SECURITIES_KEY);
@@ -16,6 +16,26 @@ pub fn set(
     remaining: u128,
 ) -> Result<(), ContractError> {
     Ok(REMAINING_SECURITIES.save(storage, security_name, &remaining)?)
+}
+
+pub fn has_amount(
+    storage: &mut dyn Storage,
+    security_name: String,
+    amount: u128,
+) -> Result<bool, ContractError> {
+    let mut can_subtract = true;
+
+    if !REMAINING_SECURITIES.has(storage, security_name.clone()) {
+        return Ok(false);
+    }
+
+    let security_amount = Uint128::new(REMAINING_SECURITIES.load(storage, security_name)?);
+
+    if security_amount.checked_sub(Uint128::new(amount)).is_err() {
+        can_subtract = false
+    };
+
+    Ok(can_subtract)
 }
 
 pub fn subtract(
