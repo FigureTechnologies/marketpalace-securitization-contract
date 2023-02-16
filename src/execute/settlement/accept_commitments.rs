@@ -105,7 +105,7 @@ mod tests {
         let commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
 
         track_paid_capital(deps.as_mut().storage, commitment.clone()).unwrap();
-        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp).unwrap();
+        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp);
         for capital in &paid_capital {
             assert_eq!(0, capital.amount);
         }
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(CommitmentState::ACCEPTED, added_commitment.state);
 
         // We need to check capital
-        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp).unwrap();
+        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp);
         for capital in &paid_capital {
             assert_eq!(0, capital.amount);
         }

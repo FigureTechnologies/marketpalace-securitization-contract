@@ -43,6 +43,9 @@ pub enum ContractError {
 
     #[error("The capital denom is invalid")]
     InvalidCapitalDenom {},
+
+    #[error("The deposit exceeds the commitment amount")]
+    ExcessiveDeposit {},
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {

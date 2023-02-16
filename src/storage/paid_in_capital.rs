@@ -7,8 +7,12 @@ use crate::core::{
 
 pub const PAID_IN_CAPITAL: Map<Addr, Vec<SecurityCommitment>> = Map::new(PAID_IN_CAPITAL_KEY);
 
-pub fn get(storage: &dyn Storage, lp: Addr) -> Result<Vec<SecurityCommitment>, ContractError> {
-    Ok(PAID_IN_CAPITAL.load(storage, lp)?)
+pub fn get(storage: &dyn Storage, lp: Addr) -> Vec<SecurityCommitment> {
+    let capital = PAID_IN_CAPITAL.load(storage, lp);
+    match capital {
+        Ok(capital) => capital,
+        Err(_) => vec![],
+    }
 }
 
 pub fn set(
@@ -146,7 +150,7 @@ mod tests {
         ];
 
         set(deps.as_mut().storage, lp.clone(), &commitments).unwrap();
-        let obtained = get(&deps.storage, lp).unwrap();
+        let obtained = get(&deps.storage, lp);
 
         assert_eq!(commitments, obtained);
     }
@@ -155,7 +159,7 @@ mod tests {
     fn test_get_invalid() {
         let deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("lp");
-        get(&deps.storage, lp).unwrap_err();
+        assert_eq!(Vec::<SecurityCommitment>::new(), get(&deps.storage, lp));
     }
 
     #[test]
@@ -173,7 +177,7 @@ mod tests {
             },
         ];
         add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
-        let obtained = get(&deps.storage, lp).unwrap();
+        let obtained = get(&deps.storage, lp);
 
         assert_eq!(commitments, obtained);
     }
@@ -194,7 +198,7 @@ mod tests {
         ];
         add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
         add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
-        let obtained = get(&deps.storage, lp).unwrap();
+        let obtained = get(&deps.storage, lp);
 
         let expected = vec![
             SecurityCommitment {

@@ -61,7 +61,7 @@ fn process_withdraw(
     let capital = available_capital::remove_capital(storage, lp.clone())?;
     let mut messages = vec![];
 
-    if is_settling(storage, &commitment)? {
+    if is_settling(storage, &commitment) {
         commitment.state = CommitmentState::SETTLED;
 
         messages.extend(transfer_investment_tokens(&commitment, contract)?);
@@ -91,9 +91,9 @@ fn transfer_investment_tokens(
     Ok(messages)
 }
 
-fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> Result<bool, ContractError> {
-    let paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone())?;
-    Ok(paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED)
+fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
+    let paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone());
+    paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED
 }
 
 #[cfg(test)]
@@ -132,7 +132,7 @@ mod tests {
             &settlement_tester.security_commitments,
         )
         .unwrap();
-        let settling = is_settling(&deps.storage, &commitment).unwrap();
+        let settling = is_settling(&deps.storage, &commitment);
         assert_eq!(true, settling);
     }
 
@@ -150,7 +150,7 @@ mod tests {
             &settlement_tester.security_commitments,
         )
         .unwrap();
-        let settling = is_settling(&deps.storage, &commitment).unwrap();
+        let settling = is_settling(&deps.storage, &commitment);
         assert_eq!(false, settling);
     }
 
@@ -160,7 +160,8 @@ mod tests {
         let settlement_tester = SettlementTester::new();
         let lp = Addr::unchecked("bad address");
         let commitment = Commitment::new(lp.clone(), settlement_tester.security_commitments);
-        is_settling(&deps.storage, &commitment).unwrap_err();
+        let settling = is_settling(&deps.storage, &commitment);
+        assert_eq!(false, settling);
     }
 
     #[test]
@@ -175,7 +176,7 @@ mod tests {
         let mut capital = commitment.clone();
         capital.clear_amounts();
         paid_in_capital::set(deps.as_mut().storage, lp.clone(), &capital.commitments).unwrap();
-        let settling = is_settling(&deps.storage, &commitment).unwrap();
+        let settling = is_settling(&deps.storage, &commitment);
         assert_eq!(false, settling);
     }
 
