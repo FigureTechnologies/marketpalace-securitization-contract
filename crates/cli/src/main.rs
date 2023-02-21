@@ -1,5 +1,6 @@
 use clap::{command, Arg, Command};
 use contract;
+use cosmwasm_std::Addr;
 
 fn main() {
     let mut cli = command!()
@@ -73,11 +74,19 @@ fn main() {
         Some(("transaction", tx_matches)) => {
             match tx_matches.subcommand() {
                 Some(("initialize", init_matches)) => {
-                    /*let contract::core::msg::InstantiateMsg{
-                        gp: init_matches: capital_denom,
-
-                    };*/
-                    println!("Running init");
+                    let gp: String = init_matches.get_one::<String>("gp").unwrap().clone();
+                    let denom: String = init_matches
+                        .get_one::<String>("capital_denom")
+                        .unwrap()
+                        .clone();
+                    let message = contract::core::msg::InstantiateMsg {
+                        gp: Addr::unchecked(gp),
+                        securities: vec![],
+                        capital_denom: denom,
+                        rules: vec![],
+                    };
+                    let json = serde_json::to_string(&message).unwrap();
+                    println!("{}", json.trim());
                 }
                 Some(("propose_commitment", _init_matches)) => {
                     println!("Running propose");

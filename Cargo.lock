@@ -114,6 +114,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "contract",
+ "cosmwasm-std",
+ "serde_json",
 ]
 
 [[package]]
