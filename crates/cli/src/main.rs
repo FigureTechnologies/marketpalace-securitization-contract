@@ -1,4 +1,5 @@
 use clap::{command, Arg, Command};
+use contract;
 
 fn main() {
     let mut cli = command!()
@@ -71,7 +72,11 @@ fn main() {
         },
         Some(("transaction", tx_matches)) => {
             match tx_matches.subcommand() {
-                Some(("initialize", _init_matches)) => {
+                Some(("initialize", init_matches)) => {
+                    /*let contract::core::msg::InstantiateMsg{
+                        gp: init_matches: capital_denom,
+
+                    };*/
                     println!("Running init");
                 }
                 Some(("propose_commitment", _init_matches)) => {

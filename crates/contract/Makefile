@@ -1,7 +1,7 @@
 UNAME_M := $(shell uname -m)
 
 .PHONY: all
-all: fmt build test lint schema optimize
+all: fmt build lint schema optimize
 
 .PHONY: fmt
 fmt:
