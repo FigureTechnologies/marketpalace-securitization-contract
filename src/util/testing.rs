@@ -70,25 +70,29 @@ impl Default for SettlementTester {
     }
 }
 
+pub fn create_test_securities() -> Vec<Security> {
+    vec![
+        Security {
+            name: "Security1".to_string(),
+            amount: 1000,
+            security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+            minimum_amount: 10,
+            price_per_unit: Coin::new(100, "denom".to_string()),
+        },
+        Security {
+            name: "Security2".to_string(),
+            amount: 1000,
+            security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+            minimum_amount: 10,
+            price_per_unit: Coin::new(100, "denom".to_string()),
+        },
+    ]
+}
+
 pub fn test_init_message() -> InstantiateMsg {
     InstantiateMsg {
         gp: Addr::unchecked("gp"),
-        securities: vec![
-            Security {
-                name: "Security1".to_string(),
-                amount: 1000,
-                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 10,
-                price_per_unit: Coin::new(100, "denom".to_string()),
-            },
-            Security {
-                name: "Security2".to_string(),
-                amount: 1000,
-                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 10,
-                price_per_unit: Coin::new(100, "denom".to_string()),
-            },
-        ],
+        securities: create_test_securities(),
         capital_denom: "denom".to_string(),
         rules: vec![],
     }
