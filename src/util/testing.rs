@@ -1,17 +1,24 @@
+use std::borrow::BorrowMut;
+
 use cosmwasm_std::{
-    testing::{mock_env, mock_info},
-    Addr, Coin, Storage,
+    testing::{mock_env, mock_info, MockApi, MockStorage},
+    Addr, Coin, Env, OwnedDeps, Storage,
 };
+use provwasm_mocks::ProvenanceMockQuerier;
+use provwasm_std::ProvenanceQuery;
 
 use crate::{
-    contract::instantiate,
+    contract::{execute, instantiate},
     core::{
         aliases::{ProvDeps, ProvDepsMut, ProvTxResponse},
-        msg::InstantiateMsg,
+        msg::{ExecuteMsg, InstantiateMsg},
         security::{FundSecurity, Security, SecurityCommitment},
     },
+    execute::settlement::propose_commitment,
     storage::state::{self, State},
 };
+
+#[cfg(tests)]
 
 pub fn setup_tests() {
     // We want things added to STATE
@@ -71,14 +78,14 @@ pub fn test_init_message() -> InstantiateMsg {
                 name: "Security1".to_string(),
                 amount: 1000,
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 100,
+                minimum_amount: 10,
                 price_per_unit: Coin::new(100, "denom".to_string()),
             },
             Security {
                 name: "Security2".to_string(),
                 amount: 1000,
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 100,
+                minimum_amount: 10,
                 price_per_unit: Coin::new(100, "denom".to_string()),
             },
         ],
@@ -93,4 +100,70 @@ pub fn instantiate_contract(deps: ProvDepsMut) -> ProvTxResponse {
     let msg = test_init_message();
 
     instantiate(deps, env, info, msg)
+}
+
+pub fn test_security_commitments() -> Vec<SecurityCommitment> {
+    vec![
+        SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: 100,
+        },
+        SecurityCommitment {
+            name: "Security2".to_string(),
+            amount: 100,
+        },
+    ]
+}
+
+pub fn test_propose_message() -> ExecuteMsg {
+    ExecuteMsg::ProposeCommitment {
+        securities: test_security_commitments(),
+    }
+}
+
+pub fn test_accept_message(lps: &[&str]) -> ExecuteMsg {
+    ExecuteMsg::AcceptCommitment {
+        commitments: lps.iter().map(|lp| Addr::unchecked(lp.clone())).collect(),
+    }
+}
+
+pub fn propose_test_commitment(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
+    let info = mock_info(sender, &[]);
+    let msg = test_propose_message();
+    execute(deps, env, info, msg)
+}
+
+pub fn accept_test_commitment(
+    deps: ProvDepsMut,
+    env: Env,
+    sender: &str,
+    lps: &[&str],
+) -> ProvTxResponse {
+    let info = mock_info(sender, &[]);
+    let msg = test_accept_message(lps);
+    execute(deps, env, info, msg)
+}
+
+pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
+
+pub fn create_testing_commitments(deps: &mut MockDeps) {
+    // Multiple LPs propose
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp1").expect("should be able to propose");
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp2").expect("should be able to propose");
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp3").expect("should be able to propose");
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp4").expect("should be able to propose");
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp5").expect("should be able to propose");
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp6").expect("should be able to propose");
+
+    // Accept 1,2,3
+    accept_test_commitment(deps.as_mut(), mock_env(), "gp", &vec!["lp1", "lp2", "lp3"])
+        .expect("should be able to accept defined lps");
+
+    // Have a deposit for 1,2
+
+    // We have 3 pending
+    // We have 2 accepted
+    // We have 1 settled
+
+    // We need to accept
 }

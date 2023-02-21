@@ -1,14 +1,8 @@
-use cosmwasm_std::{from_binary, testing::mock_env, to_binary, Storage};
-use provwasm_mocks::mock_dependencies;
+use cosmwasm_std::{to_binary, Storage};
 
 use crate::{
-    contract::query,
-    core::{
-        aliases::ProvQueryResponse,
-        msg::{QueryMsg, QueryStateResponse},
-    },
+    core::{aliases::ProvQueryResponse, msg::QueryStateResponse},
     storage,
-    util::testing::{instantiate_contract, test_init_message},
 };
 
 pub fn query_state(storage: &dyn Storage) -> ProvQueryResponse {
@@ -23,22 +17,34 @@ pub fn query_state(storage: &dyn Storage) -> ProvQueryResponse {
     Ok(to_binary(&response)?)
 }
 
-#[test]
-fn test_has_correct_state() {
-    let mut deps = mock_dependencies(&[]);
-    instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
-    let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryState {}).unwrap();
-    let value: QueryStateResponse = from_binary(&res).unwrap();
-    let expected = test_init_message();
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::{from_binary, testing::mock_env};
+    use provwasm_mocks::mock_dependencies;
 
-    let securities: Vec<String> = expected
-        .securities
-        .iter()
-        .map(|security| security.name.clone())
-        .collect();
+    use crate::{
+        contract::query,
+        core::msg::{QueryMsg, QueryStateResponse},
+        util::testing::{instantiate_contract, test_init_message},
+    };
 
-    assert_eq!(expected.gp, value.gp);
-    assert_eq!(expected.capital_denom, value.capital_denom);
-    assert_eq!(expected.rules, value.rules);
-    assert_eq!(securities, value.securities);
+    #[test]
+    fn test_has_correct_state() {
+        let mut deps = mock_dependencies(&[]);
+        instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryState {}).unwrap();
+        let value: QueryStateResponse = from_binary(&res).unwrap();
+        let expected = test_init_message();
+
+        let securities: Vec<String> = expected
+            .securities
+            .iter()
+            .map(|security| security.name.clone())
+            .collect();
+
+        assert_eq!(expected.gp, value.gp);
+        assert_eq!(expected.capital_denom, value.capital_denom);
+        assert_eq!(expected.rules, value.rules);
+        assert_eq!(securities, value.securities);
+    }
 }
