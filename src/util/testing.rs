@@ -1,7 +1,15 @@
-use cosmwasm_std::{Addr, Storage};
+use cosmwasm_std::{
+    testing::{mock_env, mock_info},
+    Addr, Coin, Storage,
+};
 
 use crate::{
-    core::security::SecurityCommitment,
+    contract::instantiate,
+    core::{
+        aliases::{ProvDeps, ProvDepsMut, ProvTxResponse},
+        msg::InstantiateMsg,
+        security::{FundSecurity, Security, SecurityCommitment},
+    },
     storage::state::{self, State},
 };
 
@@ -53,4 +61,36 @@ impl Default for SettlementTester {
     fn default() -> Self {
         Self::new()
     }
+}
+
+pub fn test_init_message() -> InstantiateMsg {
+    InstantiateMsg {
+        gp: Addr::unchecked("gp"),
+        securities: vec![
+            Security {
+                name: "Security1".to_string(),
+                amount: 1000,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 100,
+                price_per_unit: Coin::new(100, "denom".to_string()),
+            },
+            Security {
+                name: "Security2".to_string(),
+                amount: 1000,
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: 100,
+                price_per_unit: Coin::new(100, "denom".to_string()),
+            },
+        ],
+        capital_denom: "denom".to_string(),
+        rules: vec![],
+    }
+}
+
+pub fn instantiate_contract(deps: ProvDepsMut) -> ProvTxResponse {
+    let env = mock_env();
+    let info = mock_info("sender", &[]);
+    let msg = test_init_message();
+
+    instantiate(deps, env, info, msg)
 }
