@@ -27,10 +27,7 @@ mod tests {
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryVersion {}).unwrap();
         let value: QueryVersionResponse = from_binary(&res).unwrap();
-        assert_eq!(
-            "marketpalace-securitization-contract".to_string(),
-            value.contract_version.contract
-        );
+        assert_eq!("contract".to_string(), value.contract_version.contract);
         assert_eq!("1.0.0".to_string(), value.contract_version.version);
     }
 }

@@ -1,7 +1,7 @@
 UNAME_M := $(shell uname -m)
 
 .PHONY: all
-all: fmt build lint schema optimize
+all: fmt build test lint schema
 
 .PHONY: fmt
 fmt:
@@ -9,11 +9,11 @@ fmt:
 
 .PHONY: build
 build:
-	@cargo wasm
+	@cargo wasm -p contract
 
 .PHONY: test
 test:
-	@RUST_BACKTRACE=1 cargo unit-test
+	@RUST_BACKTRACE=1 cargo unit-test -p contract
 
 .PHONY: lint
 lint:
@@ -27,12 +27,12 @@ schema:
 optimize:
 ifeq ($(UNAME_M),arm64)
 	@docker run --rm -v $(CURDIR):/code \
-		--mount type=volume,source="marketpalace_securitization_cache",target=/code/target \
+		--mount type=volume,source="contract_cache",target=/code/target \
 		--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
 		cosmwasm/rust-optimizer-arm64:0.12.8
 else
 	@docker run --rm -v $(CURDIR):/code \
-		--mount type=volume,source="marketpalace_securitization_cache",target=/code/target \
+		--mount type=volume,source="contract_cache",target=/code/target \
 		--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
 		cosmwasm/rust-optimizer:0.12.8
 endif
