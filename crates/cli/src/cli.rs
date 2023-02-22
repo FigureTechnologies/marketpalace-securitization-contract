@@ -110,7 +110,7 @@ impl Cli {
                         tx::accept_commitments::create(&accepted);
                     }
                     Some(("deposit_commitment", _init_matches)) => {
-                        println!("Running deposit");
+                        tx::deposit_commitment::create();
                     }
                     Some(("withdraw_commitments", _init_matches)) => {
                         tx::withdraw_commitments::create();
