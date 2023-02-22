@@ -1,6 +1,61 @@
+use std::{
+    io::{stdout, Write},
+    str::FromStr,
+};
+
 use clap::{command, Arg, Command};
-use contract;
-use cosmwasm_std::Addr;
+use contract::{
+    self,
+    core::security::{FundSecurity, PrimarySecurity, Security, SecurityType, TrancheSecurity},
+};
+use cosmwasm_std::{Addr, Coin, Uint128};
+
+fn get_input(text: &str) -> String {
+    let mut line = String::new();
+    print!("{}", text);
+    stdout().flush().expect("should be able to flush");
+    std::io::stdin().read_line(&mut line).unwrap();
+    stdout().flush().expect("should be able to flush");
+    line.trim().to_string()
+}
+
+fn get_int_input(text: &str) -> u128 {
+    let input = get_input(text);
+    Uint128::from_str(input.as_str())
+        .expect("Should be able to parse input as u128.")
+        .u128()
+}
+
+fn collect_securities(capital_denom: &String) -> Vec<Security> {
+    let mut securities = vec![];
+
+    let security_count = get_int_input("Enter number of securities: ");
+
+    for _ in 0..security_count {
+        let name = get_input("Enter security name: ");
+        let security_type =
+            match get_input("Enter security type (0 Tranche, 1 Primary, 2 Fund): ").as_str() {
+                "0" => SecurityType::Tranche(TrancheSecurity {}),
+                "1" => SecurityType::Primary(PrimarySecurity {}),
+                "2" => SecurityType::Fund(FundSecurity {}),
+                _ => panic!("Unexpected security type"),
+            };
+        let amount = get_int_input("Enter amount of security: ");
+        let minimum_amount = get_int_input("Enter minimum amount of security: ");
+        let price = get_int_input("Enter price per unit of security: ");
+        let price_per_unit = Coin::new(price, capital_denom);
+
+        securities.push(Security {
+            name,
+            amount,
+            security_type,
+            minimum_amount,
+            price_per_unit,
+        });
+    }
+
+    securities
+}
 
 fn main() {
     let mut cli = command!()
@@ -79,9 +134,10 @@ fn main() {
                         .get_one::<String>("capital_denom")
                         .unwrap()
                         .clone();
+                    let securities = collect_securities(&denom);
                     let message = contract::core::msg::InstantiateMsg {
                         gp: Addr::unchecked(gp),
-                        securities: vec![],
+                        securities: securities,
                         capital_denom: denom,
                         rules: vec![],
                     };
