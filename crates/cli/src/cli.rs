@@ -1,6 +1,9 @@
 use clap::{command, value_parser, Arg, ArgAction, ArgMatches, Command};
 
-use crate::tx;
+use crate::{
+    query::{self},
+    tx,
+};
 
 pub struct Cli {
     cli: Command,
@@ -18,7 +21,35 @@ impl Cli {
                     Command::new("query")
                         .alias("q")
                         .arg_required_else_help(true)
-                        .about("Generate json for a query belonging to this smart contract."),
+                        .about("Generate json for a query belonging to this smart contract.")
+                        .subcommand(Command::new("version").about("Gets the contract's version."))
+                        .subcommand(Command::new("state").about("Gets the state of the contract."))
+                        .subcommand(Command::new("pending").about("Gets the pending commitments"))
+                        .subcommand(
+                            Command::new("investor")
+                            .about("Gets the status of the investor's commitment and their paid in capital.")
+                            .arg(
+                                Arg::new("address")
+                                .short('a')
+                                .long("address")
+                                .required(true)
+                                .help("The address of the investor")
+                            )
+                        )
+                        .subcommand(
+                            Command::new("securities")
+                            .about("Gets the configured settings of the listed securities")
+                            .arg(
+                                Arg::new("securities")
+                                    .action(ArgAction::Append)
+                                    .value_parser(value_parser!(String))
+                                    .short('s')
+                                    .long("securities")
+                                    .required(true)
+                                    .value_delimiter(',')
+                                    .help("The names of the requested securities separated by commas."),
+                            )
+                        )
                 )
                 .subcommand(
                     Command::new("transaction")
@@ -86,6 +117,24 @@ impl Cli {
     pub fn handle_input(&mut self) {
         match self.args.subcommand() {
             Some(("query", query_matches)) => match query_matches.subcommand() {
+                Some(("version", _version_matches)) => query::version::create(),
+                Some(("state", _state_matches)) => query::state::create(),
+                Some(("pending", _pending_matches)) => query::pending_commitments::create(),
+                Some(("investor", investor_matches)) => {
+                    let investor: String = investor_matches
+                        .get_one::<String>("investor")
+                        .unwrap()
+                        .clone();
+                    query::investor::create(&investor);
+                }
+                Some(("securities", security_matches)) => {
+                    let securities = security_matches
+                        .get_many::<String>("securities")
+                        .unwrap()
+                        .map(|value| value.clone())
+                        .collect::<Vec<_>>();
+                    query::securities::create(securities);
+                }
                 _ => println!("Unrecognized query"),
             },
             Some(("transaction", tx_matches)) => {
