@@ -1,6 +1,6 @@
-use clap::{command, Arg, ArgMatches, Command};
+use clap::{command, value_parser, Arg, ArgAction, ArgMatches, Command};
 
-use crate::instantiate;
+use crate::tx;
 
 pub struct Cli {
     cli: Command,
@@ -55,9 +55,12 @@ impl Cli {
                                 .about("Create an initialize transaction")
                                 .arg(
                                     Arg::new("commits")
+                                        .action(ArgAction::Append)
+                                        .value_parser(value_parser!(String))
                                         .short('c')
                                         .long("commits")
                                         .required(true)
+                                        .value_delimiter(',')
                                         .help("The addresses of one or more commits"),
                                 ),
                         )
@@ -93,13 +96,18 @@ impl Cli {
                             .get_one::<String>("capital_denom")
                             .unwrap()
                             .clone();
-                        instantiate::create(&gp, denom);
+                        tx::instantiate::create(&gp, denom);
                     }
-                    Some(("propose_commitment", _init_matches)) => {
-                        println!("Running propose");
+                    Some(("propose_commitment", _propose_matches)) => {
+                        tx::propose_commitment::create();
                     }
-                    Some(("accept_commitments", _init_matches)) => {
-                        println!("Running accept");
+                    Some(("accept_commitments", accept_matches)) => {
+                        let accepted = accept_matches
+                            .get_many::<String>("commits")
+                            .unwrap()
+                            .map(|value| value.clone())
+                            .collect::<Vec<_>>();
+                        tx::accept_commitments::create(&accepted);
                     }
                     Some(("deposit_commitment", _init_matches)) => {
                         println!("Running deposit");

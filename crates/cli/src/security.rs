@@ -1,5 +1,5 @@
 use contract::core::security::{
-    FundSecurity, PrimarySecurity, Security, SecurityType, TrancheSecurity,
+    FundSecurity, PrimarySecurity, Security, SecurityCommitment, SecurityType, TrancheSecurity,
 };
 use cosmwasm_std::Coin;
 
@@ -26,4 +26,10 @@ pub fn create_from_input(capital_denom: &str) -> Security {
         minimum_amount,
         price_per_unit,
     }
+}
+
+pub fn create_commitment_from_input() -> SecurityCommitment {
+    let name = user::get_input("Enter security name: ");
+    let amount = user::get_int_input("Enter amount of security: ");
+    SecurityCommitment { name, amount }
 }

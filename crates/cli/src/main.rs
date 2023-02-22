@@ -1,8 +1,9 @@
 use cli::Cli;
 
 mod cli;
-mod instantiate;
+mod query;
 mod security;
+mod tx;
 mod user;
 
 fn main() {
