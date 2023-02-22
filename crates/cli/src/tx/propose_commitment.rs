@@ -2,10 +2,12 @@ use contract::core::{msg::ExecuteMsg, security::SecurityCommitment};
 
 use crate::{security, user};
 
-pub fn create() -> ExecuteMsg {
-    ExecuteMsg::ProposeCommitment {
+pub fn create() {
+    let message = ExecuteMsg::ProposeCommitment {
         securities: collect_commitments(),
-    }
+    };
+    let json = serde_json::to_string(&message).unwrap();
+    println!("{}", json.trim());
 }
 
 fn collect_commitments() -> Vec<SecurityCommitment> {

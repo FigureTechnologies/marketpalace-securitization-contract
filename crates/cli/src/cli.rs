@@ -113,7 +113,7 @@ impl Cli {
                         println!("Running deposit");
                     }
                     Some(("withdraw_commitments", _init_matches)) => {
-                        println!("Running withdraw");
+                        tx::withdraw_commitments::create();
                     }
                     _ => println!("Unrecognized transaction"),
                 };
