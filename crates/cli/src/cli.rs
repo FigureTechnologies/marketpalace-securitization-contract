@@ -40,11 +40,11 @@ impl Cli {
                             Command::new("securities")
                             .about("Gets the configured settings of the listed securities")
                             .arg(
-                                Arg::new("securities")
+                                Arg::new("names")
                                     .action(ArgAction::Append)
                                     .value_parser(value_parser!(String))
-                                    .short('s')
-                                    .long("securities")
+                                    .short('n')
+                                    .long("names")
                                     .required(true)
                                     .value_delimiter(',')
                                     .help("The names of the requested securities separated by commas."),
@@ -122,14 +122,14 @@ impl Cli {
                 Some(("pending", _pending_matches)) => query::pending_commitments::create(),
                 Some(("investor", investor_matches)) => {
                     let investor: String = investor_matches
-                        .get_one::<String>("investor")
+                        .get_one::<String>("address")
                         .unwrap()
                         .clone();
                     query::investor::create(&investor);
                 }
                 Some(("securities", security_matches)) => {
                     let securities = security_matches
-                        .get_many::<String>("securities")
+                        .get_many::<String>("names")
                         .unwrap()
                         .map(|value| value.clone())
                         .collect::<Vec<_>>();
