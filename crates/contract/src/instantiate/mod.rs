@@ -40,7 +40,7 @@ pub fn handle(
             new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
         messages.append(&mut investment_marker);
         securities::set(deps.storage, security)?;
-        remaining_securities::set(deps.storage, security.name.clone(), security.amount)?;
+        remaining_securities::set(deps.storage, security.name.clone(), security.amount.u128())?;
     }
 
     Ok(Response::default()
@@ -69,11 +69,11 @@ fn new_active_marker(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Attribute;
     use cosmwasm_std::{
         testing::{mock_env, mock_info},
         Addr, Coin, StdError,
     };
+    use cosmwasm_std::{Attribute, Uint128};
     use cw2::get_contract_version;
     use provwasm_mocks::mock_dependencies;
     use provwasm_std::{
@@ -145,15 +145,15 @@ mod tests {
         let securities = vec![
             Security {
                 name: "Tranche 1".to_string(),
-                amount: 1000,
-                minimum_amount: 100,
+                amount: Uint128::new(1000),
+                minimum_amount: Uint128::new(100),
                 price_per_unit: Coin::new(100, "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
-                amount: 1000,
-                minimum_amount: 100,
+                amount: Uint128::new(1000),
+                minimum_amount: Uint128::new(100),
                 price_per_unit: Coin::new(100, "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
@@ -196,7 +196,7 @@ mod tests {
             assert_eq!(security, saved);
             let remaining =
                 remaining_securities::get(&deps.storage, security.name.clone()).unwrap();
-            assert_eq!(security.amount, remaining);
+            assert_eq!(security.amount, Uint128::new(remaining));
         }
     }
 

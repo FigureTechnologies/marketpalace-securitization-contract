@@ -12,7 +12,10 @@ impl Validate for ExecuteMsg {
                 if securities.is_empty() {
                     return Err(ContractError::EmptySecurityCommitmentList {});
                 }
-                if securities.iter().any(|commitment| commitment.amount == 0) {
+                if securities
+                    .iter()
+                    .any(|commitment| commitment.amount.is_zero())
+                {
                     return Err(ContractError::InvalidSecurityCommitmentAmount {});
                 }
             }
@@ -25,7 +28,10 @@ impl Validate for ExecuteMsg {
                 if securities.is_empty() {
                     return Err(ContractError::EmptySecurityCommitmentList {});
                 }
-                if securities.iter().any(|commitment| commitment.amount == 0) {
+                if securities
+                    .iter()
+                    .any(|commitment| commitment.amount.is_zero())
+                {
                     return Err(ContractError::InvalidSecurityCommitmentAmount {});
                 }
             }
@@ -74,7 +80,7 @@ mod tests {
         let propose = ExecuteMsg::ProposeCommitment {
             securities: vec![SecurityCommitment {
                 name: "test".to_string(),
-                amount: 0,
+                amount: Uint128::new(0),
             }],
         };
         let output = propose.validate().unwrap_err();
@@ -87,7 +93,7 @@ mod tests {
         let propose = ExecuteMsg::ProposeCommitment {
             securities: vec![SecurityCommitment {
                 name: "test".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             }],
         };
         propose.validate().expect("propose should pass validation");
@@ -124,7 +130,7 @@ mod tests {
         let msg = ExecuteMsg::DepositCommitment {
             securities: vec![SecurityCommitment {
                 name: "test".to_string(),
-                amount: 0,
+                amount: Uint128::new(0),
             }],
         };
         let output = msg.validate().unwrap_err();
@@ -137,7 +143,7 @@ mod tests {
         let msg = ExecuteMsg::DepositCommitment {
             securities: vec![SecurityCommitment {
                 name: "test".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             }],
         };
         msg.validate().expect("deposit should pass validation");
@@ -154,7 +160,7 @@ mod tests {
         let msg = ExecuteMsg::DepositCommitment {
             securities: vec![SecurityCommitment {
                 name: "test".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             }],
         };
         let funds = vec![];
@@ -168,7 +174,7 @@ mod tests {
         let msg = ExecuteMsg::DepositCommitment {
             securities: vec![SecurityCommitment {
                 name: "test".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             }],
         };
         let funds = vec![Coin {

@@ -28,7 +28,7 @@ mod tests {
     use crate::{
         contract::query,
         core::msg::QuerySecuritizationsResponse,
-        util::testing::{create_test_securities, instantiate_contract, test_security_commitments},
+        util::testing::{create_test_securities, instantiate_contract},
     };
 
     #[test]

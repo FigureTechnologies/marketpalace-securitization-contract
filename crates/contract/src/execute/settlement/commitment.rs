@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 
 use crate::core::security::SecurityCommitment;
 
@@ -21,7 +21,7 @@ impl Commitment {
 
     pub fn clear_amounts(&mut self) {
         for commitment in &mut self.commitments {
-            commitment.amount = 0;
+            commitment.amount = Uint128::zero();
         }
     }
 }
@@ -35,7 +35,7 @@ pub enum CommitmentState {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Addr;
+    use cosmwasm_std::{Addr, Uint128};
 
     use crate::{
         core::security::SecurityCommitment, execute::settlement::commitment::CommitmentState,
@@ -48,14 +48,14 @@ mod tests {
         let lp = Addr::unchecked("address");
         let securities = vec![SecurityCommitment {
             name: "security 1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         }];
         let mut commitment = Commitment::new(lp.clone(), securities.clone());
 
         commitment.clear_amounts();
         assert_eq!(securities.len(), commitment.commitments.len());
         for security in &commitment.commitments {
-            assert_eq!(0, security.amount);
+            assert_eq!(0, security.amount.u128());
         }
     }
 
@@ -64,7 +64,7 @@ mod tests {
         let lp = Addr::unchecked("address");
         let securities = vec![SecurityCommitment {
             name: "security 1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         }];
         let commitment = Commitment::new(lp.clone(), securities.clone());
 

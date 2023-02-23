@@ -23,7 +23,7 @@ pub fn set(storage: &mut dyn Storage, security: &Security) -> Result<(), Contrac
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Coin;
+    use cosmwasm_std::{Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -45,9 +45,9 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let security = Security {
             name: "Security1".to_string(),
-            amount: 100,
+            amount: Uint128::new(100),
             security_type: SecurityType::Tranche(TrancheSecurity {}),
-            minimum_amount: 10,
+            minimum_amount: Uint128::new(10),
             price_per_unit: Coin::new(100, "denom".to_string()),
         };
         set(deps.as_mut().storage, &security).unwrap();

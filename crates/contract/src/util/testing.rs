@@ -1,8 +1,6 @@
-use std::borrow::BorrowMut;
-
 use cosmwasm_std::{
     testing::{mock_env, mock_info, MockApi, MockStorage},
-    Addr, Coin, Env, OwnedDeps, Storage,
+    Addr, Coin, Env, OwnedDeps, Storage, Uint128,
 };
 use provwasm_mocks::ProvenanceMockQuerier;
 use provwasm_std::ProvenanceQuery;
@@ -10,11 +8,10 @@ use provwasm_std::ProvenanceQuery;
 use crate::{
     contract::{execute, instantiate},
     core::{
-        aliases::{ProvDeps, ProvDepsMut, ProvTxResponse},
+        aliases::{ProvDepsMut, ProvTxResponse},
         msg::{ExecuteMsg, InstantiateMsg},
         security::{FundSecurity, Security, SecurityCommitment},
     },
-    execute::settlement::propose_commitment,
     storage::state::{self, State},
 };
 
@@ -58,7 +55,7 @@ impl SettlementTester {
         for _ in 0..amount {
             self.security_commitments.push(SecurityCommitment {
                 name: format!("Security{}", self.security_commitments.len() + 1),
-                amount: (self.security_commitments.len() + 11) as u128,
+                amount: Uint128::new((self.security_commitments.len() + 11) as u128),
             });
         }
     }
@@ -74,16 +71,16 @@ pub fn create_test_securities() -> Vec<Security> {
     vec![
         Security {
             name: "Security1".to_string(),
-            amount: 1000,
+            amount: Uint128::new(1000),
             security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-            minimum_amount: 10,
+            minimum_amount: Uint128::new(10),
             price_per_unit: Coin::new(100, "denom".to_string()),
         },
         Security {
             name: "Security2".to_string(),
-            amount: 1000,
+            amount: Uint128::new(1000),
             security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-            minimum_amount: 10,
+            minimum_amount: Uint128::new(10),
             price_per_unit: Coin::new(100, "denom".to_string()),
         },
     ]
@@ -110,11 +107,11 @@ pub fn test_security_commitments() -> Vec<SecurityCommitment> {
     vec![
         SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 100,
+            amount: Uint128::new(100),
         },
         SecurityCommitment {
             name: "Security2".to_string(),
-            amount: 100,
+            amount: Uint128::new(100),
         },
     ]
 }
@@ -163,7 +160,7 @@ pub fn deposit_test(
     let funds = deposit
         .iter()
         .fold(Coin::new(0, "denom".to_string()), |acc, commit| -> Coin {
-            Coin::new((commit.amount * 100) + acc.amount.u128(), acc.denom)
+            Coin::new((commit.amount.u128() * 100) + acc.amount.u128(), acc.denom)
         });
     let info = mock_info(sender, &vec![funds]);
     let msg = test_deposit_message(deposit);
@@ -196,7 +193,7 @@ pub fn create_testing_commitments(deps: &mut MockDeps) {
 
     let mut partial_commitments = test_security_commitments();
     for partial_commitment in &mut partial_commitments {
-        partial_commitment.amount = partial_commitment.amount / 2;
+        partial_commitment.amount = partial_commitment.amount / Uint128::new(2);
     }
 
     deposit_test(deps.as_mut(), mock_env(), "lp2", &partial_commitments)

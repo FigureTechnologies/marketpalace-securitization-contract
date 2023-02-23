@@ -78,10 +78,10 @@ fn transfer_investment_tokens(
     let mut messages = vec![];
     for security in &commitment.commitments {
         let investment_name = to::security_to_investment_name(&security.name, contract);
-        let mint_msg = mint_marker_supply(security.amount, &investment_name)?;
+        let mint_msg = mint_marker_supply(security.amount.u128(), &investment_name)?;
         let withdraw_msg = withdraw_coins(
             &investment_name,
-            security.amount,
+            security.amount.u128(),
             &investment_name,
             commitment.lp.clone(),
         )?;
@@ -191,10 +191,10 @@ mod tests {
         let mut expected = vec![];
         for commitment in &commitment.commitments {
             let investment_name = to::security_to_investment_name(&commitment.name, &contract);
-            let mint_msg = mint_marker_supply(commitment.amount, &investment_name).unwrap();
+            let mint_msg = mint_marker_supply(commitment.amount.u128(), &investment_name).unwrap();
             let withdraw_msg = withdraw_coins(
                 &investment_name,
-                commitment.amount,
+                commitment.amount.u128(),
                 &investment_name,
                 lp.clone(),
             )
@@ -255,11 +255,11 @@ mod tests {
             &vec![
                 SecurityCommitment {
                     name: settlement_tester.security_commitments[0].name.clone(),
-                    amount: 1,
+                    amount: Uint128::new(1),
                 },
                 SecurityCommitment {
                     name: settlement_tester.security_commitments[1].name.clone(),
-                    amount: 1,
+                    amount: Uint128::new(1),
                 },
             ],
         )

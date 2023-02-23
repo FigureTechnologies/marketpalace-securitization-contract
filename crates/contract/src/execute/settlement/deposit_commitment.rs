@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Coin, Response, Uint128};
+use cosmwasm_std::{Addr, Coin, Response};
 
 use crate::{
     core::{
@@ -144,7 +144,7 @@ fn calculate_funds(
     for security_commitment in initial_drawdown {
         let security = securities::get(deps.storage, security_commitment.name.clone())?;
 
-        let cost = Uint128::from(security_commitment.amount) * security.price_per_unit.amount;
+        let cost = security_commitment.amount * security.price_per_unit.amount;
         sum.amount += cost;
     }
 
@@ -158,7 +158,7 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr, Coin};
+    use cosmwasm_std::{Addr, Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -212,7 +212,7 @@ mod tests {
         let capital_denom = "denom".to_string();
         let securities = vec![SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         }];
 
         calculate_funds(&deps.as_mut(), &securities, &capital_denom)
@@ -236,27 +236,27 @@ mod tests {
         let securities = vec![
             Security {
                 name: "Security1".to_string(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(10, capital_denom.clone()),
             },
             Security {
                 name: "Security2".to_string(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(5, capital_denom.clone()),
             },
         ];
         let commitments = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             },
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 7,
+                amount: Uint128::new(7),
             },
         ];
         securities::set(deps.as_mut().storage, &securities[0]).unwrap();
@@ -274,11 +274,11 @@ mod tests {
         let deposit = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 1,
+                amount: Uint128::new(1),
             },
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 2,
+                amount: Uint128::new(2),
             },
         ];
 
@@ -286,9 +286,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: deposit[0].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(50, &capital_denom),
             },
         )
@@ -297,9 +297,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: deposit[1].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(25, &capital_denom),
             },
         )
@@ -317,11 +317,11 @@ mod tests {
         let deposit = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 1,
+                amount: Uint128::new(1),
             },
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 2,
+                amount: Uint128::new(2),
             },
         ];
 
@@ -329,9 +329,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: deposit[0].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(50, &capital_denom),
             },
         )
@@ -340,9 +340,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: deposit[1].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(25, &capital_denom),
             },
         )
@@ -368,9 +368,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(10, "denom".to_string()),
             },
         )
@@ -384,15 +384,15 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let commitment = vec![SecurityCommitment {
             name: "Security2".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         }];
         securities::set(
             deps.as_mut().storage,
             &Security {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(10, "denom".to_string()),
             },
         )
@@ -406,15 +406,15 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let commitment = vec![SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 1,
+            amount: Uint128::new(1),
         }];
         securities::set(
             deps.as_mut().storage,
             &Security {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 4,
+                minimum_amount: Uint128::new(4),
                 price_per_unit: Coin::new(10, "denom".to_string()),
             },
         )
@@ -429,15 +429,15 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let commitment = vec![SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 1,
+            amount: Uint128::new(1),
         }];
         securities::set(
             deps.as_mut().storage,
             &Security {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(10, "denom".to_string()),
             },
         )
@@ -454,7 +454,7 @@ mod tests {
         let funds = vec![Coin::new(10, &capital_denom)];
         let deposit = vec![SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         }];
         update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
             .expect("should be successful");
@@ -474,7 +474,7 @@ mod tests {
         let funds = vec![Coin::new(10, &capital_denom)];
         let deposit = vec![SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         }];
 
         paid_in_capital::set(deps.as_mut().storage, lp.clone(), &deposit).unwrap();
@@ -491,7 +491,7 @@ mod tests {
             paid_capital[0],
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 10,
+                amount: Uint128::new(10),
             }
         );
         assert_eq!(available_capital[0], Coin::new(20, &capital_denom));
@@ -523,7 +523,7 @@ mod tests {
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
         let funds = vec![Coin::new(
-            settlement_tester.security_commitments[0].amount,
+            settlement_tester.security_commitments[0].amount.u128(),
             "denom".to_string(),
         )];
 
@@ -533,7 +533,7 @@ mod tests {
             settlement_tester.security_commitments.clone(),
         );
         commitment.state = CommitmentState::ACCEPTED;
-        commitment.commitments[0].amount = 1;
+        commitment.commitments[0].amount = Uint128::new(1);
 
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
@@ -541,9 +541,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: settlement_tester.security_commitments[0].name.clone(),
-                amount: 1000,
+                amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(1, "denom".to_string()),
             },
         )
@@ -598,9 +598,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: settlement_tester.security_commitments[0].name.clone(),
-                amount: 100,
+                amount: Uint128::new(100),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(10, "capital_denom".to_string()),
             },
         )
@@ -621,7 +621,7 @@ mod tests {
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
         let funds = vec![Coin::new(
-            settlement_tester.security_commitments[0].amount,
+            settlement_tester.security_commitments[0].amount.u128(),
             "denom".to_string(),
         )];
 
@@ -638,9 +638,9 @@ mod tests {
             deps.as_mut().storage,
             &Security {
                 name: settlement_tester.security_commitments[0].name.clone(),
-                amount: 1000,
+                amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                minimum_amount: 1,
+                minimum_amount: Uint128::new(1),
                 price_per_unit: Coin::new(1, "denom".to_string()),
             },
         )
@@ -701,7 +701,7 @@ mod tests {
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         let mut deposit = settlement_tester.security_commitments.clone();
-        deposit[0].amount += 1;
+        deposit[0].amount += Uint128::new(1);
         let res = deposit_exceeds_commitment(&deps.as_mut(), commitment.lp, &deposit).unwrap();
         assert_eq!(true, res);
     }
@@ -756,7 +756,7 @@ mod tests {
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
         let mut small_deposit = settlement_tester.security_commitments.clone();
-        small_deposit[0].amount = 1;
+        small_deposit[0].amount = Uint128::new(1);
 
         paid_in_capital::set(deps.as_mut().storage, commitment.lp.clone(), &small_deposit).unwrap();
 

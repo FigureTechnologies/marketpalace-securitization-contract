@@ -65,7 +65,7 @@ fn add_security_commitment(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Addr;
+    use cosmwasm_std::{Addr, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -91,46 +91,46 @@ mod tests {
     fn test_add_security_commitment_updates_first_capital() {
         let new_commitment = SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         };
         let mut commitments = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 7,
+                amount: Uint128::new(7),
             },
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             },
         ];
 
         add_security_commitment(&new_commitment, &mut commitments);
         assert_eq!(2, commitments.len());
-        assert_eq!(12, commitments[0].amount);
-        assert_eq!(5, commitments[1].amount);
+        assert_eq!(Uint128::new(12), commitments[0].amount);
+        assert_eq!(Uint128::new(5), commitments[1].amount);
     }
 
     #[test]
     fn test_add_security_commitment_ignores_invalid_name() {
         let new_commitment = SecurityCommitment {
             name: "Security1".to_string(),
-            amount: 5,
+            amount: Uint128::new(5),
         };
         let mut commitments = vec![
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 7,
+                amount: Uint128::new(7),
             },
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             },
         ];
 
         add_security_commitment(&new_commitment, &mut commitments);
         assert_eq!(2, commitments.len());
-        assert_eq!(7, commitments[0].amount);
-        assert_eq!(10, commitments[1].amount);
+        assert_eq!(Uint128::new(7), commitments[0].amount);
+        assert_eq!(Uint128::new(10), commitments[1].amount);
     }
 
     #[test]
@@ -141,11 +141,11 @@ mod tests {
         let commitments = vec![
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 7,
+                amount: Uint128::new(7),
             },
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             },
         ];
 
@@ -169,11 +169,11 @@ mod tests {
         let commitments = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             },
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 7,
+                amount: Uint128::new(7),
             },
         ];
         add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
@@ -189,11 +189,11 @@ mod tests {
         let commitments = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 5,
+                amount: Uint128::new(5),
             },
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 7,
+                amount: Uint128::new(7),
             },
         ];
         add_payment(deps.as_mut().storage, lp.clone(), commitments.clone()).unwrap();
@@ -203,11 +203,11 @@ mod tests {
         let expected = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
-                amount: 10,
+                amount: Uint128::new(10),
             },
             SecurityCommitment {
                 name: "Security2".to_string(),
-                amount: 14,
+                amount: Uint128::new(14),
             },
         ];
 

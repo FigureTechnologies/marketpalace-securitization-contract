@@ -55,8 +55,8 @@ mod tests {
             securities: vec![
                 Security {
                     name: "security 1".to_string(),
-                    amount: 100,
-                    minimum_amount: 5,
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
                         denom: "denom".to_string(),
                         amount: Uint128::new(5),
@@ -65,8 +65,8 @@ mod tests {
                 },
                 Security {
                     name: "security 2".to_string(),
-                    amount: 100,
-                    minimum_amount: 5,
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
                         denom: "denom".to_string(),
                         amount: Uint128::new(5),
@@ -103,8 +103,8 @@ mod tests {
             securities: vec![
                 Security {
                     name: "security 1".to_string(),
-                    amount: 100,
-                    minimum_amount: 5,
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
                         denom: "denom".to_string(),
                         amount: Uint128::new(5),
@@ -113,8 +113,8 @@ mod tests {
                 },
                 Security {
                     name: "security 2".to_string(),
-                    amount: 100,
-                    minimum_amount: 5,
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
                         denom: "denom".to_string(),
                         amount: Uint128::new(5),
@@ -136,8 +136,8 @@ mod tests {
             gp: Addr::unchecked("address"),
             securities: vec![Security {
                 name: "security 1".to_string(),
-                amount: 100,
-                minimum_amount: 5,
+                amount: Uint128::new(100),
+                minimum_amount: Uint128::new(5),
                 price_per_unit: Coin {
                     denom: "denom".to_string(),
                     amount: Uint128::new(5),
@@ -159,8 +159,8 @@ mod tests {
             securities: vec![
                 Security {
                     name: "security 1".to_string(),
-                    amount: 100,
-                    minimum_amount: 5,
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
                         denom: "denom".to_string(),
                         amount: Uint128::new(5),
@@ -169,8 +169,8 @@ mod tests {
                 },
                 Security {
                     name: "security 2".to_string(),
-                    amount: 100,
-                    minimum_amount: 5,
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
                         denom: "denom".to_string(),
                         amount: Uint128::new(5),

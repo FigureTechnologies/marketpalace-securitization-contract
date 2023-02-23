@@ -23,7 +23,7 @@ pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>)
         if !remaining_securities::has_amount(
             deps.storage,
             commitment.name.clone(),
-            commitment.amount,
+            commitment.amount.u128(),
         )? {
             return Err(
                 crate::core::error::ContractError::CommitmentExceedsRemainingSecurityAmount {},
@@ -39,7 +39,7 @@ pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>)
 
 #[cfg(test)]
 mod test {
-    use cosmwasm_std::{Addr, Coin};
+    use cosmwasm_std::{Addr, Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -67,9 +67,9 @@ mod test {
             &mut deps.storage,
             &Security {
                 name: commitments[0].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: commitments[0].amount + 1,
+                minimum_amount: commitments[0].amount + Uint128::new(1),
                 price_per_unit: Coin::new(5, "denom".to_string()),
             },
         )
@@ -103,7 +103,7 @@ mod test {
             &mut deps.storage,
             &Security {
                 name: commitments[0].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
                 price_per_unit: Coin::new(5, "denom".to_string()),
@@ -113,7 +113,7 @@ mod test {
         remaining_securities::set(
             deps.as_mut().storage,
             commitments[0].name.clone(),
-            commitments[0].amount,
+            commitments[0].amount.u128(),
         )
         .unwrap();
         handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
@@ -135,7 +135,7 @@ mod test {
             &mut deps.storage,
             &Security {
                 name: commitments[0].name.clone(),
-                amount: 10,
+                amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
                 price_per_unit: Coin::new(5, "denom".to_string()),

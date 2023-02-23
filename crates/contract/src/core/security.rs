@@ -1,13 +1,13 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Coin;
+use cosmwasm_std::{Coin, Uint128};
 
 #[cw_serde]
 #[derive(Eq)]
 pub struct Security {
     pub name: String,
-    pub amount: u128,
+    pub amount: Uint128,
     pub security_type: SecurityType,
-    pub minimum_amount: u128,
+    pub minimum_amount: Uint128,
     pub price_per_unit: Coin,
 }
 
@@ -34,5 +34,5 @@ pub enum SecurityType {
 #[cw_serde]
 pub struct SecurityCommitment {
     pub name: String,
-    pub amount: u128,
+    pub amount: Uint128,
 }

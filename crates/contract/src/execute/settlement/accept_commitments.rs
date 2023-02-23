@@ -40,7 +40,7 @@ fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), Contract
         if !remaining_securities::subtract(
             storage,
             security_commitment.name.clone(),
-            security_commitment.amount,
+            security_commitment.amount.u128(),
         )? {
             return Err(
                 crate::core::error::ContractError::CommitmentExceedsRemainingSecurityAmount {},
@@ -119,7 +119,7 @@ mod tests {
         remaining_securities::set(
             deps.as_mut().storage,
             settlement_tester.security_commitments[0].name.clone(),
-            settlement_tester.security_commitments[0].amount - 1,
+            settlement_tester.security_commitments[0].amount.u128() - 1,
         )
         .unwrap();
         let error = accept_commitment(deps.as_mut().storage, lp.clone()).unwrap_err();
@@ -141,7 +141,7 @@ mod tests {
         track_paid_capital(deps.as_mut().storage, commitment.clone()).unwrap();
         let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp);
         for capital in &paid_capital {
-            assert_eq!(0, capital.amount);
+            assert_eq!(0, capital.amount.u128());
         }
     }
 
@@ -157,7 +157,7 @@ mod tests {
         remaining_securities::set(
             deps.as_mut().storage,
             settlement_tester.security_commitments[0].name.clone(),
-            settlement_tester.security_commitments[0].amount,
+            settlement_tester.security_commitments[0].amount.u128(),
         )
         .unwrap();
         accept_commitment(deps.as_mut().storage, lp.clone()).unwrap();
@@ -169,7 +169,7 @@ mod tests {
         // We need to check capital
         let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp);
         for capital in &paid_capital {
-            assert_eq!(0, capital.amount);
+            assert_eq!(0, capital.amount.u128());
         }
     }
 
@@ -193,7 +193,7 @@ mod tests {
         remaining_securities::set(
             deps.as_mut().storage,
             settlement_tester.security_commitments[0].name.clone(),
-            settlement_tester.security_commitments[0].amount,
+            settlement_tester.security_commitments[0].amount.u128(),
         )
         .unwrap();
 
@@ -205,7 +205,7 @@ mod tests {
         remaining_securities::set(
             deps.as_mut().storage,
             settlement_tester.security_commitments[1].name.clone(),
-            settlement_tester.security_commitments[1].amount,
+            settlement_tester.security_commitments[1].amount.u128(),
         )
         .unwrap();
 
