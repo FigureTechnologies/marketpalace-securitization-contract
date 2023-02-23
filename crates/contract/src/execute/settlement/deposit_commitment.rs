@@ -113,10 +113,6 @@ fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) 
         if security.is_err() {
             return false;
         }
-        let security = security.unwrap();
-        if drawdown.amount < security.minimum_amount {
-            return false;
-        }
     }
 
     true
@@ -397,29 +393,6 @@ mod tests {
             },
         )
         .unwrap();
-        let res = drawdown_met(&deps.as_mut(), &commitment);
-        assert_eq!(false, res);
-    }
-
-    #[test]
-    fn test_drawdown_security_minimum_not_met() {
-        let mut deps = mock_dependencies(&[]);
-        let commitment = vec![SecurityCommitment {
-            name: "Security1".to_string(),
-            amount: Uint128::new(1),
-        }];
-        securities::set(
-            deps.as_mut().storage,
-            &Security {
-                name: "Security1".to_string(),
-                amount: Uint128::new(5),
-                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(4),
-                price_per_unit: Coin::new(10, "denom".to_string()),
-            },
-        )
-        .unwrap();
-
         let res = drawdown_met(&deps.as_mut(), &commitment);
         assert_eq!(false, res);
     }
