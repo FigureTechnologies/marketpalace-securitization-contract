@@ -5,7 +5,7 @@ use crate::{
     storage,
 };
 
-pub fn query_pending_commitments(storage: &dyn Storage) -> ProvQueryResponse {
+pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
     let commitments = storage::commits::get_pending(storage);
     let response = QueryPendingCommitmentsResponse { commitments };
     Ok(to_binary(&response)?)

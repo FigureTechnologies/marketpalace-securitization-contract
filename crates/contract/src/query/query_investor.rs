@@ -5,7 +5,7 @@ use crate::{
     storage,
 };
 
-pub fn query_investor(storage: &dyn Storage, lp: Addr) -> ProvQueryResponse {
+pub fn handle(storage: &dyn Storage, lp: Addr) -> ProvQueryResponse {
     let commitment = storage::commits::get(storage, lp.clone())?;
     let paid_in_capital = storage::paid_in_capital::get(storage, lp);
     let response = QueryInvestorResponse {

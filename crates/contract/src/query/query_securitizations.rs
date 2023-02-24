@@ -5,10 +5,7 @@ use crate::{
     storage::{self},
 };
 
-pub fn query_securitizations(
-    storage: &dyn Storage,
-    security_names: Vec<String>,
-) -> ProvQueryResponse {
+pub fn handle(storage: &dyn Storage, security_names: Vec<String>) -> ProvQueryResponse {
     let mut securities = vec![];
 
     for security in security_names {

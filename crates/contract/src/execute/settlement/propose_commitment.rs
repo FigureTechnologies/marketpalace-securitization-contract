@@ -50,7 +50,9 @@ mod test {
             error::ContractError,
             security::{FundSecurity, Security},
         },
-        execute::{propose_commitment::handle, settlement::commitment::CommitmentState},
+        execute::{
+            settlement::commitment::CommitmentState, settlement::propose_commitment::handle,
+        },
         storage::{
             commits::{self},
             remaining_securities,

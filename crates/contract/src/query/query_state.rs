@@ -5,7 +5,7 @@ use crate::{
     storage,
 };
 
-pub fn query_state(storage: &dyn Storage) -> ProvQueryResponse {
+pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
     let state = storage::state::get(storage)?;
     let securities = storage::securities::get_security_types(storage);
     let response = QueryStateResponse {

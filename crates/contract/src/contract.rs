@@ -16,30 +16,24 @@ pub fn instantiate(
 ) -> ProvTxResponse {
     msg.validate()?;
     msg.validate_msg_funds(&info.funds)?;
-    instantiate::handle(deps, env, info, msg)
+    instantiate::handler::handle(deps, env, info, msg)
 }
 
 #[entry_point]
 pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
     msg.validate()?;
-    query::handle(deps, env, msg)
+    query::router::route(deps, env, msg)
 }
 
 #[entry_point]
 pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     msg.validate()?;
     msg.validate_msg_funds(&info.funds)?;
-    execute::handle(deps, env, info, msg)
+    execute::router::route(deps, env, info, msg)
 }
 
 #[entry_point]
 pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) -> ProvTxResponse {
     msg.validate()?;
-    migrate::handle(deps, env, msg)
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {}
+    migrate::router::route(deps, env, msg)
 }
