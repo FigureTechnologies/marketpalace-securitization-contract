@@ -16,6 +16,10 @@ pub fn set(storage: &mut dyn Storage, commitment: &Commitment) -> Result<(), Con
     Ok(COMMITS.save(storage, commitment.lp.clone(), commitment)?)
 }
 
+pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
+    COMMITS.has(storage, lp)
+}
+
 pub fn get_pending(storage: &dyn Storage) -> Vec<Commitment> {
     let commits: Vec<Commitment> = COMMITS
         .range(storage, None, None, Order::Ascending)
@@ -31,7 +35,9 @@ mod tests {
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
-        execute::settlement::commitment::Commitment, storage::commits::get, storage::commits::set,
+        execute::settlement::commitment::Commitment,
+        storage::commits::set,
+        storage::commits::{exists, get},
     };
 
     #[test]
@@ -50,5 +56,15 @@ mod tests {
 
         let obtained = get(deps.as_mut().storage, lp).unwrap();
         assert_eq!(commitment, obtained);
+    }
+
+    #[test]
+    fn test_exists() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let commitment = Commitment::new(lp.clone(), vec![]);
+        assert!(!exists(&deps.storage, lp.clone()));
+        set(deps.as_mut().storage, &commitment).unwrap();
+        assert!(exists(&deps.storage, lp));
     }
 }

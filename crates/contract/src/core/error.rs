@@ -49,6 +49,9 @@ pub enum ContractError {
 
     #[error("The commitment will exceed the remaining amount of a security")]
     CommitmentExceedsRemainingSecurityAmount {},
+
+    #[error("A commitment by this lp already exists")]
+    CommitmentAlreadyExists {},
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {
