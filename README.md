@@ -5,8 +5,7 @@ General Partners to create securities and Limited Partners to commit and deposit
 for shares. For more information please review the smart contract's documentation.
 
 ## Status
-[![Latest Release][release-badge]][release-latest]
-[![Apache 2.0 License][license-badge]][license-url]
+[![Apache 2.0 License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Build
 Since this repository contains multiple projects, one or more projects can be built using Makefile and Cargo.
