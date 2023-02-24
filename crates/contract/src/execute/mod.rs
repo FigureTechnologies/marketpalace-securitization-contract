@@ -29,18 +29,10 @@ pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{
-        testing::{mock_env, mock_info},
-        Addr,
-    };
+    use cosmwasm_std::testing::mock_env;
     use provwasm_mocks::mock_dependencies;
 
-    use crate::{
-        core::msg::ExecuteMsg,
-        util::{self, testing::test_security_commitments},
-    };
-
-    use super::handle;
+    use crate::util::{self, testing::test_security_commitments};
 
     #[test]
     fn test_propose_commitment_is_routed() {
