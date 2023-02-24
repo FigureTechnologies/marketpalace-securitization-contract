@@ -122,16 +122,16 @@ pub fn test_propose_message() -> ExecuteMsg {
     }
 }
 
-pub fn test_accept_message(lps: &[&str]) -> ExecuteMsg {
-    ExecuteMsg::AcceptCommitment {
-        commitments: lps.iter().map(|lp| Addr::unchecked(lp.clone())).collect(),
-    }
-}
-
 pub fn propose_test_commitment(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
     let info = mock_info(sender, &[]);
     let msg = test_propose_message();
     execute(deps, env, info, msg)
+}
+
+pub fn test_accept_message(lps: &[&str]) -> ExecuteMsg {
+    ExecuteMsg::AcceptCommitment {
+        commitments: lps.iter().map(|lp| Addr::unchecked(lp.clone())).collect(),
+    }
 }
 
 pub fn accept_test_commitment(
@@ -165,6 +165,16 @@ pub fn deposit_test(
     let info = mock_info(sender, &vec![funds]);
     let msg = test_deposit_message(deposit);
     execute(deps, env, info, msg)
+}
+
+pub fn withdraw_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
+    let info = mock_info(sender, &[]);
+    let msg = test_withdraw_message();
+    execute(deps, env, info, msg)
+}
+
+pub fn test_withdraw_message() -> ExecuteMsg {
+    ExecuteMsg::WithdrawCommitments {}
 }
 
 pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;

@@ -29,23 +29,62 @@ pub fn handle(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::{
+        testing::{mock_env, mock_info},
+        Addr,
+    };
+    use provwasm_mocks::mock_dependencies;
+
+    use crate::{
+        core::msg::ExecuteMsg,
+        util::{self, testing::test_security_commitments},
+    };
+
+    use super::handle;
+
     #[test]
-    fn test_propose_commitment() {
-        //assert!(false);
+    fn test_propose_commitment_is_routed() {
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
     }
 
     #[test]
     fn test_accept_commitment() {
-        //assert!(false);
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
+        util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp"]).unwrap();
     }
 
     #[test]
     fn test_deposit_commitment() {
-        //assert!(false);
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
+        util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp"]).unwrap();
+        util::testing::deposit_test(
+            deps.as_mut(),
+            mock_env(),
+            "lp",
+            &test_security_commitments(),
+        )
+        .unwrap();
     }
 
     #[test]
     fn test_withdraw_commitment() {
-        //assert!(false);
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
+        util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp"]).unwrap();
+        util::testing::deposit_test(
+            deps.as_mut(),
+            mock_env(),
+            "lp",
+            &test_security_commitments(),
+        )
+        .unwrap();
+        util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp").unwrap();
     }
 }
