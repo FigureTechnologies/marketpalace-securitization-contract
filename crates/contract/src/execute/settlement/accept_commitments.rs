@@ -240,10 +240,10 @@ mod tests {
         let res = handle(deps.as_mut(), gp.clone(), vec![]).unwrap();
         assert_eq!(res.attributes.len(), 2);
         assert_eq!(res.events.len(), 0);
-        assert_eq!(res.attributes[0].key, "gp");
-        assert_eq!(res.attributes[0].value, gp);
-        assert_eq!(res.attributes[1].key, "action");
-        assert_eq!(res.attributes[1].value, "accept_commitments");
+        assert_eq!(res.attributes[0].key, "action");
+        assert_eq!(res.attributes[0].value, "accept_commitments");
+        assert_eq!(res.attributes[1].key, "gp");
+        assert_eq!(res.attributes[1].value, gp);
     }
 
     #[test]

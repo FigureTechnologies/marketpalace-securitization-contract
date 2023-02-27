@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BankMsg, Coin, Env, Response, Storage, Uint128};
+use cosmwasm_std::{Addr, BankMsg, Coin, Env, Event, Response, Storage, Uint128};
 use provwasm_std::{mint_marker_supply, withdraw_coins};
 
 use crate::{
@@ -41,6 +41,7 @@ fn withdraw_commitments(
         let withdraw = process_withdraw(deps.storage, lp, &env.contract.address)?;
         messages.extend(withdraw.0);
         send_amount.amount += withdraw.1;
+        response = response.add_event(Event::new("settled").add_attribute("lp", lp));
     }
 
     if !send_amount.amount.is_zero() {
@@ -59,19 +60,20 @@ fn process_withdraw(
     storage: &mut dyn Storage,
     lp: &Addr,
     contract: &Addr,
-) -> Result<(Vec<ProvMsg>, Uint128), ContractError> {
+) -> Result<(Vec<ProvMsg>, Uint128, bool), ContractError> {
     let mut commitment = commits::get(storage, lp.clone())?;
     let capital = available_capital::remove_capital(storage, lp.clone())?;
     let mut messages = vec![];
+    let mut settled = false;
 
     if is_settling(storage, &commitment) {
         commitment.state = CommitmentState::SETTLED;
-
+        settled = true;
         messages.extend(transfer_investment_tokens(&commitment, contract)?);
     }
 
     commits::set(storage, &commitment)?;
-    Ok((messages, capital.amount))
+    Ok((messages, capital.amount, settled))
 }
 
 fn transfer_investment_tokens(
@@ -101,7 +103,7 @@ fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Event, Uint128};
     use provwasm_mocks::mock_dependencies;
     use provwasm_std::{mint_marker_supply, withdraw_coins};
 
@@ -268,10 +270,11 @@ mod tests {
         )
         .unwrap();
 
-        let (messages, amount) =
+        let (messages, amount, settled) =
             process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
         assert_eq!(0, messages.len());
         assert_eq!(Uint128::new(100), amount);
+        assert_eq!(false, settled);
         assert_eq!(
             false,
             available_capital::has_lp(deps.as_mut().storage, commitment.lp)
@@ -303,13 +306,14 @@ mod tests {
             &settlement_tester.security_commitments,
         )
         .unwrap();
-        let (messages, amount) =
+        let (messages, amount, settled) =
             process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
 
         let updated = commits::get(&deps.storage, commitment.lp.clone()).unwrap();
         assert_eq!(CommitmentState::SETTLED, updated.state);
         assert_eq!(4, messages.len());
         assert_eq!(Uint128::new(100), amount);
+        assert_eq!(true, settled);
         assert_eq!(
             false,
             available_capital::has_lp(deps.as_mut().storage, commitment.lp)
@@ -323,6 +327,7 @@ mod tests {
         let capital_denom = "denom".to_string();
         let res = withdraw_commitments(deps.as_mut(), mock_env(), sender, capital_denom).unwrap();
         assert_eq!(0, res.messages.len());
+        assert_eq!(0, res.events.len());
     }
 
     #[test]
@@ -359,6 +364,11 @@ mod tests {
         )
         .unwrap();
         assert_eq!(5, res.messages.len());
+        assert_eq!(1, res.events.len());
+        assert_eq!(
+            Event::new("settled").add_attribute("lp", commitment.lp),
+            res.events[0]
+        );
     }
 
     #[test]
