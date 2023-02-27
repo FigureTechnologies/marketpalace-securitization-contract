@@ -33,10 +33,11 @@ After validation has succeed, the contract routes the message to the correct han
 - `rules`: A list of investment vehicle rules.
 
 #### Emitted Attributes
-- `action`: The action that was executed.
+- `action`: The action that was executed. The value of this will always be `init`.
 
 #### Request Sample
-```{
+```
+{
     "gp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
     "securities": [
         {
@@ -66,6 +67,46 @@ After validation has succeed, the contract routes the message to the correct han
     ],
     "capital_denom": "nhash",
     "rules": []
-}```
+}
+```
+
+### Execution Routes
+This contract contains four different types of execution messages. Every message is first validated and then handed off to the execute router. The router will then forward the message to the correct handler to be ran. A more detailed view of these messages can be seen in the [json](schema/execute_msg.json).
+
+#### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/7fb595c57620ada63566f0ceabaf0bade62ffddf/crates/contract/src/core/msg.rs#L22)
+The ProposeCommitment message is sent by a Limited Partner. When they are interested in funding a GP they will make an offer containing how many of each security they are interested in purchasing.
+
+##### Request Parameters
+- `securities`: A list containing the name and amount of each security they are interested in exchanging funding for.
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `propose_commitment`.
+- `lp`: The address of the lp proposing a commitment.
+
+##### Request Sample
+```
+{
+    "propose_commitment": {
+        "securities": [
+            {
+                "name": "Security1",
+                "amount": "100"
+            },
+            {
+                "name": "Security2",
+                "amount": "200"
+            }
+        ]
+    }
+}
+```
+
+#### Accept Commitments
+
+#### Deposit Commitment
+
+### Withdraw Commitments
+
+
 
 ## Local Deployment
