@@ -21,13 +21,15 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
         return Err(crate::core::error::ContractError::Unauthorized {});
     }
 
-    let mut response = Response::new().add_attribute("gp", state.gp);
+    let mut response = Response::new()
+        .add_attribute("action", "accept_commitments")
+        .add_attribute("gp", state.gp);
     for lp in commitments {
         accept_commitment(deps.storage, lp.clone())?;
         response = response.add_event(Event::new("accepted").add_attribute("lp", lp));
     }
 
-    Ok(response.add_attribute("action", "accept_commitments"))
+    Ok(response)
 }
 
 fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), ContractError> {
@@ -67,7 +69,7 @@ fn track_paid_capital(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Addr;
+    use cosmwasm_std::{Addr, Attribute};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -213,15 +215,16 @@ mod tests {
 
         let res = handle(deps.as_mut(), gp.clone(), vec![lp1, lp2]).unwrap();
         assert_eq!(res.attributes.len(), 2);
-        assert_eq!(res.attributes[0].value, gp);
-        assert_eq!(res.attributes[1].key, "action");
-        assert_eq!(res.attributes[1].value, "accept_commitments");
+        assert_eq!(
+            Attribute::new("action", "accept_commitments"),
+            res.attributes[0]
+        );
+        assert_eq!(Attribute::new("gp", gp), res.attributes[1]);
         assert_eq!(res.events.len(), 2);
         assert_eq!(res.events[0].attributes.len(), 1);
-        assert_eq!(res.events[0].attributes[0].key, "lp");
-        assert_eq!(res.events[0].attributes[0].value, "lp1");
-        assert_eq!(res.events[1].attributes[0].key, "lp");
-        assert_eq!(res.events[1].attributes[0].value, "lp2");
+        assert_eq!(Attribute::new("lp", "lp1"), res.events[0].attributes[0]);
+        assert_eq!(res.events[1].attributes.len(), 1);
+        assert_eq!(Attribute::new("lp", "lp2"), res.events[1].attributes[0]);
     }
 
     #[test]

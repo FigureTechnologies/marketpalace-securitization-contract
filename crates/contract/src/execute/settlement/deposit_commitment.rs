@@ -40,9 +40,11 @@ pub fn handle(
         return Err(crate::core::error::ContractError::ExcessiveDeposit {});
     }
 
-    update_depositer_capital(deps, sender, funds, deposit)?;
+    update_depositer_capital(deps, sender.clone(), funds, deposit)?;
 
-    Ok(Response::default())
+    Ok(Response::default()
+        .add_attribute("action", "deposit_commitment")
+        .add_attribute("lp", sender))
 }
 
 // Check if they have a commitment - Shouldn't really matter
@@ -154,7 +156,7 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr, Coin, Uint128};
+    use cosmwasm_std::{Addr, Attribute, Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -620,8 +622,14 @@ mod tests {
         .unwrap();
 
         let response =
-            handle(deps.as_mut(), sender, funds, deposit).expect("Should not throw error");
+            handle(deps.as_mut(), sender.clone(), funds, deposit).expect("Should not throw error");
         assert_eq!(0, response.messages.len());
+        assert_eq!(2, response.attributes.len());
+        assert_eq!(
+            Attribute::new("action", "deposit_commitment"),
+            response.attributes[0]
+        );
+        assert_eq!(Attribute::new("lp", sender), response.attributes[1]);
     }
 
     #[test]
