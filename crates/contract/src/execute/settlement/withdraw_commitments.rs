@@ -49,7 +49,10 @@ fn withdraw_commitments(
             amount: vec![send_amount],
         });
     }
-    Ok(response.add_messages(messages))
+    Ok(response
+        .add_messages(messages)
+        .add_attribute("action", "withdraw_commitments")
+        .add_attribute("gp", sender))
 }
 
 fn process_withdraw(
@@ -98,7 +101,7 @@ fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Coin, Uint128};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
     use provwasm_std::{mint_marker_supply, withdraw_coins};
 
@@ -371,5 +374,23 @@ mod tests {
             ContractError::Unauthorized {}.to_string(),
             error.to_string()
         );
+    }
+
+    #[test]
+    fn test_handle_succeeds() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("gp");
+
+        let settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
+
+        let res = handle(deps.as_mut(), mock_env(), sender.clone()).unwrap();
+        assert_eq!(2, res.attributes.len());
+        assert_eq!(0, res.events.len());
+        assert_eq!(
+            Attribute::new("action", "withdraw_commitments"),
+            res.attributes[0]
+        );
+        assert_eq!(Attribute::new("gp", sender), res.attributes[1]);
     }
 }
