@@ -35,14 +35,16 @@ pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>)
         }
     }
 
-    let commitment = Commitment::new(lp, commitments);
+    let commitment = Commitment::new(lp.clone(), commitments);
     commits::set(deps.storage, &commitment)?;
-    Ok(Response::new())
+    Ok(Response::new()
+        .add_attribute("action", "propose_commitment")
+        .add_attribute("lp", lp))
 }
 
 #[cfg(test)]
 mod test {
-    use cosmwasm_std::{Addr, Coin, Uint128};
+    use cosmwasm_std::{Addr, Attribute, Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -121,12 +123,18 @@ mod test {
             commitments[0].amount.u128(),
         )
         .unwrap();
-        handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
+        let res = handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
 
         let commitment = commits::get(&deps.storage, lp.clone()).unwrap();
         assert_eq!(commitments, commitment.commitments);
         assert_eq!(CommitmentState::PENDING, commitment.state);
         assert_eq!(lp, commitment.lp);
+        assert_eq!(2, res.attributes.len());
+        assert_eq!(
+            Attribute::new("action", "propose_commitment"),
+            res.attributes[0]
+        );
+        assert_eq!(Attribute::new("lp", lp), res.attributes[1]);
     }
 
     #[test]
