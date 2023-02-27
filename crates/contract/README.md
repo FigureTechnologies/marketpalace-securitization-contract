@@ -76,6 +76,8 @@ This contract contains four different types of execution messages. Every message
 #### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/7fb595c57620ada63566f0ceabaf0bade62ffddf/crates/contract/src/core/msg.rs#L22)
 The ProposeCommitment message is sent by a Limited Partner. When they are interested in funding a GP they will make an offer containing how many of each security they are interested in purchasing.
 
+This message must contain a non-empty list of existing securities. If a commitment already exists for the LP or the security amounts don't match the minimum, then the message will be rejected.
+
 ##### Request Parameters
 - `securities`: A list containing the name and amount of each security they are interested in exchanging funding for.
 
@@ -102,10 +104,34 @@ The ProposeCommitment message is sent by a Limited Partner. When they are intere
 ```
 
 #### Accept Commitments
+The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and they must be considered pending. Lastly, the accepted commitments cannot commit to more than the remaining amount of each security.
+
+##### Request Parameters
+- `commitments`: The addresses of the LPs that the GP wishes to approve.
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `accept_commitments`.
+- `gp`: The address of the GP proposing a commitment.
+
+##### Emitted Events
+- `accepted`: An event representing an accepted LP.
+  - `lp`: The address of the accepted LP.
+
+##### Request Sample
+```
+{
+    "accept_commitment": {
+        "commitments": [
+            "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+            "tp1n2zvcfsvqwe9dwal7kleq0qv0a676kvm4alekx"
+        ]
+    }
+}
+```
 
 #### Deposit Commitment
 
-### Withdraw Commitments
+#### Withdraw Commitments
 
 
 
