@@ -20,6 +20,12 @@ impl Validate for InstantiateMsg {
             return Err(ContractError::InvalidSecurityList {});
         }
 
+        let slice = self.securities.iter().as_slice();
+        let has_duplicate = (1..slice.len()).any(|i| slice[i..].contains(&slice[i - 1]));
+        if has_duplicate {
+            return Err(ContractError::InvalidSecurityList {});
+        }
+
         if self.capital_denom.is_empty() {
             return Err(ContractError::InvalidCapitalDenom {});
         }
@@ -84,19 +90,6 @@ mod tests {
     }
 
     #[test]
-    fn test_securities_is_not_empty() {
-        let msg = InstantiateMsg {
-            gp: Addr::unchecked("address"),
-            securities: vec![],
-            capital_denom: "denom".to_string(),
-            rules: vec![],
-        };
-        let output = msg.validate().unwrap_err();
-        let expected = ContractError::EmptySecurityList {}.to_string();
-        assert_eq!(expected, output.to_string());
-    }
-
-    #[test]
     fn test_securities_have_same_type() {
         let msg = InstantiateMsg {
             gp: Addr::unchecked("address"),
@@ -113,6 +106,53 @@ mod tests {
                 },
                 Security {
                     name: "security 2".to_string(),
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                },
+            ],
+            capital_denom: "denom".to_string(),
+            rules: vec![],
+        };
+        let expected = ContractError::InvalidSecurityList {}.to_string();
+        let output = msg.validate().unwrap_err();
+        assert_eq!(expected, output.to_string());
+    }
+
+    #[test]
+    fn test_securities_is_not_empty() {
+        let msg = InstantiateMsg {
+            gp: Addr::unchecked("address"),
+            securities: vec![],
+            capital_denom: "denom".to_string(),
+            rules: vec![],
+        };
+        let output = msg.validate().unwrap_err();
+        let expected = ContractError::EmptySecurityList {}.to_string();
+        assert_eq!(expected, output.to_string());
+    }
+
+    #[test]
+    fn test_securities_have_same_name() {
+        let msg = InstantiateMsg {
+            gp: Addr::unchecked("address"),
+            securities: vec![
+                Security {
+                    name: "security 1".to_string(),
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                },
+                Security {
+                    name: "security 1".to_string(),
                     amount: Uint128::new(100),
                     minimum_amount: Uint128::new(5),
                     price_per_unit: Coin {
