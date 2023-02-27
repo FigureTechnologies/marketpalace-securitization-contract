@@ -27,7 +27,7 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTx
         response = response.add_event(Event::new("accepted").add_attribute("lp", lp));
     }
 
-    Ok(response)
+    Ok(response.add_attribute("action", "accept_commitments"))
 }
 
 fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), ContractError> {
@@ -212,8 +212,10 @@ mod tests {
         .unwrap();
 
         let res = handle(deps.as_mut(), gp.clone(), vec![lp1, lp2]).unwrap();
-        assert_eq!(res.attributes.len(), 1);
+        assert_eq!(res.attributes.len(), 2);
         assert_eq!(res.attributes[0].value, gp);
+        assert_eq!(res.attributes[1].key, "action");
+        assert_eq!(res.attributes[1].value, "accept_commitments");
         assert_eq!(res.events.len(), 2);
         assert_eq!(res.events[0].attributes.len(), 1);
         assert_eq!(res.events[0].attributes[0].key, "lp");
@@ -233,10 +235,12 @@ mod tests {
         .unwrap();
 
         let res = handle(deps.as_mut(), gp.clone(), vec![]).unwrap();
-        assert_eq!(res.attributes.len(), 1);
+        assert_eq!(res.attributes.len(), 2);
         assert_eq!(res.events.len(), 0);
         assert_eq!(res.attributes[0].key, "gp");
         assert_eq!(res.attributes[0].value, gp);
+        assert_eq!(res.attributes[1].key, "action");
+        assert_eq!(res.attributes[1].value, "accept_commitments");
     }
 
     #[test]
