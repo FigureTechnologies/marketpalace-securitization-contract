@@ -102,7 +102,7 @@ jobs:
         if: ${{ !env.TAG_EXISTS }}
         run: |
           # Build the WASM output in the artifacts directory
-          make all
+          make contract
 
       - name: Release WASM
         uses: softprops/action-gh-release@v1
