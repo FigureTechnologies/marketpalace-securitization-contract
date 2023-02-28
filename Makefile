@@ -8,7 +8,7 @@ cli:
 
 .PHONY: contract
 contract:
-	make -C crates/contract all
+	make -C crates/contract optimize
 	cp -r crates/contract/artifacts .
 
 .PHONY: clean
