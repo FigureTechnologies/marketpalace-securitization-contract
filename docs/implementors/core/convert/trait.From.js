@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"contract":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.67.1/core/convert/trait.From.html\" title=\"trait core::convert::From\">From</a>&lt;StdError&gt; for <a class=\"enum\" href=\"contract/core/error/enum.ContractError.html\" title=\"enum contract::core::error::ContractError\">ContractError</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

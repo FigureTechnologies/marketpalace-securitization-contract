@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["accept_commitments",""],["commitment",""],["deposit_commitment",""],["propose_commitment",""],["withdraw_commitments",""]]};

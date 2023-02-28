@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["PAID_IN_CAPITAL",""]],"fn":[["add_payment",""],["get",""],["set",""]]};
