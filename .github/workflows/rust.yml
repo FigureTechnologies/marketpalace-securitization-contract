@@ -1,0 +1,118 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check Project Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          components: clippy, rustfmt
+
+      - name: Cargo Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Cargo Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+
+      - name: Cargo Tarpaulin XML Report
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          version: '0.19.1'
+          out-type: Xml
+          args: '--ignore-config --ignore-tests'
+
+      - name: Archive Code Coverage Results
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-report
+          path: cobertura.xml
+
+  release:
+    name: Release Project Files
+    needs: check
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get Release Version
+        run: |
+          APP_VERSION=$(cargo metadata | jq -r '.packages[] | select(.name == "contract") | .version')
+          echo "Using application version v$APP_VERSION for release"
+          echo "RELEASE_VERSION=v$APP_VERSION" >> $GITHUB_ENV
+
+      - name: Check Release is New Version
+        run: |
+          TAG_EXISTS=$((git show-ref --tags "$RELEASE_VERSION") || echo "")
+          if [ $TAG_EXISTS ]; then
+            echo "Found existing Github tag [$RELEASE_VERSION]. Skipping release.";
+          else
+            echo "Tag [$RELEASE_VERSION] has not yet been used. Continuing with release";
+          fi
+          echo "TAG_EXISTS=$TAG_EXISTS" >> $GITHUB_ENV
+
+      - name: Generate Rust Docs
+        if: ${{ !env.TAG_EXISTS }}
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --no-deps
+
+      - name: Stage Cargo Docs
+        if: ${{ !env.TAG_EXISTS }}
+        run: |
+          # Add redirect page to inner doc index
+          echo "<meta http-equiv=\"refresh\" content=\"0; url=contract\">" >> ./target/doc/index.html
+          # Create doc deployment location
+          mkdir ./pages-files
+          # Move documentation to its configured location in settings
+          cp -r target/doc ./pages-files/docs
+
+      - name: Deploy Docs to GitHub Pages
+        if: ${{ !env.TAG_EXISTS }}
+        uses: JamesIves/github-pages-deploy-action@v4.2.2
+        with:
+          branch: gh-pages
+          folder: pages-files
+
+      - name: Build and Optimize WASM
+        # No need to create the release WASM if the version hasn't changed and no new release will be made
+        if: ${{ !env.TAG_EXISTS }}
+        run: |
+          # Build the WASM output in the artifacts directory
+          make all
+
+      - name: Release WASM
+        uses: softprops/action-gh-release@v1
+        # Only upload a new release if the attempted tag does not yet exist
+        if: ${{ !env.TAG_EXISTS }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          files: |
+            artifacts/contract.wasm
+            artifacts/checksums.txt
