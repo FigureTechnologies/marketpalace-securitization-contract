@@ -109,7 +109,7 @@ This message must contain a non-empty list of existing securities. If a commitme
 }
 ```
 
-#### Accept Commitments
+#### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L23)
 The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and they must be considered pending. Lastly, the accepted commitments cannot commit to more than the remaining amount of each security.
 
 ##### Request Parameters
@@ -135,7 +135,7 @@ The AcceptCommitments message is sent by the General Partner. They will submit t
 }
 ```
 
-#### Deposit Commitment
+#### [Deposit Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L24)
 The DepositCommitment message is sent by one of the accepted LPs. It's purpose is for the LP to partially or completely pay their commitment. These funds will then be stored in the contract, and the GP can withdraw them at a later time. LPs cannot deposit more than they have committed, and every deposit must include funds. These included funds must equal the sum of the cost of all the message's securities.
 
 ##### Request Parameters
@@ -163,7 +163,7 @@ The DepositCommitment message is sent by one of the accepted LPs. It's purpose i
 }
 ```
 
-#### Withdraw Commitments
+#### [Withdraw Commitments]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
 The WithdrawCommitments message is sent by the GP, and it allows them to take capital that was deposited into the contract. A commitment will only move into the `SETTLED` state when the GP has withdrawn all the funds that the LP promised to commit. When a commitment by a LP is settled the contract will mint and transfer them LP investment tokens. Additionally, the contract will emit an event for each newly settled LP.
 
 ##### Emitted Events
