@@ -140,6 +140,7 @@ The DepositCommitment message is sent by one of the accepted LPs. It's purpose i
 - `lp`: The address of the LP depositing funds.
 
 ##### Request Sample
+```
 {
     "deposit_commitment": {
         "securities": [
@@ -154,9 +155,24 @@ The DepositCommitment message is sent by one of the accepted LPs. It's purpose i
         ]
     }
 }
+```
 
 #### Withdraw Commitments
+The WithdrawCommitments message is sent by the GP, and it allows them to take capital that was deposited into the contract. A commitment will only move into the `SETTLED` state when the GP has withdrawn all the funds that the LP promised to commit. When a commitment by a LP is settled the contract will mint and transfer them LP investment tokens. Additionally, the contract will emit an event for each newly settled LP.
 
+##### Emitted Events
+- `settled`: An event representing a settled LP.
+  - `lp`: The address of the settled LP.
 
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `withdraw_commitments`.
+- `gp`: The address of the GP withdrawing funds.
+
+##### Request Sample
+```
+{
+    "withdraw_commitments": {}
+}
+```
 
 ## Local Deployment
