@@ -130,6 +130,30 @@ The AcceptCommitments message is sent by the General Partner. They will submit t
 ```
 
 #### Deposit Commitment
+The DepositCommitment message is sent by one of the accepted LPs. It's purpose is for the LP to partially or completely pay their commitment. These funds will then be stored in the contract, and the GP can withdraw them at a later time. LPs cannot deposit more than they have committed, and every deposit must include funds. These included funds must equal the sum of the cost of all the message's securities.
+
+##### Request Parameters
+- `securities`: A list of partial or complete security commitments that the LP is depositing funds for.
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `deposit_commitment`.
+- `lp`: The address of the LP depositing funds.
+
+##### Request Sample
+{
+    "deposit_commitment": {
+        "securities": [
+            {
+                "name": "Security1",
+                "amount": "50"
+            },
+            {
+                "name": "Security2",
+                "amount": "75"
+            }
+        ]
+    }
+}
 
 #### Withdraw Commitments
 
