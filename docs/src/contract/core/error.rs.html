@@ -57,6 +57,21 @@
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::StdError;
 <span class="kw">use </span>thiserror::Error;
 
@@ -111,10 +126,25 @@
 
     <span class="attr">#[error(<span class="string">&quot;A commitment by this lp already exists&quot;</span>)]
     </span>CommitmentAlreadyExists {},
+
+    <span class="attr">#[error(<span class="string">&quot;Mismatch in the migrating contract name&quot;</span>)]
+    </span>ContractNameMismatch {},
+
+    <span class="attr">#[error(<span class="string">&quot;Invalid migration version&quot;</span>)]
+    </span>InvalidVersion {},
+
+    <span class="attr">#[error(<span class="string">&quot;Semver parsing error: {0}&quot;</span>)]
+    </span>SemVer(String),
 }
 
 <span class="kw">pub fn </span>contract_error(err: <span class="kw-2">&amp;</span>str) -&gt; ProvTxResponse {
     <span class="prelude-val">Err</span>(ContractError::Std(StdError::generic_err(err)))
+}
+
+<span class="kw">impl </span>From&lt;semver::Error&gt; <span class="kw">for </span>ContractError {
+    <span class="kw">fn </span>from(err: semver::Error) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::SemVer(err.to_string())
+    }
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
