@@ -181,6 +181,64 @@ The WithdrawCommitments message is sent by the GP, and it allows them to take ca
 }
 ```
 
+### Query Routes
+This contract exposes five different query routes which allow users to view the state of the contract, investors, and the investor's commitments. A more detailed view of these messages can be seen in the [json](schema/query_msg.json).
+
+#### Query Version
+This route can be used to obtain the contract's version.
+
+##### Request Sample
+```
+{
+    "query_version": {}
+}
+```
+
+#### Query State
+This route can be used to obtain gp, securities, capital denom, and rules that were setup during instatiation.
+
+##### Request Sample
+```
+{
+    "query_state":{}
+}
+```
+
+#### Query Investor
+This route can be used to obtain the commitment made by an investor, and how much of that commitment they have paid.
+
+##### Request Sample
+```
+{
+    "query_investor": {
+        "investor": "tp1udtttp4crmfyp3s7z2mqzxa9dxyx6lrphf4uzz"
+    }
+}
+```
+
+#### Query Pending Commitments
+This route can be used to obtain a list of all the commitments in the `PENDING` state.
+
+##### Request Sample
+```
+{
+    "query_pending_commitments": {}
+}
+```
+
+#### Query Securitizations
+This route can be used to obtain initialization information about one or more securities. 
+
+##### Request Sample
+```
+{
+    "query_securitizations": {
+        "securities": [
+            "Security1"
+        ]
+    }
+}
+```
 ## Local Deployment
 The following steps will show you how to locally run the contract with a local Provenance Blockchain instance.
 
