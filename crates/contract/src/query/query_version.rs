@@ -17,7 +17,10 @@ mod tests {
 
     use crate::{
         contract::query,
-        core::msg::{QueryMsg, QueryVersionResponse},
+        core::{
+            constants::CONTRACT_VERSION,
+            msg::{QueryMsg, QueryVersionResponse},
+        },
         util::testing::instantiate_contract,
     };
 
@@ -28,6 +31,6 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryVersion {}).unwrap();
         let value: QueryVersionResponse = from_binary(&res).unwrap();
         assert_eq!("contract".to_string(), value.contract_version.contract);
-        assert_eq!("1.0.0".to_string(), value.contract_version.version);
+        assert_eq!(CONTRACT_VERSION, value.contract_version.version);
     }
 }
