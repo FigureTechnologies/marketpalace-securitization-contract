@@ -27,7 +27,7 @@ fn validate_migration(storage: &dyn Storage) -> ValidateResult {
         return Err(crate::core::error::ContractError::ContractNameMismatch {});
     }
 
-    if storage_version < version {
+    if storage_version >= version {
         return Err(crate::core::error::ContractError::InvalidVersion {});
     }
 
