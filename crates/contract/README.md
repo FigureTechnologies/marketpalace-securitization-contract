@@ -1,8 +1,14 @@
 # Marketpalace Securitization
-
-## Documentation
-
+The purpose of this contract is to act as a third party to help a GP raise funding by producing one or more securities. Any LP can partake in this and deposit funding for shares of one or more of the securities created by the contract. These LPs will then be rewarded with investment tokens when they have finished settlement.
 ## Process / Concepts
+In order to understand the contract it's important to have an understanding of some of the processes and concepts. The following subsections should help in clarifying what these processes and concepts are.
+### Commitment Lifecycle
+A commitment will transition between the three following states:
+  - `PENDING`: A commitment will be considered `PENDING` when a LP proposes a commitment, but it has not yet been accepted yet.
+  - `ACCEPTED`: A commitment will move into the `ACCEPTED` state when the GP accepts a proposed commitment. The LP will then have to pay their committed funds.
+  - `SETTLED`: A commitment transitions into the `SETTLED` state when a GP has withdrawn all of a LP's commitment. The LP will be rewarded with investment tokens.
+### Investment Tokens
+These are tokens that represent the shares of a security. A LP will receive these when they have paid their commitment in full and have reached settlement. Each security has its own unique investment token.
 
 ## Account Roles
 There are three types of accounts that interact with this smart contract.
