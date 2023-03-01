@@ -182,3 +182,60 @@ The WithdrawCommitments message is sent by the GP, and it allows them to take ca
 ```
 
 ## Local Deployment
+The following steps will show you how to locally run the contract with a local Provenance Blockchain instance.
+
+1. Download and run a Provenance Blockchain localnet. The remaining commands in this tutorial are assumed to be run
+   from the provenance directory.If you already have the provenance repository cloned locally, this step can be skipped.
+
+```shell
+git clone https://github.com/provenance-io/provenance.git
+git checkout main
+make clean
+make localnet-start
+```
+
+2. Next, lets obtain the address of the `node0` account. This is an account that is setup and configured to have funds. We
+    can use it to instantiate our contract.
+
+```shell
+export node0=$(provenanced keys show -a node0 --home build/node0 --testnet)
+```
+
+3. Now let's instantiate the contract!  Run the following, making sure to use the correct location of the wasm file
+   that should exist in the `artifacts` directory of this repositories root.
+
+```shell
+provenanced tx wasm store contract.wasm
+--from "$node0" \
+--home build/node0 \
+--chain-id chain-local \
+--gas auto \
+--gas-prices 1905nhash \
+--gas-adjustment 1.5 \
+--broadcast-mode block \
+--testnet \
+--output json \
+--yes | jq
+```
+
+4. Find the `code_id` output from the previous command.  If you're following this guide from a fresh install, the value
+   should just be 1.  Let's assume it is for this next command.  Time to instantiate the contract!
+
+```shell
+provenanced tx wasm instantiate 1 \
+'{"gp":"tp13k86awgexqdt2f2wtu6ukdhrg8dc8nrtmc49pl","securities":[{"name":"Security1","amount":"1000","security_type":{"tranche":{}},"minimum_amount":"10","price_per_unit":{"denom":"nhash","amount":"1000000000"}}],"capital_denom":"nhash","rules":[]}' \
+--admin "$node0" \
+--from "$node0" \
+--home build/node0 \
+--label securities \
+--chain-id chain-local \
+--gas auto \
+--gas-prices 1905nhash \
+--gas-adjustment 1.5 \
+--broadcast-mode block \
+--testnet \
+--output json \
+--yes | jq
+```
+
+Success!  The contract is now deployed locally!!
