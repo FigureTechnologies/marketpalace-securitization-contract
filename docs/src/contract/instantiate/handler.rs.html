@@ -218,6 +218,8 @@
 <a href="#218" id="218">218</a>
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, CosmosMsg, Env, MessageInfo, Response, StdResult};
 <span class="kw">use </span>cw2::set_contract_version;
 <span class="kw">use </span>provwasm_std::{
@@ -276,9 +278,10 @@
         MarkerAccess::Mint,
         MarkerAccess::Burn,
         MarkerAccess::Withdraw,
+        MarkerAccess::Transfer,
     ];
     <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[
-        create_marker(amount, denom.clone(), MarkerType::Coin)<span class="question-mark">?</span>,
+        create_marker(amount, denom.clone(), MarkerType::Restricted)<span class="question-mark">?</span>,
         grant_marker_access(denom, owner, permissions)<span class="question-mark">?</span>,
         finalize_marker(denom)<span class="question-mark">?</span>,
         activate_marker(denom)<span class="question-mark">?</span>,
@@ -322,12 +325,13 @@
             MarkerAccess::Mint,
             MarkerAccess::Burn,
             MarkerAccess::Withdraw,
+            MarkerAccess::Transfer,
         ];
 
         <span class="kw">let </span>messages = new_active_marker(address.clone(), <span class="kw-2">&amp;</span>denom, amount).unwrap();
         <span class="macro">assert_eq!</span>(<span class="number">4</span>, messages.len());
         <span class="macro">assert_eq!</span>(
-            create_marker(amount, <span class="kw-2">&amp;</span>denom, MarkerType::Coin).unwrap(),
+            create_marker(amount, <span class="kw-2">&amp;</span>denom, MarkerType::Restricted).unwrap(),
             messages[<span class="number">0</span>]
         );
         <span class="macro">assert_eq!</span>(
