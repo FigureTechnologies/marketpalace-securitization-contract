@@ -31,6 +31,9 @@
 <a href="#31" id="31">31</a>
 <a href="#32" id="32">32</a>
 <a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{to_binary, Storage};
 <span class="kw">use </span>cw2::get_contract_version;
 
@@ -50,7 +53,10 @@
 
     <span class="kw">use crate</span>::{
         contract::query,
-        core::msg::{QueryMsg, QueryVersionResponse},
+        core::{
+            constants::CONTRACT_VERSION,
+            msg::{QueryMsg, QueryVersionResponse},
+        },
         util::testing::instantiate_contract,
     };
 
@@ -61,7 +67,7 @@
         <span class="kw">let </span>res = query(deps.as_ref(), mock_env(), QueryMsg::QueryVersion {}).unwrap();
         <span class="kw">let </span>value: QueryVersionResponse = from_binary(<span class="kw-2">&amp;</span>res).unwrap();
         <span class="macro">assert_eq!</span>(<span class="string">&quot;contract&quot;</span>.to_string(), value.contract_version.contract);
-        <span class="macro">assert_eq!</span>(<span class="string">&quot;1.0.0&quot;</span>.to_string(), value.contract_version.version);
+        <span class="macro">assert_eq!</span>(CONTRACT_VERSION, value.contract_version.version);
     }
 }
 </code></pre></div>
