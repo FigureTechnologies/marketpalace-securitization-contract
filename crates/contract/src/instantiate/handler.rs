@@ -56,9 +56,10 @@ fn new_active_marker(
         MarkerAccess::Mint,
         MarkerAccess::Burn,
         MarkerAccess::Withdraw,
+        MarkerAccess::Transfer,
     ];
     Ok(vec![
-        create_marker(amount, denom.clone(), MarkerType::Coin)?,
+        create_marker(amount, denom.clone(), MarkerType::Restricted)?,
         grant_marker_access(denom, owner, permissions)?,
         finalize_marker(denom)?,
         activate_marker(denom)?,
@@ -102,12 +103,13 @@ mod tests {
             MarkerAccess::Mint,
             MarkerAccess::Burn,
             MarkerAccess::Withdraw,
+            MarkerAccess::Transfer,
         ];
 
         let messages = new_active_marker(address.clone(), &denom, amount).unwrap();
         assert_eq!(4, messages.len());
         assert_eq!(
-            create_marker(amount, &denom, MarkerType::Coin).unwrap(),
+            create_marker(amount, &denom, MarkerType::Restricted).unwrap(),
             messages[0]
         );
         assert_eq!(
