@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ExecuteMsg",""],["MigrateMsg",""],["QueryMsg",""]],"struct":[["InstantiateMsg",""],["QueryInvestorResponse",""],["QueryPendingCommitmentsResponse",""],["QuerySecuritizationsResponse",""],["QueryStateResponse",""],["QueryVersionResponse",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["ExecuteMsg",""],["QueryMsg",""]],"struct":[["InstantiateMsg",""],["MigrateMsg",""],["QueryInvestorResponse",""],["QueryPendingCommitmentsResponse",""],["QuerySecuritizationsResponse",""],["QueryStateResponse",""],["QueryVersionResponse",""]]};

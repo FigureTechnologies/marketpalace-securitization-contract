@@ -62,7 +62,7 @@
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::core::error::ContractError::ContractNameMismatch {});
     }
 
-    <span class="kw">if </span>storage_version &lt; version {
+    <span class="kw">if </span>storage_version &gt;= version {
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::core::error::ContractError::InvalidVersion {});
     }
 
