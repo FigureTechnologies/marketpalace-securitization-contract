@@ -52,8 +52,23 @@ pub enum ContractError {
 
     #[error("A commitment by this lp already exists")]
     CommitmentAlreadyExists {},
+
+    #[error("Mismatch in the migrating contract name")]
+    ContractNameMismatch {},
+
+    #[error("Invalid migration version")]
+    InvalidVersion {},
+
+    #[error("Semver parsing error: {0}")]
+    SemVer(String),
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {
     Err(ContractError::Std(StdError::generic_err(err)))
+}
+
+impl From<semver::Error> for ContractError {
+    fn from(err: semver::Error) -> Self {
+        Self::SemVer(err.to_string())
+    }
 }

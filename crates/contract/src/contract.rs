@@ -2,7 +2,10 @@ use cosmwasm_std::{entry_point, Env, MessageInfo};
 
 use crate::{
     core::aliases::{ProvDeps, ProvDepsMut, ProvQueryResponse, ProvTxResponse},
-    core::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
+    core::{
+        constants::{CONTRACT_NAME, CONTRACT_VERSION},
+        msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
+    },
     execute, instantiate, migrate, query,
     util::validate::Validate,
 };
@@ -35,5 +38,7 @@ pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) 
 #[entry_point]
 pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) -> ProvTxResponse {
     msg.validate()?;
-    migrate::router::route(deps, env, msg)
+    let res = migrate::handler::handle(&deps, env, msg);
+    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    res
 }
