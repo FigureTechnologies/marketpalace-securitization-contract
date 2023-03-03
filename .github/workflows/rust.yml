@@ -2,9 +2,9 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, release ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -52,7 +52,7 @@ jobs:
     name: Release Project Files
     needs: check
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/release' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
