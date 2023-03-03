@@ -7,10 +7,15 @@ use crate::{
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
         msg::MigrateMsg,
     },
+    storage,
     util::validate::ValidateResult,
 };
 
 pub fn handle(deps: &ProvDepsMut, _env: Env, _msg: MigrateMsg) -> ProvTxResponse {
+    if storage::state::is_migrating(deps.storage)? {
+        // Throw an error
+    }
+
     validate_migration(deps.storage)?;
 
     // Do migration here

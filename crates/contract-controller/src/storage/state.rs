@@ -1,4 +1,4 @@
-use cosmwasm_std::Storage;
+use cosmwasm_std::{Addr, Storage};
 use cw_storage_plus::Item;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -6,7 +6,11 @@ use serde::{Deserialize, Serialize};
 use crate::core::{constants::STATE_KEY, error::ContractError};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct State {}
+pub struct State {
+    pub batch_size: u128,
+    pub migrating: bool,
+    pub last_address: Option<Addr>,
+}
 
 // We store basic contract State
 pub const STATE: Item<State> = Item::new(STATE_KEY);
@@ -17,6 +21,11 @@ pub fn get(storage: &dyn Storage) -> Result<State, ContractError> {
 
 pub fn set(storage: &mut dyn Storage, state: &State) -> Result<(), ContractError> {
     Ok(STATE.save(storage, state)?)
+}
+
+pub fn is_migrating(storage: &dyn Storage) -> Result<bool, ContractError> {
+    let state = get(storage)?;
+    Ok(state.migrating)
 }
 
 #[cfg(test)]

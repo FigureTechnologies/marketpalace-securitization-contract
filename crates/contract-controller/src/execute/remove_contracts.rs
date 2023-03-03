@@ -6,7 +6,10 @@ use crate::{
 };
 
 pub fn handle(deps: ProvDepsMut, _sender: Addr, contracts: Vec<Addr>) -> ProvTxResponse {
-    for contract in contracts {
+    if storage::state::is_migrating(deps.storage)? {
+        // Throw an error
+    }
+    for contract in &contracts {
         storage::contract::remove(deps.storage, contract);
     }
     Ok(Response::default())

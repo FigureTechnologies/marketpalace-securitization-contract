@@ -21,7 +21,7 @@ lint:
 
 .PHONY: schema
 schema:
-	@cargo schema
+	@cargo schema -p contract
 
 .PHONY: optimize
 optimize:
