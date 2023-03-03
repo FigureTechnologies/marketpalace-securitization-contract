@@ -3,7 +3,9 @@ use cosmwasm_std::{Addr, Uint128};
 use cw2::ContractVersion;
 
 #[cw_serde]
-pub struct InstantiateMsg {}
+pub struct InstantiateMsg {
+    pub batch_size: Uint128,
+}
 
 #[cw_serde]
 pub enum ExecuteMsg {
@@ -29,3 +31,6 @@ pub struct QueryVersionResponse {
 
 #[cw_serde]
 pub struct MigrateMsg {}
+
+#[cw_serde]
+pub struct ContractMigrateMsg {}

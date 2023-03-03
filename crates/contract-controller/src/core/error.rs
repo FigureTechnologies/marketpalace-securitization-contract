@@ -20,6 +20,9 @@ pub enum ContractError {
     #[error("The supplied contract list is empty")]
     EmptyContractList {},
 
+    #[error("Unable to perform this action while migrating manages contracts")]
+    MigrationInProcess {},
+
     #[error("Mismatch in the migrating contract name")]
     ContractNameMismatch {},
 

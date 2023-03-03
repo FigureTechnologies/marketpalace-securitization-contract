@@ -1,11 +1,10 @@
 use cosmwasm_std::{to_binary, Addr, Response, SubMsg, Uint128, WasmMsg};
-use provwasm_std::ProvenanceMsg;
 
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvSubMsg, ProvTxResponse},
         error::ContractError,
-        msg::MigrateMsg,
+        msg::ContractMigrateMsg,
     },
     storage,
 };
@@ -22,7 +21,7 @@ pub fn handle(deps: ProvDepsMut, _sender: Addr, contract_id: Uint128) -> ProvTxR
     // Automatically exit migrating
     if contracts.is_empty() {
         state.migrating = false;
-        // We want to throw out an event
+        // We want to emit an event that we are done
     }
     state.last_address = contracts.last().cloned();
     storage::state::set(deps.storage, &state)?;
@@ -39,7 +38,7 @@ fn migrate_contracts(
         let msg = WasmMsg::Migrate {
             contract_addr: contract.to_string(),
             new_code_id: contract_id.u128() as u64,
-            msg: to_binary(&MigrateMsg {})?,
+            msg: to_binary(&ContractMigrateMsg {})?,
         };
         messages.push(SubMsg::reply_on_success(msg, 0));
     }

@@ -5,6 +5,7 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
+        error::ContractError,
         msg::MigrateMsg,
     },
     storage,
@@ -13,7 +14,7 @@ use crate::{
 
 pub fn handle(deps: &ProvDepsMut, _env: Env, _msg: MigrateMsg) -> ProvTxResponse {
     if storage::state::is_migrating(deps.storage)? {
-        // Throw an error
+        return Err(ContractError::MigrationInProcess {});
     }
 
     validate_migration(deps.storage)?;

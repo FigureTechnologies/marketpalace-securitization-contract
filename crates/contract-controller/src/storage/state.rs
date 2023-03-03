@@ -12,6 +12,16 @@ pub struct State {
     pub last_address: Option<Addr>,
 }
 
+impl State {
+    pub fn new(batch_size: u128) -> Self {
+        Self {
+            batch_size,
+            migrating: false,
+            last_address: None,
+        }
+    }
+}
+
 // We store basic contract State
 pub const STATE: Item<State> = Item::new(STATE_KEY);
 
