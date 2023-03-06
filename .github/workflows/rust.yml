@@ -60,8 +60,10 @@ jobs:
       - name: Get Release Version
         run: |
           APP_VERSION=$(cargo metadata | jq -r '.packages[] | select(.name == "contract") | .version')
-          echo "Using application version v$APP_VERSION for release"
+          CONTROLLER_APP_VERSION=$(cargo metadata | jq -r '.packages[] | select(.name == "controller_contract") | .version')
+          echo "Using application version v$APP_VERSION and controller v$CONTROLLER_APP_VERSION for release"
           echo "RELEASE_VERSION=v$APP_VERSION" >> $GITHUB_ENV
+          echo "CONTROLLER_RELEASE_VERSION=v$CONTROLLER_APP_VERSION" >> $GITHUB_ENV
 
       - name: Check Release is New Version
         run: |
@@ -102,7 +104,9 @@ jobs:
         if: ${{ !env.TAG_EXISTS }}
         run: |
           # Build the WASM output in the artifacts directory
-          make contract
+          make contracts
+          mv artifacts/contract.wasm artifacts/contract_${{ env.RELEASE_VERSION }}.wasm
+          mv artifacts/controller_contract.wasm artifacts/controller_contract_${{ env.CONTROLLER_RELEASE_VERSION }}.wasm
 
       - name: Release WASM
         uses: softprops/action-gh-release@v1
@@ -114,5 +118,6 @@ jobs:
           name: ${{ env.RELEASE_VERSION }}
           tag_name: ${{ env.RELEASE_VERSION }}
           files: |
-            artifacts/contract.wasm
+            artifacts/contract_${{ env.RELEASE_VERSION }}.wasm
+            artifacts/controller_contract_${{ env.CONTROLLER_RELEASE_VERSION }}.wasm
             artifacts/checksums.txt

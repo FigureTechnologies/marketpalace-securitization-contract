@@ -1,6 +1,6 @@
 [package]
 name = "contract-controller"
-version = "1.0.1"
+version = "1.0.0"
 authors = ["Matthew Witkowski <mwitkowski@provenance.io>"]
 edition = "2021"
 

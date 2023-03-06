@@ -126,7 +126,7 @@ checksum = "520fbf3c07483f94e3e3ca9d0cfd913d7718ef2483d2cfd91c0d9e91474ab913"
 
 [[package]]
 name = "contract"
-version = "1.0.2"
+version = "1.0.3"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -144,7 +144,7 @@ dependencies = [
 
 [[package]]
 name = "contract-controller"
-version = "1.0.1"
+version = "1.0.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
