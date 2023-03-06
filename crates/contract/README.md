@@ -62,7 +62,7 @@ After validation has succeed, the contract routes the message to the correct han
             "name": "Security2",
             "amount": "5000",
             "security_type": {
-                "primary": {}
+                "tranche": {}
             },
             "minimum_amount": "100",
             "price_per_unit": {
