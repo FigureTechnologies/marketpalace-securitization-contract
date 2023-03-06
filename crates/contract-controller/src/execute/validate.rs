@@ -18,7 +18,7 @@ impl Validate for ExecuteMsg {
                     return Err(ContractError::EmptyContractList {});
                 }
             }
-            ExecuteMsg::MigrateContracts { new_contract: _ } => {}
+            _ => {}
         };
         Ok(())
     }

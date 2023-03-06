@@ -33,6 +33,16 @@ pub fn set(storage: &mut dyn Storage, state: &State) -> Result<(), ContractError
     Ok(STATE.save(storage, state)?)
 }
 
+pub fn update_batch_size(
+    storage: &mut dyn Storage,
+    batch_size: u128,
+) -> Result<State, ContractError> {
+    STATE.update(storage, |mut state| -> Result<State, ContractError> {
+        state.batch_size = batch_size;
+        Ok(state)
+    })
+}
+
 pub fn is_migrating(storage: &dyn Storage) -> Result<bool, ContractError> {
     let state = get(storage)?;
     Ok(state.migrating)

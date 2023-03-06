@@ -12,6 +12,7 @@ pub enum ExecuteMsg {
     AddContracts { contracts: Vec<Addr> },
     RemoveContracts { contracts: Vec<Addr> },
     MigrateContracts { new_contract: Uint128 },
+    ModifyBatchSize { batch_size: Uint128 },
 }
 
 #[cw_serde]

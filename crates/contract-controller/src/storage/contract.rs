@@ -31,10 +31,16 @@ pub fn range(storage: &mut dyn Storage, start: Option<&Addr>, amount: u128) -> V
         None => None,
         Some(address) => Some(Bound::exclusive(address)),
     };
-    let contracts: Vec<Addr> = CONTRACTS_MAP
-        .keys(storage, min, None, Order::Ascending)
-        .take(amount as usize)
-        .map(|item| item.unwrap())
-        .collect();
+    let contracts: Vec<Addr> = match amount {
+        0 => CONTRACTS_MAP
+            .keys(storage, min, None, Order::Ascending)
+            .map(|item| item.unwrap())
+            .collect(),
+        _ => CONTRACTS_MAP
+            .keys(storage, min, None, Order::Ascending)
+            .take(amount as usize)
+            .map(|item| item.unwrap())
+            .collect(),
+    };
     contracts
 }

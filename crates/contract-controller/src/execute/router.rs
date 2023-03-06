@@ -5,7 +5,7 @@ use crate::core::{
     msg::ExecuteMsg,
 };
 
-use super::{add_contracts, migrate_contracts, remove_contracts};
+use super::{add_contracts, migrate_contracts, modify_batch_size, remove_contracts};
 
 pub fn route(deps: ProvDepsMut, _env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -17,6 +17,9 @@ pub fn route(deps: ProvDepsMut, _env: Env, info: MessageInfo, msg: ExecuteMsg) -
         }
         ExecuteMsg::MigrateContracts { new_contract } => {
             migrate_contracts::handle(deps, info.sender, new_contract)
+        }
+        ExecuteMsg::ModifyBatchSize { batch_size } => {
+            modify_batch_size::handle(deps, batch_size.u128())
         }
     }
 }

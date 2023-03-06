@@ -21,12 +21,13 @@ pub fn handle(deps: ProvDepsMut, _sender: Addr, contract_id: Uint128) -> ProvTxR
     // Automatically exit migrating
     if contracts.is_empty() {
         state.migrating = false;
-        // We want to emit an event that we are done
     }
     state.last_address = contracts.last().cloned();
     storage::state::set(deps.storage, &state)?;
-
-    Ok(Response::default().add_submessages(messages))
+    Ok(Response::default()
+        .add_attribute("migration_finished", contracts.is_empty().to_string())
+        .add_attribute("action", "migrate_contracts")
+        .add_submessages(messages))
 }
 
 fn migrate_contracts(
