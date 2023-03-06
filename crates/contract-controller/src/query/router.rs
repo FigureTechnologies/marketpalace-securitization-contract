@@ -5,11 +5,12 @@ use crate::core::{
     msg::QueryMsg,
 };
 
-use super::query_version;
+use super::{query_state, query_version};
 
 pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
     match msg {
         QueryMsg::QueryVersion {} => query_version::handle(deps.storage),
+        QueryMsg::QueryState {} => query_state::handle(deps.storage),
     }
 }
 

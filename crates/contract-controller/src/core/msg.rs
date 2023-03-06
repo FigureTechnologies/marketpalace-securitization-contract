@@ -20,14 +20,20 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(QueryVersionResponse)]
     QueryVersion {},
-}
 
-#[cw_serde]
-pub struct QueryStateResponse {}
+    #[returns(QueryStateResponse)]
+    QueryState {},
+}
 
 #[cw_serde]
 pub struct QueryVersionResponse {
     pub contract_version: ContractVersion,
+}
+
+#[cw_serde]
+pub struct QueryStateResponse {
+    pub batch_size: Uint128,
+    pub migrating: bool,
 }
 
 #[cw_serde]
