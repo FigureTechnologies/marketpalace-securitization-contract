@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Response, SubMsg, Uint128, WasmMsg};
+use cosmwasm_std::{to_binary, Addr, Env, Response, SubMsg, Uint128, WasmMsg};
 
 use crate::{
     core::{
@@ -7,10 +7,15 @@ use crate::{
         msg::ContractMigrateMsg,
     },
     storage,
+    util::is_contract_admin::is_contract_admin,
 };
 
 // We may need to do batching on this because of the large amount of securities
-pub fn handle(deps: ProvDepsMut, _sender: Addr, contract_id: Uint128) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contract_id: Uint128) -> ProvTxResponse {
+    if !is_contract_admin(&deps, &env, sender)? {
+        return Err(ContractError::Unauthorized {});
+    }
+
     let mut state = storage::state::get(deps.storage)?;
     state.migrating = true;
 

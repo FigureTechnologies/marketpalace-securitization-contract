@@ -27,10 +27,7 @@ pub fn list(storage: &mut dyn Storage) -> Vec<Addr> {
 }
 
 pub fn range(storage: &mut dyn Storage, start: Option<&Addr>, amount: u128) -> Vec<Addr> {
-    let min = match start {
-        None => None,
-        Some(address) => Some(Bound::exclusive(address)),
-    };
+    let min = start.map(Bound::exclusive);
     let contracts: Vec<Addr> = match amount {
         0 => CONTRACTS_MAP
             .keys(storage, min, None, Order::Ascending)

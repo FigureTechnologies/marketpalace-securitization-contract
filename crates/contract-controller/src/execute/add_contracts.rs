@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Event, Response};
+use cosmwasm_std::{Addr, Env, Event, Response};
 
 use crate::{
     core::{
@@ -6,10 +6,15 @@ use crate::{
         error::ContractError,
     },
     storage,
+    util::is_contract_admin::is_contract_admin,
 };
 
-pub fn handle(deps: ProvDepsMut, _sender: Addr, contracts: Vec<Addr>) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec<Addr>) -> ProvTxResponse {
     let mut response = Response::default();
+    if !is_contract_admin(&deps, &env, sender)? {
+        return Err(ContractError::Unauthorized {});
+    }
+
     if storage::state::is_migrating(deps.storage)? {
         return Err(ContractError::MigrationInProcess {});
     }

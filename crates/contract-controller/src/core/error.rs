@@ -23,6 +23,9 @@ pub enum ContractError {
     #[error("Unable to perform this action while migrating manages contracts")]
     MigrationInProcess {},
 
+    #[error("This action can only be performed by the contract's admin")]
+    Unauthorized {},
+
     #[error("Mismatch in the migrating contract name")]
     ContractNameMismatch {},
 
