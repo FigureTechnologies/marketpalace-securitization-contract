@@ -1,10 +1,9 @@
-use cosmwasm_std::{entry_point, Env, MessageInfo, Reply, Response};
+use cosmwasm_std::{entry_point, Env, MessageInfo, Reply};
 
 use crate::{
     core::aliases::{ProvDeps, ProvDepsMut, ProvQueryResponse, ProvTxResponse},
     core::{
         constants::{CONTRACT_NAME, CONTRACT_VERSION},
-        error::ContractError,
         msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
     },
     execute, instantiate, migrate, query, reply,
