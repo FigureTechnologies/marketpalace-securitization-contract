@@ -18,7 +18,7 @@ pub fn remove(storage: &mut dyn Storage, contract: &Addr) {
     CONTRACTS_MAP.remove(storage, contract);
 }
 
-pub fn list(storage: &mut dyn Storage) -> Vec<Addr> {
+pub fn list(storage: &dyn Storage) -> Vec<Addr> {
     let contracts: Vec<Addr> = CONTRACTS_MAP
         .keys(storage, None, None, Order::Ascending)
         .map(|item| item.unwrap())

@@ -23,6 +23,9 @@ pub enum QueryMsg {
 
     #[returns(QueryStateResponse)]
     QueryState {},
+
+    #[returns(QueryContractsResponse)]
+    QueryContracts {},
 }
 
 #[cw_serde]
@@ -34,6 +37,11 @@ pub struct QueryVersionResponse {
 pub struct QueryStateResponse {
     pub batch_size: Uint128,
     pub migrating: bool,
+}
+
+#[cw_serde]
+pub struct QueryContractsResponse {
+    pub contracts: Vec<Addr>,
 }
 
 #[cw_serde]
