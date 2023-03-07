@@ -7,7 +7,7 @@ use crate::{
         error::ContractError,
         msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
     },
-    execute, instantiate, migrate, query,
+    execute, instantiate, migrate, query, reply,
     util::validate::Validate,
 };
 
@@ -45,6 +45,6 @@ pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) -> ProvTxResponse {
 }
 
 #[entry_point]
-pub fn reply(_deps: ProvDepsMut, _env: Env, _reply: Reply) -> Result<Response, ContractError> {
-    Ok(Response::default())
+pub fn reply(deps: ProvDepsMut, env: Env, reply: Reply) -> ProvTxResponse {
+    reply::handler::handle(deps, env, reply)
 }
