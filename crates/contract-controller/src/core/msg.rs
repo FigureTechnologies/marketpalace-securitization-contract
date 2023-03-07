@@ -9,10 +9,22 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    AddContracts { contracts: Vec<Addr> },
-    RemoveContracts { contracts: Vec<Addr> },
-    MigrateContracts { new_contract: Uint128 },
-    ModifyBatchSize { batch_size: Uint128 },
+    AddContracts {
+        contracts: Vec<Addr>,
+    },
+    RemoveContracts {
+        contracts: Vec<Addr>,
+    },
+    MigrateContracts {
+        contracts: Vec<Addr>,
+        new_contract: Uint128,
+    },
+    MigrateAllContracts {
+        new_contract: Uint128,
+    },
+    ModifyBatchSize {
+        batch_size: Uint128,
+    },
 }
 
 #[cw_serde]
