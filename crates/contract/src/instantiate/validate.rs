@@ -30,6 +30,14 @@ impl Validate for InstantiateMsg {
             return Err(ContractError::InvalidCapitalDenom {});
         }
 
+        let same_denom = self
+            .securities
+            .iter()
+            .all(|security| security.price_per_unit.denom == self.capital_denom);
+        if !same_denom {
+            return Err(ContractError::InvalidSecurityPriceDenom {});
+        }
+
         Ok(())
     }
 
@@ -87,6 +95,40 @@ mod tests {
         msg.validate().expect("should pass validation");
         msg.validate_msg_funds(&funds)
             .expect("should not have funds");
+    }
+
+    #[test]
+    fn test_invalid_security_denom() {
+        let msg = InstantiateMsg {
+            gp: Addr::unchecked("address"),
+            securities: vec![
+                Security {
+                    name: "security 1".to_string(),
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                },
+                Security {
+                    name: "security 2".to_string(),
+                    amount: Uint128::new(100),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom2".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                },
+            ],
+            capital_denom: "denom".to_string(),
+            rules: vec![],
+        };
+        let expected = ContractError::InvalidSecurityPriceDenom {}.to_string();
+        let output = msg.validate().unwrap_err();
+        assert_eq!(expected, output.to_string());
     }
 
     #[test]
