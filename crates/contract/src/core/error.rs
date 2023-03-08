@@ -44,6 +44,9 @@ pub enum ContractError {
     #[error("The capital denom is invalid")]
     InvalidCapitalDenom {},
 
+    #[error("All security denoms must match the capital denom")]
+    InvalidSecurityPriceDenom {},
+
     #[error("The deposit exceeds the commitment amount")]
     ExcessiveDeposit {},
 
