@@ -49,4 +49,60 @@ pub fn is_migrating(storage: &dyn Storage) -> Result<bool, ContractError> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+
+    use provwasm_mocks::mock_dependencies;
+
+    use crate::storage::state::{is_migrating, set, update_batch_size};
+
+    use super::{get, State};
+
+    #[test]
+    fn test_new_state_creation() {
+        let state = State::new(2);
+        assert_eq!(2, state.batch_size);
+        assert_eq!(false, state.migrating);
+        assert_eq!(None, state.last_address);
+    }
+
+    #[test]
+    fn test_get_set() {
+        let mut deps = mock_dependencies(&[]);
+        let state = State::new(2);
+
+        set(deps.as_mut().storage, &state).unwrap();
+        let new_state = get(&deps.storage).unwrap();
+
+        assert_eq!(2, new_state.batch_size);
+        assert_eq!(false, new_state.migrating);
+        assert_eq!(None, new_state.last_address);
+    }
+
+    #[test]
+    fn test_update_batch_size() {
+        let mut deps = mock_dependencies(&[]);
+        let state = State::new(2);
+
+        set(deps.as_mut().storage, &state).unwrap();
+        let returned_state = update_batch_size(deps.as_mut().storage, 5).unwrap();
+
+        let new_state = get(&deps.storage).unwrap();
+        assert_eq!(5, new_state.batch_size);
+        assert_eq!(false, new_state.migrating);
+        assert_eq!(None, new_state.last_address);
+        assert_eq!(returned_state, new_state);
+    }
+
+    #[test]
+    fn test_is_migrating() {
+        let mut deps = mock_dependencies(&[]);
+        let mut state = State::new(2);
+
+        set(deps.as_mut().storage, &state).unwrap();
+        assert_eq!(false, is_migrating(&deps.storage).unwrap());
+
+        state.migrating = true;
+        set(deps.as_mut().storage, &state).unwrap();
+        assert_eq!(true, is_migrating(&deps.storage).unwrap());
+    }
+}
