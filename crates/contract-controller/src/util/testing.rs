@@ -73,15 +73,3 @@ pub fn create_admin_deps(
     querier.base.update_wasm(handler);
     deps
 }
-
-pub fn mock_dependencies2(
-    contract_balance: &[Coin],
-) -> OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery> {
-    let base = MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]);
-    OwnedDeps {
-        storage: MockStorage::default(),
-        api: MockApi::default(),
-        querier: ProvenanceMockQuerier::new(base),
-        custom_query_type: PhantomData,
-    }
-}
