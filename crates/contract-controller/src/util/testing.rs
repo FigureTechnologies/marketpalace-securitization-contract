@@ -9,11 +9,11 @@ use provwasm_mocks::{mock_dependencies, ProvenanceMockQuerier};
 use provwasm_std::ProvenanceQuery;
 
 use crate::{
-    contract::instantiate,
+    contract::{execute, instantiate},
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
-        msg::{InstantiateMsg, QueryMsg},
+        msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     },
 };
 
@@ -23,10 +23,26 @@ pub fn test_init_message() -> InstantiateMsg {
     }
 }
 
+pub fn test_add_contracts_message() -> ExecuteMsg {
+    ExecuteMsg::AddContracts {
+        contracts: vec![
+            Addr::unchecked("contract1"),
+            Addr::unchecked("contract2"),
+            Addr::unchecked("contract3"),
+        ],
+    }
+}
+
 pub fn instantiate_contract(deps: ProvDepsMut, env: Env) -> ProvTxResponse {
     let info = mock_info("sender", &[]);
     let msg = test_init_message();
     instantiate(deps, env, info, msg)
+}
+
+pub fn add_contracts(deps: ProvDepsMut, env: Env) -> ProvTxResponse {
+    let info = mock_info("admin", &[]);
+    let msg = test_add_contracts_message();
+    execute(deps, env, info, msg)
 }
 
 pub fn get_test_admin(deps: &ProvDepsMut, env: &Env) -> Result<Addr, ContractError> {
