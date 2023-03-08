@@ -13,7 +13,7 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
-        msg::InstantiateMsg,
+        msg::{InstantiateMsg, QueryMsg},
     },
 };
 
@@ -72,4 +72,16 @@ pub fn create_admin_deps(
 
     querier.base.update_wasm(handler);
     deps
+}
+
+pub fn create_test_query_contracts() -> QueryMsg {
+    QueryMsg::QueryContracts {}
+}
+
+pub fn create_test_query_state() -> QueryMsg {
+    QueryMsg::QueryState {}
+}
+
+pub fn create_test_query_verison() -> QueryMsg {
+    QueryMsg::QueryVersion {}
 }

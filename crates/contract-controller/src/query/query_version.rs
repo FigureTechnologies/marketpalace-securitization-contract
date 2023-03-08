@@ -11,4 +11,28 @@ pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cosmwasm_std::{from_binary, testing::mock_env};
+    use provwasm_mocks::mock_dependencies;
+
+    use crate::{
+        core::{
+            constants::{CONTRACT_NAME, CONTRACT_VERSION},
+            msg::QueryVersionResponse,
+        },
+        util::testing::instantiate_contract,
+    };
+
+    use super::handle;
+
+    #[test]
+    fn test_query_version_has_correct_version() {
+        let mut deps = mock_dependencies(&[]);
+        let env = mock_env();
+        let _ = instantiate_contract(deps.as_mut(), env).unwrap();
+        let bin_response = handle(&deps.storage).unwrap();
+        let response: QueryVersionResponse = from_binary(&bin_response).unwrap();
+        assert_eq!(response.contract_version.version, CONTRACT_VERSION);
+        assert_eq!(response.contract_version.contract, CONTRACT_NAME);
+    }
+}
