@@ -23,6 +23,9 @@ pub enum ContractError {
     #[error("Unable to perform this action while migrating manages contracts")]
     MigrationInProcess {},
 
+    #[error("One or more supplied contracts is not managed by this contract")]
+    UnmanageContract {},
+
     #[error("This action can only be performed by the contract's admin")]
     Unauthorized {},
 

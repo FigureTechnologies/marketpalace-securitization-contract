@@ -26,3 +26,67 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec<Addr>) -
     }
     Ok(response.add_attribute("action", "add_contracts"))
 }
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Event};
+
+    use crate::{
+        core::{error::ContractError, msg::ExecuteMsg},
+        execute::add_contracts::handle,
+        storage,
+        util::testing::{create_admin_deps, instantiate_contract, test_add_contracts_message},
+    };
+
+    #[test]
+    fn test_handle_sender_is_admin() {
+        let mut deps = create_admin_deps(&[]);
+        let env = mock_env();
+        let sender = Addr::unchecked("sender");
+        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let res = handle(deps.as_mut(), env, sender, contracts).unwrap_err();
+        assert_eq!(ContractError::Unauthorized {}.to_string(), res.to_string());
+    }
+
+    #[test]
+    fn test_handle_is_not_in_migrating_state() {
+        let mut deps = create_admin_deps(&[]);
+        let env = mock_env();
+        let sender = Addr::unchecked("admin");
+        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+
+        instantiate_contract(deps.as_mut(), env.clone()).unwrap();
+        let mut state = storage::state::get(&deps.storage).unwrap();
+        state.migrating = true;
+        storage::state::set(deps.as_mut().storage, &state).unwrap();
+
+        let res = handle(deps.as_mut(), env, sender, contracts).unwrap_err();
+        assert_eq!(
+            ContractError::MigrationInProcess {}.to_string(),
+            res.to_string()
+        );
+    }
+
+    #[test]
+    fn test_handle_successfully_adds() {
+        let mut deps = create_admin_deps(&[]);
+        let env = mock_env();
+        let sender = Addr::unchecked("admin");
+        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+
+        instantiate_contract(deps.as_mut(), env.clone()).unwrap();
+
+        let res = handle(deps.as_mut(), env, sender, contracts).unwrap();
+        assert_eq!(
+            vec![Attribute::new("action", "add_contracts")],
+            res.attributes
+        );
+        assert_eq!(
+            vec![
+                Event::new("contract_added").add_attribute("address", "contract1"),
+                Event::new("contract_added").add_attribute("address", "contract2")
+            ],
+            res.events
+        );
+    }
+}
