@@ -23,6 +23,16 @@ pub fn test_init_message() -> InstantiateMsg {
     }
 }
 
+pub fn test_remove_contracts_empty_message() -> ExecuteMsg {
+    ExecuteMsg::RemoveContracts { contracts: vec![] }
+}
+
+pub fn test_remove_contracts_message() -> ExecuteMsg {
+    ExecuteMsg::RemoveContracts {
+        contracts: vec![Addr::unchecked("contract1"), Addr::unchecked("contract3")],
+    }
+}
+
 pub fn test_add_contracts_message() -> ExecuteMsg {
     ExecuteMsg::AddContracts {
         contracts: vec![
@@ -30,6 +40,36 @@ pub fn test_add_contracts_message() -> ExecuteMsg {
             Addr::unchecked("contract2"),
             Addr::unchecked("contract3"),
         ],
+    }
+}
+
+pub fn test_add_contracts_empty_message() -> ExecuteMsg {
+    ExecuteMsg::AddContracts { contracts: vec![] }
+}
+
+pub fn test_migrate_contracts_message() -> ExecuteMsg {
+    ExecuteMsg::MigrateContracts {
+        contracts: vec![Addr::unchecked("contract1"), Addr::unchecked("contract3")],
+        new_contract: Uint128::new(2),
+    }
+}
+
+pub fn test_migrate_contracts_empty_message() -> ExecuteMsg {
+    ExecuteMsg::MigrateContracts {
+        contracts: vec![],
+        new_contract: Uint128::new(2),
+    }
+}
+
+pub fn test_migrate_all_contracts_message() -> ExecuteMsg {
+    ExecuteMsg::MigrateAllContracts {
+        new_contract: Uint128::new(2),
+    }
+}
+
+pub fn test_modify_batch_size_message() -> ExecuteMsg {
+    ExecuteMsg::ModifyBatchSize {
+        batch_size: Uint128::new(7),
     }
 }
 
