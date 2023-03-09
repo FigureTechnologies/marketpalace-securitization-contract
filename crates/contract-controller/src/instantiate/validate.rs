@@ -19,4 +19,35 @@ impl Validate for InstantiateMsg {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cosmwasm_std::Coin;
+
+    use crate::{
+        core::error::ContractError,
+        util::{testing::test_init_message, validate::Validate},
+    };
+
+    #[test]
+    fn test_validate_always_succeeds() {
+        let message = test_init_message();
+        message.validate().unwrap();
+    }
+
+    #[test]
+    fn test_funds_throw_error() {
+        let message = test_init_message();
+        let error = message
+            .validate_msg_funds(&[Coin::new(50, "nhash")])
+            .unwrap_err();
+        assert_eq!(
+            ContractError::UnexpectedFunds {}.to_string(),
+            error.to_string()
+        );
+    }
+
+    #[test]
+    fn test_no_funds_succeeds() {
+        let message = test_init_message();
+        message.validate_msg_funds(&[]).unwrap();
+    }
+}

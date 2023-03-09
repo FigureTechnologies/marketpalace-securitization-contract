@@ -24,5 +24,35 @@ pub fn handle(
 
 #[cfg(test)]
 mod tests {
-    
+    use cosmwasm_std::{
+        testing::{mock_env, mock_info},
+        Attribute,
+    };
+    use cw2::get_contract_version;
+    use provwasm_mocks::mock_dependencies;
+
+    use crate::{
+        core::constants::{CONTRACT_NAME, CONTRACT_VERSION},
+        storage::{self, state::State},
+        util::testing::test_init_message,
+    };
+
+    use super::handle;
+
+    #[test]
+    fn test_proper_instantiation() {
+        let mut deps = mock_dependencies(&[]);
+        let env = mock_env();
+        let info = mock_info("sender", &[]);
+        let msg = test_init_message();
+
+        let res = handle(deps.as_mut(), env, info, msg).unwrap();
+        let version = get_contract_version(&deps.storage).unwrap();
+        let state = storage::state::get(&deps.storage).unwrap();
+
+        assert_eq!(CONTRACT_NAME, version.contract);
+        assert_eq!(CONTRACT_VERSION, version.version);
+        assert_eq!(State::new(2), state);
+        assert_eq!(vec![Attribute::new("action", "init")], res.attributes);
+    }
 }
