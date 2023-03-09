@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use cosmwasm_std::{
     testing::{mock_info, MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR},
     to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
-    SystemError, SystemResult, Uint128, WasmQuery,
+    SubMsg, SystemError, SystemResult, Uint128, WasmMsg, WasmQuery,
 };
 use provwasm_mocks::{mock_dependencies, ProvenanceMockQuerier};
 use provwasm_std::ProvenanceQuery;
@@ -11,9 +11,9 @@ use provwasm_std::ProvenanceQuery;
 use crate::{
     contract::{execute, instantiate},
     core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
+        aliases::{ProvDepsMut, ProvSubMsg, ProvTxResponse},
         error::ContractError,
-        msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+        msg::{ContractMigrateMsg, ExecuteMsg, InstantiateMsg, QueryMsg},
     },
 };
 
@@ -71,6 +71,15 @@ pub fn test_modify_batch_size_message() -> ExecuteMsg {
     ExecuteMsg::ModifyBatchSize {
         batch_size: Uint128::new(7),
     }
+}
+
+pub fn migrate_message(contract: Addr, contract_id: Uint128, message_id: u64) -> ProvSubMsg {
+    let msg = WasmMsg::Migrate {
+        contract_addr: contract.to_string(),
+        new_code_id: contract_id.u128() as u64,
+        msg: to_binary(&ContractMigrateMsg {}).unwrap(),
+    };
+    SubMsg::reply_always(msg, message_id)
 }
 
 pub fn instantiate_contract(deps: ProvDepsMut, env: Env) -> ProvTxResponse {

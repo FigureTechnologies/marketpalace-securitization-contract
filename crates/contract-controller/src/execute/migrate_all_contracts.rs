@@ -33,3 +33,6 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contract_id: Uint128) -
         .add_attribute("action", "migrate_all_contracts")
         .add_submessages(messages))
 }
+
+#[cfg(test)]
+mod tests {}
