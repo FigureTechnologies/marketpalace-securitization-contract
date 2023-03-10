@@ -117,5 +117,5 @@ jobs:
           tag_name: ${{ env.RELEASE_VERSION }}
           files: |
             artifacts/contract.wasm
-            artifacts/controller_contract.wasm
+            artifacts/contract_controller.wasm
             artifacts/checksums.txt
