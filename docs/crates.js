@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["cli","contract"];
+window.ALL_CRATES = ["cli","contract","contract_controller"];

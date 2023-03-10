@@ -72,6 +72,9 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::StdError;
 <span class="kw">use </span>thiserror::Error;
 
@@ -117,6 +120,9 @@
 
     <span class="attr">#[error(<span class="string">&quot;The capital denom is invalid&quot;</span>)]
     </span>InvalidCapitalDenom {},
+
+    <span class="attr">#[error(<span class="string">&quot;All security denoms must match the capital denom&quot;</span>)]
+    </span>InvalidSecurityPriceDenom {},
 
     <span class="attr">#[error(<span class="string">&quot;The deposit exceeds the commitment amount&quot;</span>)]
     </span>ExcessiveDeposit {},
