@@ -15,7 +15,7 @@ There is only one type of account that interact with this smart contract.
 ## Contract Interaction
 
 
-### [Instantiation](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/057cc028f64ad67e1de2ceb76ecf943ea060025c/crates/contract/src/core/msg.rs#L13-L18)
+### [Instantiation](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L6-L8)
 In order to use this contract it must first be instantiated by the admin. The admin must specify the `batch_size` for migration. A more detailed view of message can be seen in the [json](schema/instantiate_msg.json).
 
 When a contract is instantiated it first validates the message and ensures the following are true:
@@ -39,7 +39,7 @@ After validation has succeed, the contract routes the message to the correct han
 ### Execution Routes
 This contract contains five different types of execution messages. Every message is first validated and then handed off to the execute router. The router will then forward the message to the correct handler to be ran. A more detailed view of these messages can be seen in the [json](schema/execute_msg.json).
 
-#### [Add Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/7fb595c57620ada63566f0ceabaf0bade62ffddf/crates/contract/src/core/msg.rs#L22)
+#### [Add Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L12-L14)
 The `AddContracts` message adds one or more contracts to the instance of the Contract Controller.
 
 The contracts list cannot be empty. Additionally, this message must be ran by the admin, and the contract cannot be in the `migrating` state.
@@ -66,7 +66,7 @@ The contracts list cannot be empty. Additionally, this message must be ran by th
 }
 ```
 
-#### [Remove Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L23)
+#### [Remove Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L15-L17)
 The `RemoveContracts` message removes one or more contracts from the instance of the Contract Controller.
 
 The contracts list cannot be empty, and each listed contract must be managed by the Contract Controller. Additionally, this message must be ran by the admin, and the contract cannot be in the `migrating` state.
@@ -93,7 +93,7 @@ The contracts list cannot be empty, and each listed contract must be managed by 
 }
 ```
 
-#### [Modify Batch Size](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L24)
+#### [Modify Batch Size](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L25-L27)
 The `ModifyBatchSize` updates the batching size of the `MigrateAllContracts` message. 
 
 This message must be ran by the admin.
@@ -114,7 +114,7 @@ This message must be ran by the admin.
 }
 ```
 
-#### [Migrate Contracts]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
+#### [Migrate Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L18-L21)
 The `MigrateContracts` message manually migrates one or more managed contracts.
 
 The contracts list cannot be empty, and each contract must be managed and owned by the Contract Controller. Additionally, this message must be ran by the admin, and the contract cannot be in the `migrating` state.
@@ -145,7 +145,7 @@ The contracts list cannot be empty, and each contract must be managed and owned 
 }
 ```
 
-#### [Migrate All Contracts]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
+#### [Migrate All Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L22-L24)
 The `MigrateAllContracts` message automatically migrates `batch_size` managed contracts. This transaction must be run multiple times if the number of managed contracts is greater than the batch size, excluding the case where `batch_size` is 0. In this case all contracts will be migrated. Once all contracts have been migrated, this transaction must be ran once more to transition out of the `migrating` state.
 
 This message must be ran by the admin.
