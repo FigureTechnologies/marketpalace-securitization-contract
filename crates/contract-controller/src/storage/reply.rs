@@ -18,6 +18,10 @@ pub fn remove(storage: &mut dyn Storage, index: u64) -> Result<Addr, ContractErr
     Ok(addr)
 }
 
+pub fn has(storage: &dyn Storage, key: u64) -> bool {
+    REPLIES_MAP.has(storage, key)
+}
+
 fn get_next_index(storage: &dyn Storage) -> Result<u64, ContractError> {
     let index = REPLIES_MAP
         .keys(storage, None, None, Order::Descending)
@@ -33,7 +37,7 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
-    use crate::storage::reply::REPLIES_MAP;
+    use crate::storage::reply::{has, REPLIES_MAP};
 
     use super::{add, get_next_index, remove};
 
@@ -52,6 +56,17 @@ mod tests {
         assert_eq!(1, id);
         let stored = REPLIES_MAP.load(&deps.storage, id).unwrap();
         assert_eq!(stored, contract2);
+    }
+
+    #[test]
+    fn test_has() {
+        let mut deps = mock_dependencies(&[]);
+        let contract1 = Addr::unchecked("address1");
+
+        assert_eq!(false, has(&deps.storage, 0));
+
+        let id = add(deps.as_mut().storage, &contract1).unwrap();
+        assert_eq!(true, has(&deps.storage, id));
     }
 
     #[test]

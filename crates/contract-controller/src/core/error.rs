@@ -35,6 +35,9 @@ pub enum ContractError {
     #[error("Invalid migration version")]
     InvalidVersion {},
 
+    #[error("Unrecognized reply id")]
+    UnrecognizedReplyId {},
+
     #[error("Semver parsing error: {0}")]
     SemVer(String),
 }
