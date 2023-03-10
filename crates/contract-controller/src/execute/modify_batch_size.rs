@@ -22,7 +22,7 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, batch_size: u128) -> Pr
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Event};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute};
 
     use crate::{
         core::error::ContractError,

@@ -1,7 +1,5 @@
-use std::marker::PhantomData;
-
 use cosmwasm_std::{
-    testing::{mock_info, MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR},
+    testing::{mock_info, MockApi, MockStorage},
     to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
     SubMsg, SystemError, SystemResult, Uint128, WasmMsg, WasmQuery,
 };

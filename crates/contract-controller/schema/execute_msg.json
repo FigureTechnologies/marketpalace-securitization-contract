@@ -59,10 +59,59 @@
         "migrate_contracts": {
           "type": "object",
           "required": [
+            "contracts",
+            "new_contract"
+          ],
+          "properties": {
+            "contracts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Addr"
+              }
+            },
+            "new_contract": {
+              "$ref": "#/definitions/Uint128"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "migrate_all_contracts"
+      ],
+      "properties": {
+        "migrate_all_contracts": {
+          "type": "object",
+          "required": [
             "new_contract"
           ],
           "properties": {
             "new_contract": {
+              "$ref": "#/definitions/Uint128"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "modify_batch_size"
+      ],
+      "properties": {
+        "modify_batch_size": {
+          "type": "object",
+          "required": [
+            "batch_size"
+          ],
+          "properties": {
+            "batch_size": {
               "$ref": "#/definitions/Uint128"
             }
           },

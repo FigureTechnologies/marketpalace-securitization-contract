@@ -17,7 +17,6 @@ impl Validate for QueryMsg {
 
 #[cfg(test)]
 mod tests {
-    use provwasm_mocks::mock_dependencies;
 
     use crate::util::{
         testing::{create_test_query_contracts, create_test_query_verison},
@@ -26,7 +25,6 @@ mod tests {
 
     #[test]
     fn test_query_version_validate() {
-        let deps = mock_dependencies(&[]);
         let message = create_test_query_verison();
         message.validate().unwrap();
         message.validate_msg_funds(&[]).unwrap();
@@ -34,7 +32,6 @@ mod tests {
 
     #[test]
     fn test_query_state_validate() {
-        let deps = mock_dependencies(&[]);
         let message = create_test_query_verison();
         message.validate().unwrap();
         message.validate_msg_funds(&[]).unwrap();
@@ -42,7 +39,6 @@ mod tests {
 
     #[test]
     fn test_query_contracts_validate() {
-        let deps = mock_dependencies(&[]);
         let message = create_test_query_contracts();
         message.validate().unwrap();
         message.validate_msg_funds(&[]).unwrap();

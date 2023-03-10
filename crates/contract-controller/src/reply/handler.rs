@@ -31,7 +31,7 @@ pub fn handle(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxResponse {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        testing::mock_env, Addr, Attribute, Event, Reply, Response, SubMsgResponse, SubMsgResult,
+        testing::mock_env, Addr, Attribute, Event, Reply, SubMsgResponse, SubMsgResult,
     };
     use provwasm_mocks::mock_dependencies;
 

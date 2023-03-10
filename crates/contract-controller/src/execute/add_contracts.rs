@@ -32,10 +32,10 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Event};
 
     use crate::{
-        core::{error::ContractError, msg::ExecuteMsg},
+        core::error::ContractError,
         execute::add_contracts::handle,
         storage,
-        util::testing::{create_admin_deps, instantiate_contract, test_add_contracts_message},
+        util::testing::{create_admin_deps, instantiate_contract},
     };
 
     #[test]

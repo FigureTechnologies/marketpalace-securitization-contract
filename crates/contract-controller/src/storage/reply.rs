@@ -34,7 +34,7 @@ fn get_next_index(storage: &dyn Storage) -> Result<u64, ContractError> {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr};
+    use cosmwasm_std::Addr;
     use provwasm_mocks::mock_dependencies;
 
     use crate::storage::reply::{has, REPLIES_MAP};

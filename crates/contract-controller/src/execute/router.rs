@@ -34,7 +34,7 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
 mod tests {
     use cosmwasm_std::{
         testing::{mock_env, mock_info},
-        Addr, Attribute,
+        Attribute,
     };
 
     use crate::{
