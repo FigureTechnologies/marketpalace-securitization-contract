@@ -29,8 +29,8 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contract_id: Uint128) -
     state.last_address = contracts.last().cloned();
     storage::state::set(deps.storage, &state)?;
     Ok(Response::default()
-        .add_attribute("migration_finished", contracts.is_empty().to_string())
         .add_attribute("action", "migrate_all_contracts")
+        .add_attribute("migration_finished", contracts.is_empty().to_string())
         .add_submessages(messages))
 }
 
@@ -70,8 +70,8 @@ mod tests {
         assert_eq!(false, state.migrating);
         assert_eq!(
             vec![
-                Attribute::new("migration_finished", "true"),
-                Attribute::new("action", "migrate_all_contracts")
+                Attribute::new("action", "migrate_all_contracts"),
+                Attribute::new("migration_finished", "true")
             ],
             res.attributes
         );
@@ -108,8 +108,8 @@ mod tests {
         assert_eq!(true, state.migrating);
         assert_eq!(
             vec![
-                Attribute::new("migration_finished", "false"),
-                Attribute::new("action", "migrate_all_contracts")
+                Attribute::new("action", "migrate_all_contracts"),
+                Attribute::new("migration_finished", "false")
             ],
             res.attributes
         );
@@ -129,8 +129,8 @@ mod tests {
         assert_eq!(true, state.migrating);
         assert_eq!(
             vec![
-                Attribute::new("migration_finished", "false"),
-                Attribute::new("action", "migrate_all_contracts")
+                Attribute::new("action", "migrate_all_contracts"),
+                Attribute::new("migration_finished", "false")
             ],
             res.attributes
         );
@@ -147,8 +147,8 @@ mod tests {
         assert_eq!(false, state.migrating);
         assert_eq!(
             vec![
-                Attribute::new("migration_finished", "true"),
-                Attribute::new("action", "migrate_all_contracts")
+                Attribute::new("action", "migrate_all_contracts"),
+                Attribute::new("migration_finished", "true")
             ],
             res.attributes
         );
