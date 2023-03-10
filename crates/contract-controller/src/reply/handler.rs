@@ -21,3 +21,16 @@ pub fn handle(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxResponse {
     };
     Ok(Response::default().add_event(event))
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_invalid_reply() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_valid_reply() {
+        assert!(false);
+    }
+}
