@@ -123,7 +123,7 @@
         SubMsgResult::Ok(_response) =&gt; Event::new(<span class="string">&quot;migration&quot;</span>).add_attributes(<span class="macro">vec!</span>[
             (<span class="string">&quot;contract&quot;</span>, addr.to_string()),
             (<span class="string">&quot;success&quot;</span>, <span class="string">&quot;true&quot;</span>.to_string()),
-            (<span class="string">&quot;error&quot;</span>, <span class="string">&quot;&quot;</span>.to_string()),
+            (<span class="string">&quot;error&quot;</span>, <span class="string">&quot;none&quot;</span>.to_string()),
         ]),
         SubMsgResult::Err(error) =&gt; Event::new(<span class="string">&quot;migration&quot;</span>).add_attributes(<span class="macro">vec!</span>[
             (<span class="string">&quot;contract&quot;</span>, addr.to_string()),
@@ -181,7 +181,7 @@
             <span class="macro">vec!</span>[Event::new(<span class="string">&quot;migration&quot;</span>).add_attributes(<span class="macro">vec!</span>[
                 Attribute::new(<span class="string">&quot;contract&quot;</span>, contract.to_string()),
                 Attribute::new(<span class="string">&quot;success&quot;</span>, <span class="string">&quot;true&quot;</span>),
-                Attribute::new(<span class="string">&quot;error&quot;</span>, <span class="string">&quot;&quot;</span>)
+                Attribute::new(<span class="string">&quot;error&quot;</span>, <span class="string">&quot;none&quot;</span>)
             ])],
             res.events
         );
