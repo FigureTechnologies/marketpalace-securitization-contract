@@ -17,7 +17,7 @@ pub fn handle(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxResponse {
         SubMsgResult::Ok(_response) => Event::new("migration").add_attributes(vec![
             ("contract", addr.to_string()),
             ("success", "true".to_string()),
-            ("error", "".to_string()),
+            ("error", "none".to_string()),
         ]),
         SubMsgResult::Err(error) => Event::new("migration").add_attributes(vec![
             ("contract", addr.to_string()),
