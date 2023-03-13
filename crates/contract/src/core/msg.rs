@@ -5,6 +5,7 @@ use cw2::ContractVersion;
 use crate::execute::settlement::commitment::Commitment;
 
 use super::{
+    fee::Fee,
     rules::InvestmentVehicleRule,
     security::{Security, SecurityCommitment},
 };
@@ -15,6 +16,7 @@ pub struct InstantiateMsg {
     pub securities: Vec<Security>,
     pub capital_denom: String,
     pub rules: Vec<InvestmentVehicleRule>,
+    pub fee: Option<Fee>,
 }
 
 #[cw_serde]

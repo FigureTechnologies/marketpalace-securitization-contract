@@ -1,8 +1,8 @@
-use cosmwasm_std::{Addr, CosmosMsg, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Addr, Attribute, CosmosMsg, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 use provwasm_std::{
-    activate_marker, create_marker, finalize_marker, grant_marker_access, MarkerAccess, MarkerType,
-    ProvenanceMsg,
+    activate_marker, assess_custom_fee, create_marker, finalize_marker, grant_marker_access,
+    MarkerAccess, MarkerType, ProvenanceMsg,
 };
 
 use crate::{
@@ -22,11 +22,12 @@ use crate::{
 pub fn handle(
     deps: ProvDepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> ProvTxResponse {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     let state = State::new(msg.gp, msg.capital_denom, msg.rules);
+    let mut response = Response::new();
     state::set(deps.storage, &state)?;
 
     // Create the markers
@@ -41,9 +42,24 @@ pub fn handle(
         remaining_securities::set(deps.storage, security.name.clone(), security.amount.u128())?;
     }
 
-    Ok(Response::default()
+    response = response
         .add_messages(messages)
-        .add_attribute("action", "init"))
+        .add_attribute("action", "init");
+
+    if let Some(fee) = msg.fee {
+        response = response.add_message(assess_custom_fee(
+            fee.amount.to_owned(),
+            Some("security_creation_fee"),
+            info.sender,
+            Some(fee.recipient.to_owned()),
+        )?);
+        response = response.add_attributes(vec![
+            Attribute::new("fee_recipient", fee.recipient),
+            Attribute::new("fee_amount", format!("{:?}", fee.amount)),
+        ]);
+    }
+
+    Ok(response)
 }
 
 fn new_active_marker(
@@ -80,7 +96,6 @@ mod tests {
         MarkerType,
     };
 
-    use crate::storage::securities::{self};
     use crate::storage::state::{self};
     use crate::{
         contract::instantiate,
@@ -90,6 +105,10 @@ mod tests {
             rules::InvestmentVehicleRule,
             security::{Security, TrancheSecurity},
         },
+    };
+    use crate::{
+        core::fee::Fee,
+        storage::securities::{self},
     };
     use crate::{instantiate::handler::new_active_marker, storage::remaining_securities};
 
@@ -162,6 +181,7 @@ mod tests {
             securities: securities.clone(),
             capital_denom: DEFAULT_CAPITAL_DENOM.to_string(),
             rules: DEFAULT_RULES,
+            fee: None,
         };
 
         // initialize
@@ -174,6 +194,81 @@ mod tests {
                 // We probably want to check the type of messages
                 assert_eq!(1, res.attributes.len());
                 assert_eq!(Attribute::new("action", "init"), res.attributes[0])
+            }
+            Err(error) => panic!("unable to initialize contract {}", error),
+        };
+
+        // Check the contract version
+        let contract_version = get_contract_version(&deps.storage).unwrap();
+        assert_eq!(CONTRACT_VERSION, contract_version.version);
+        assert_eq!(CONTRACT_NAME, contract_version.contract);
+
+        // Check the STATE
+        let state = state::get(&deps.storage).unwrap();
+        assert_eq!(DEFAULT_CAPITAL_DENOM.to_string(), state.capital_denom);
+        assert_eq!(Addr::unchecked(DEFAULT_GP), state.gp);
+        assert_eq!(DEFAULT_RULES, state.rules);
+
+        // Check the SECURITIES_MAP
+        for security in securities {
+            let saved = securities::get(&deps.storage, security.name.clone()).unwrap();
+            assert_eq!(security, saved);
+            let remaining =
+                remaining_securities::get(&deps.storage, security.name.clone()).unwrap();
+            assert_eq!(security.amount, Uint128::new(remaining));
+        }
+    }
+
+    #[test]
+    fn test_with_valid_data_and_fee() {
+        // create valid init data
+        let mut deps = mock_dependencies(&[]);
+        let info = mock_info("admin", &[]);
+        const DEFAULT_GP: &str = "gp";
+        const DEFAULT_RULES: Vec<InvestmentVehicleRule> = vec![];
+        const DEFAULT_CAPITAL_DENOM: &str = "denom";
+        let securities = vec![
+            Security {
+                name: "Tranche 1".to_string(),
+                amount: Uint128::new(1000),
+                minimum_amount: Uint128::new(100),
+                price_per_unit: Coin::new(100, "denom"),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+            },
+            Security {
+                name: "Tranche 2".to_string(),
+                amount: Uint128::new(1000),
+                minimum_amount: Uint128::new(100),
+                price_per_unit: Coin::new(100, "denom"),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+            },
+        ];
+        let init_msg = InstantiateMsg {
+            gp: Addr::unchecked(DEFAULT_GP),
+            securities: securities.clone(),
+            capital_denom: DEFAULT_CAPITAL_DENOM.to_string(),
+            rules: DEFAULT_RULES,
+            fee: Some(Fee {
+                recipient: Addr::unchecked("recipient"),
+                amount: Coin::new(100, "nhash"),
+            }),
+        };
+
+        // initialize
+        let init_response = instantiate(deps.as_mut(), mock_env(), info, init_msg.clone());
+
+        // Check the messages
+        match init_response {
+            Ok(res) => {
+                assert_eq!(9, res.messages.len());
+                assert_eq!(
+                    vec![
+                        Attribute::new("action", "init"),
+                        Attribute::new("fee_recipient", "recipient"),
+                        Attribute::new("fee_amount", format!("{:?}", Coin::new(100, "nhash")))
+                    ],
+                    res.attributes
+                )
             }
             Err(error) => panic!("unable to initialize contract {}", error),
         };
@@ -213,6 +308,7 @@ mod tests {
             securities: securities.clone(),
             capital_denom: DEFAULT_CAPITAL_DENOM.to_string(),
             rules: DEFAULT_RULES,
+            fee: None,
         };
 
         // initialize

@@ -56,6 +56,7 @@ mod tests {
     use crate::{
         core::{
             error::ContractError,
+            fee::Fee,
             msg::InstantiateMsg,
             security::{FundSecurity, Security, TrancheSecurity},
         },
@@ -90,6 +91,10 @@ mod tests {
             ],
             capital_denom: "denom".to_string(),
             rules: vec![],
+            fee: Some(Fee {
+                recipient: Addr::unchecked("receiver"),
+                amount: Coin::new(100, "nhash"),
+            }),
         };
         let funds = vec![];
         msg.validate().expect("should pass validation");
@@ -125,6 +130,7 @@ mod tests {
             ],
             capital_denom: "denom".to_string(),
             rules: vec![],
+            fee: None,
         };
         let expected = ContractError::InvalidSecurityPriceDenom {}.to_string();
         let output = msg.validate().unwrap_err();
@@ -159,6 +165,7 @@ mod tests {
             ],
             capital_denom: "denom".to_string(),
             rules: vec![],
+            fee: None,
         };
         let expected = ContractError::InvalidSecurityList {}.to_string();
         let output = msg.validate().unwrap_err();
@@ -172,6 +179,7 @@ mod tests {
             securities: vec![],
             capital_denom: "denom".to_string(),
             rules: vec![],
+            fee: None,
         };
         let output = msg.validate().unwrap_err();
         let expected = ContractError::EmptySecurityList {}.to_string();
@@ -206,6 +214,7 @@ mod tests {
             ],
             capital_denom: "denom".to_string(),
             rules: vec![],
+            fee: None,
         };
         let expected = ContractError::InvalidSecurityList {}.to_string();
         let output = msg.validate().unwrap_err();
@@ -228,6 +237,7 @@ mod tests {
             }],
             capital_denom: "".to_string(),
             rules: vec![],
+            fee: None,
         };
         let expected = ContractError::InvalidCapitalDenom {}.to_string();
         let output = msg.validate().unwrap_err();
@@ -262,6 +272,7 @@ mod tests {
             ],
             capital_denom: "denom".to_string(),
             rules: vec![],
+            fee: None,
         };
         let funds = vec![Coin {
             denom: "denom".to_string(),

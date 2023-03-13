@@ -92,6 +92,7 @@ pub fn test_init_message() -> InstantiateMsg {
         securities: create_test_securities(),
         capital_denom: "denom".to_string(),
         rules: vec![],
+        fee: None,
     }
 }
 

@@ -30,16 +30,19 @@ When a contract is instantiated it first validates the message and ensures the f
 3. All securities have unique names.
 4. The capital denom is not empty.
 
-After validation has succeed, the contract routes the message to the correct handler and begins updating state. The contract version is updated, and the stores are updated with the request params. Lastly, a marker is created for each security.
+After validation has succeed, the contract routes the message to the correct handler and begins updating state. The contract version is updated, and the stores are updated with the request params. Lastly, a marker is created for each security. If a fee is provided, then a `MsgFees` message will be added to the response.
 
 #### Request Parameters
 - `gp`: The address of the General Partner. They will be the one to accept commitments and withdraw capital.
 - `securities`: The list of securities that Limited Partners can commit to. A security can either be a `Tranche`, `Primary`, or `Fund`.
 - `capital_denom`: The denomination of the collected capital.
 - `rules`: A list of investment vehicle rules.
+- `fee`: An optional additional fee that can be added to the instantiation. 
 
 #### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `init`.
+- `fee_recipient`: The account received a portion or all of the fee. This will only be emitted when there is a `Fee`.
+- `fee_amount`: The amount that was paid for the fee. This will only be emitted where there is a `Fee`.
 
 #### Request Sample
 ```
@@ -72,7 +75,14 @@ After validation has succeed, the contract routes the message to the correct han
         }
     ],
     "capital_denom": "nhash",
-    "rules": []
+    "rules": [],
+    "fee": {
+        "recipient": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+        "amount": {
+            "denom": "nhash",
+            "amount": "1000000000"
+        }
+    }
 }
 ```
 

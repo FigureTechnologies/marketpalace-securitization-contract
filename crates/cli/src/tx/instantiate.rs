@@ -1,5 +1,5 @@
-use contract::core::security::Security;
-use cosmwasm_std::Addr;
+use contract::core::{fee::Fee, security::Security};
+use cosmwasm_std::{Addr, Coin};
 
 use crate::{security, user};
 
@@ -10,6 +10,10 @@ pub fn create(gp: &str, denom: String) {
         securities: securities,
         capital_denom: denom,
         rules: vec![],
+        fee: Some(Fee {
+            recipient: Addr::unchecked("receiver"),
+            amount: Coin::new(100, "nhash"),
+        }),
     };
     let json = serde_json::to_string(&message).unwrap();
     println!("{}", json.trim());
