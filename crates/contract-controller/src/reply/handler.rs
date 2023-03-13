@@ -75,7 +75,7 @@ mod tests {
             vec![Event::new("migration").add_attributes(vec![
                 Attribute::new("contract", contract.to_string()),
                 Attribute::new("success", "true"),
-                Attribute::new("error", "")
+                Attribute::new("error", "none")
             ])],
             res.events
         );
