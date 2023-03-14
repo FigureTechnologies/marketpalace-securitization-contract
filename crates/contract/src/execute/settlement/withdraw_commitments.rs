@@ -38,10 +38,13 @@ fn withdraw_commitments(
 
     let mut send_amount = Coin::new(0, capital_denom);
     for lp in &lps {
-        let withdraw = process_withdraw(deps.storage, lp, &env.contract.address)?;
-        messages.extend(withdraw.0);
-        send_amount.amount += withdraw.1;
-        response = response.add_event(Event::new("settled").add_attribute("lp", lp));
+        let (withdraw, amount, is_settled) =
+            process_withdraw(deps.storage, lp, &env.contract.address)?;
+        messages.extend(withdraw);
+        send_amount.amount += amount;
+        if is_settled {
+            response = response.add_event(Event::new("settled").add_attribute("lp", lp));
+        }
     }
 
     if !send_amount.amount.is_zero() {
@@ -327,6 +330,40 @@ mod tests {
         let capital_denom = "denom".to_string();
         let res = withdraw_commitments(deps.as_mut(), mock_env(), sender, capital_denom).unwrap();
         assert_eq!(0, res.messages.len());
+        assert_eq!(0, res.events.len());
+    }
+
+    #[test]
+    fn test_withdraw_commitments_with_not_settled() {
+        let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
+        let lp = Addr::unchecked("lp");
+        let capital_denom = "denom".to_string();
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
+        commitment.state = CommitmentState::ACCEPTED;
+
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(100, &capital_denom)],
+        )
+        .unwrap();
+
+        let mut partial_paid = settlement_tester.security_commitments.clone();
+        partial_paid[0].amount = Uint128::new(1);
+        paid_in_capital::set(deps.as_mut().storage, commitment.lp.clone(), &partial_paid).unwrap();
+
+        let res = withdraw_commitments(
+            deps.as_mut(),
+            mock_env(),
+            commitment.lp.clone(),
+            capital_denom,
+        )
+        .unwrap();
+        assert_eq!(1, res.messages.len());
         assert_eq!(0, res.events.len());
     }
 
