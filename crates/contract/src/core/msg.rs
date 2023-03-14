@@ -24,7 +24,7 @@ pub enum ExecuteMsg {
     ProposeCommitment { securities: Vec<SecurityCommitment> },
     AcceptCommitment { commitments: Vec<Addr> },
     DepositCommitment { securities: Vec<SecurityCommitment> },
-    WithdrawCommitments {},
+    WithdrawCommitment { lp: Addr },
 }
 
 #[cw_serde]

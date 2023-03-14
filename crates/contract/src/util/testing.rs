@@ -175,7 +175,9 @@ pub fn withdraw_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxRespons
 }
 
 pub fn test_withdraw_message() -> ExecuteMsg {
-    ExecuteMsg::WithdrawCommitments {}
+    ExecuteMsg::WithdrawCommitment {
+        lp: Addr::unchecked("lp"),
+    }
 }
 
 pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;

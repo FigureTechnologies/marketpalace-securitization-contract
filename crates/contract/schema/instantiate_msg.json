@@ -12,6 +12,16 @@
     "capital_denom": {
       "type": "string"
     },
+    "fee": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Fee"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "gp": {
       "$ref": "#/definitions/Addr"
     },
@@ -48,6 +58,22 @@
           "type": "string"
         }
       }
+    },
+    "Fee": {
+      "type": "object",
+      "required": [
+        "amount",
+        "recipient"
+      ],
+      "properties": {
+        "amount": {
+          "$ref": "#/definitions/Coin"
+        },
+        "recipient": {
+          "$ref": "#/definitions/Addr"
+        }
+      },
+      "additionalProperties": false
     },
     "FundSecurity": {
       "type": "object",

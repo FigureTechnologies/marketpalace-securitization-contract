@@ -32,6 +32,9 @@ pub enum ContractError {
     #[error("One or more commitments are in an invalid state")]
     InvalidCommitmentState {},
 
+    #[error("Commitment has not been met")]
+    CommitmentNotMet {},
+
     #[error("Missing required funds")]
     MissingFunds {},
 

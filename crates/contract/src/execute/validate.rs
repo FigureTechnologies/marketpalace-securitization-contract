@@ -35,7 +35,7 @@ impl Validate for ExecuteMsg {
                     return Err(ContractError::InvalidSecurityCommitmentAmount {});
                 }
             }
-            ExecuteMsg::WithdrawCommitments {} => {}
+            ExecuteMsg::WithdrawCommitment { lp: _ } => {}
         };
         Ok(())
     }
@@ -151,7 +151,9 @@ mod tests {
 
     #[test]
     fn test_valid_withdraw() {
-        let msg = ExecuteMsg::WithdrawCommitments {};
+        let msg = ExecuteMsg::WithdrawCommitment {
+            lp: Addr::unchecked("lp"),
+        };
         msg.validate().expect("withdraw should pass validation");
     }
 
@@ -187,7 +189,9 @@ mod tests {
 
     #[test]
     fn test_other_msgs_should_not_have_funds() {
-        let msg = ExecuteMsg::WithdrawCommitments {};
+        let msg = ExecuteMsg::WithdrawCommitment {
+            lp: Addr::unchecked("lp"),
+        };
         let funds = vec![Coin {
             denom: "denom".to_string(),
             amount: Uint128::new(5),
@@ -199,7 +203,9 @@ mod tests {
 
     #[test]
     fn test_other_msgs_are_valid_without_funds() {
-        let msg = ExecuteMsg::WithdrawCommitments {};
+        let msg = ExecuteMsg::WithdrawCommitment {
+            lp: Addr::unchecked("lp"),
+        };
         let funds = vec![];
         msg.validate_msg_funds(&funds)
             .expect("should pass with no funds");

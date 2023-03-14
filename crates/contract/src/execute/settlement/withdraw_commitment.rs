@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, BankMsg, Coin, Env, Event, Response, Storage, Uint128};
+use cosmwasm_std::{Addr, BankMsg, Env, Event, Response, Storage};
 use provwasm_std::{mint_marker_supply, withdraw_coins};
 
 use crate::{
@@ -17,66 +17,52 @@ use crate::{
 
 use super::commitment::{Commitment, CommitmentState};
 
-pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, commitment: Addr) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(ContractError::Unauthorized {});
     }
 
-    withdraw_commitments(deps, env, sender, state.capital_denom)
+    withdraw_commitment(deps, env, sender, commitment)
 }
 
-fn withdraw_commitments(
-    deps: ProvDepsMut,
-    env: Env,
-    sender: Addr,
-    capital_denom: String,
-) -> ProvTxResponse {
-    let mut messages: Vec<ProvMsg> = vec![];
-    let mut response = Response::new();
-    let lps = available_capital::get_lps(deps.storage)?;
+fn withdraw_commitment(deps: ProvDepsMut, env: Env, sender: Addr, lp: Addr) -> ProvTxResponse {
+    let commitment = commits::get(deps.storage, lp.clone())?;
 
-    let mut send_amount = Coin::new(0, capital_denom);
-    for lp in &lps {
-        let (withdraw, amount, is_settled) =
-            process_withdraw(deps.storage, lp, &env.contract.address)?;
-        messages.extend(withdraw);
-        send_amount.amount += amount;
-        if is_settled {
-            response = response.add_event(Event::new("settled").add_attribute("lp", lp));
-        }
+    if !is_settling(deps.storage, &commitment) {
+        return Err(ContractError::CommitmentNotMet {});
     }
 
-    if !send_amount.amount.is_zero() {
-        response = response.add_message(BankMsg::Send {
-            to_address: sender.to_string(),
-            amount: vec![send_amount],
-        });
-    }
-    Ok(response
-        .add_messages(messages)
-        .add_attribute("action", "withdraw_commitments")
+    let withdraw_messages = process_withdraw(deps.storage, &sender, &lp, &env.contract.address)?;
+
+    Ok(Response::new()
+        .add_messages(withdraw_messages)
+        .add_event(Event::new("settled").add_attribute("lp", lp))
+        .add_attribute("action", "withdraw_commitment")
         .add_attribute("gp", sender))
 }
 
 fn process_withdraw(
     storage: &mut dyn Storage,
+    gp: &Addr,
     lp: &Addr,
     contract: &Addr,
-) -> Result<(Vec<ProvMsg>, Uint128, bool), ContractError> {
+) -> Result<Vec<ProvMsg>, ContractError> {
     let mut commitment = commits::get(storage, lp.clone())?;
     let capital = available_capital::remove_capital(storage, lp.clone())?;
     let mut messages = vec![];
-    let mut settled = false;
 
-    if is_settling(storage, &commitment) {
-        commitment.state = CommitmentState::SETTLED;
-        settled = true;
-        messages.extend(transfer_investment_tokens(&commitment, contract)?);
+    commitment.state = CommitmentState::SETTLED;
+    messages.extend(transfer_investment_tokens(&commitment, contract)?);
+    if !capital.amount.is_zero() {
+        messages.push(ProvMsg::Bank(BankMsg::Send {
+            to_address: gp.to_string(),
+            amount: vec![capital],
+        }));
     }
 
     commits::set(storage, &commitment)?;
-    Ok((messages, capital.amount, settled))
+    Ok(messages)
 }
 
 fn transfer_investment_tokens(
@@ -111,7 +97,7 @@ mod tests {
     use provwasm_std::{mint_marker_supply, withdraw_coins};
 
     use crate::{
-        core::{error::ContractError, security::SecurityCommitment},
+        core::error::ContractError,
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::{
             available_capital::{self},
@@ -122,7 +108,7 @@ mod tests {
     };
 
     use super::{
-        handle, is_settling, process_withdraw, transfer_investment_tokens, withdraw_commitments,
+        handle, is_settling, process_withdraw, transfer_investment_tokens, withdraw_commitment,
     };
 
     #[test]
@@ -220,8 +206,9 @@ mod tests {
     fn test_process_withdraw_fails_when_commit_doesnt_exist() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("lp");
+        let gp = Addr::unchecked("gp");
         let contract = Addr::unchecked("contract");
-        process_withdraw(deps.as_mut().storage, &lp, &contract).unwrap_err();
+        process_withdraw(deps.as_mut().storage, &gp, &lp, &contract).unwrap_err();
     }
 
     #[test]
@@ -230,66 +217,22 @@ mod tests {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
+        let gp = Addr::unchecked("gp");
         let contract = Addr::unchecked("contract");
         let commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
 
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
-        process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap_err();
+        process_withdraw(deps.as_mut().storage, &gp, &commitment.lp, &contract).unwrap_err();
     }
 
     #[test]
-    fn test_process_withdraw_not_settled() {
+    fn test_process_withdraw_has_capital() {
         let mut deps = mock_dependencies(&[]);
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
-        let contract = Addr::unchecked("contract");
-        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
-        commitment.state = CommitmentState::ACCEPTED;
-
-        commits::set(deps.as_mut().storage, &commitment).unwrap();
-
-        available_capital::add_capital(
-            deps.as_mut().storage,
-            commitment.lp.clone(),
-            vec![Coin::new(100, "denom".to_string())],
-        )
-        .unwrap();
-
-        paid_in_capital::set(
-            deps.as_mut().storage,
-            commitment.lp.clone(),
-            &vec![
-                SecurityCommitment {
-                    name: settlement_tester.security_commitments[0].name.clone(),
-                    amount: Uint128::new(1),
-                },
-                SecurityCommitment {
-                    name: settlement_tester.security_commitments[1].name.clone(),
-                    amount: Uint128::new(1),
-                },
-            ],
-        )
-        .unwrap();
-
-        let (messages, amount, settled) =
-            process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
-        assert_eq!(0, messages.len());
-        assert_eq!(Uint128::new(100), amount);
-        assert_eq!(false, settled);
-        assert_eq!(
-            false,
-            available_capital::has_lp(deps.as_mut().storage, commitment.lp)
-        );
-    }
-
-    #[test]
-    fn test_process_withdraw_settled() {
-        let mut deps = mock_dependencies(&[]);
-        let mut settlement_tester = SettlementTester::new();
-        settlement_tester.create_security_commitments(2);
-        let lp = Addr::unchecked("lp");
+        let gp = Addr::unchecked("gp");
         let contract = Addr::unchecked("contract");
         let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
@@ -309,14 +252,12 @@ mod tests {
             &settlement_tester.security_commitments,
         )
         .unwrap();
-        let (messages, amount, settled) =
-            process_withdraw(deps.as_mut().storage, &commitment.lp, &contract).unwrap();
+        let messages =
+            process_withdraw(deps.as_mut().storage, &gp, &commitment.lp, &contract).unwrap();
 
         let updated = commits::get(&deps.storage, commitment.lp.clone()).unwrap();
         assert_eq!(CommitmentState::SETTLED, updated.state);
-        assert_eq!(4, messages.len());
-        assert_eq!(Uint128::new(100), amount);
-        assert_eq!(true, settled);
+        assert_eq!(5, messages.len());
         assert_eq!(
             false,
             available_capital::has_lp(deps.as_mut().storage, commitment.lp)
@@ -324,13 +265,49 @@ mod tests {
     }
 
     #[test]
-    fn test_withdraw_commitments_with_none() {
+    fn test_process_withdraw_has_no_capital() {
+        let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
+        let lp = Addr::unchecked("lp");
+        let gp = Addr::unchecked("gp");
+        let contract = Addr::unchecked("contract");
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
+        commitment.state = CommitmentState::ACCEPTED;
+
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(0, "denom".to_string())],
+        )
+        .unwrap();
+
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            &settlement_tester.security_commitments,
+        )
+        .unwrap();
+        let messages =
+            process_withdraw(deps.as_mut().storage, &gp, &commitment.lp, &contract).unwrap();
+
+        let updated = commits::get(&deps.storage, commitment.lp.clone()).unwrap();
+        assert_eq!(CommitmentState::SETTLED, updated.state);
+        assert_eq!(4, messages.len());
+        assert_eq!(
+            false,
+            available_capital::has_lp(deps.as_mut().storage, commitment.lp)
+        );
+    }
+
+    #[test]
+    fn test_withdraw_commitments_with_invalid_lp() {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("gp");
-        let capital_denom = "denom".to_string();
-        let res = withdraw_commitments(deps.as_mut(), mock_env(), sender, capital_denom).unwrap();
-        assert_eq!(0, res.messages.len());
-        assert_eq!(0, res.events.len());
+        let lp = Addr::unchecked("lp");
+        withdraw_commitment(deps.as_mut(), mock_env(), sender, lp).unwrap_err();
     }
 
     #[test]
@@ -339,6 +316,7 @@ mod tests {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
+        let sender = Addr::unchecked("gp");
         let capital_denom = "denom".to_string();
         let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
@@ -356,15 +334,17 @@ mod tests {
         partial_paid[0].amount = Uint128::new(1);
         paid_in_capital::set(deps.as_mut().storage, commitment.lp.clone(), &partial_paid).unwrap();
 
-        let res = withdraw_commitments(
+        let err = withdraw_commitment(
             deps.as_mut(),
             mock_env(),
+            sender.clone(),
             commitment.lp.clone(),
-            capital_denom,
         )
-        .unwrap();
-        assert_eq!(1, res.messages.len());
-        assert_eq!(0, res.events.len());
+        .unwrap_err();
+        assert_eq!(
+            ContractError::CommitmentNotMet {}.to_string(),
+            err.to_string()
+        );
     }
 
     #[test]
@@ -373,6 +353,7 @@ mod tests {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
+        let gp = Addr::unchecked("gp");
         let capital_denom = "denom".to_string();
         let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
@@ -393,13 +374,8 @@ mod tests {
         )
         .unwrap();
 
-        let res = withdraw_commitments(
-            deps.as_mut(),
-            mock_env(),
-            commitment.lp.clone(),
-            capital_denom,
-        )
-        .unwrap();
+        let res = withdraw_commitment(deps.as_mut(), mock_env(), gp.clone(), commitment.lp.clone())
+            .unwrap();
         assert_eq!(5, res.messages.len());
         assert_eq!(1, res.events.len());
         assert_eq!(
@@ -416,7 +392,7 @@ mod tests {
         let settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
 
-        let error = handle(deps.as_mut(), mock_env(), sender).unwrap_err();
+        let error = handle(deps.as_mut(), mock_env(), sender.clone(), sender).unwrap_err();
         assert_eq!(
             ContractError::Unauthorized {}.to_string(),
             error.to_string()
@@ -426,18 +402,39 @@ mod tests {
     #[test]
     fn test_handle_succeeds() {
         let mut deps = mock_dependencies(&[]);
-        let sender = Addr::unchecked("gp");
 
-        let settlement_tester = SettlementTester::new();
+        let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
+        settlement_tester.create_security_commitments(2);
+        let lp = Addr::unchecked("lp");
+        let gp = Addr::unchecked("gp");
+        let capital_denom = "denom".to_string();
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
+        commitment.state = CommitmentState::ACCEPTED;
 
-        let res = handle(deps.as_mut(), mock_env(), sender.clone()).unwrap();
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(100, &capital_denom)],
+        )
+        .unwrap();
+
+        paid_in_capital::set(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            &settlement_tester.security_commitments.clone(),
+        )
+        .unwrap();
+
+        let res = handle(deps.as_mut(), mock_env(), gp.clone(), commitment.lp.clone()).unwrap();
         assert_eq!(2, res.attributes.len());
-        assert_eq!(0, res.events.len());
+        assert_eq!(1, res.events.len());
         assert_eq!(
-            Attribute::new("action", "withdraw_commitments"),
+            Attribute::new("action", "withdraw_commitment"),
             res.attributes[0]
         );
-        assert_eq!(Attribute::new("gp", sender), res.attributes[1]);
+        assert_eq!(Attribute::new("gp", gp), res.attributes[1]);
     }
 }

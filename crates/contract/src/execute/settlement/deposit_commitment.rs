@@ -28,7 +28,7 @@ pub fn handle(
         return Err(crate::core::error::ContractError::InvalidCommitmentState {});
     }
 
-    if !drawdown_met(&deps, &deposit) {
+    if !securities_match(&deps, &deposit) {
         return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
@@ -103,15 +103,15 @@ fn update_depositer_capital(
 // Check that the length is the same between the initial drawdown and our instatiation
 // We check to make sure that every security commitment in the drawdown was specified at instantiation
 // We also make sure our initial drawdown has the minimum for each of these security commitments
-fn drawdown_met(deps: &ProvDepsMut, initial_drawdown: &Vec<SecurityCommitment>) -> bool {
+fn securities_match(deps: &ProvDepsMut, commitment: &Vec<SecurityCommitment>) -> bool {
     let security_types = securities::get_security_types(deps.storage);
 
-    if security_types.len() != initial_drawdown.len() {
+    if security_types.len() != commitment.len() {
         return false;
     }
 
-    for drawdown in initial_drawdown {
-        let security = securities::get(deps.storage, drawdown.name.clone());
+    for security in commitment {
+        let security = securities::get(deps.storage, security.name.clone());
         if security.is_err() {
             return false;
         }
@@ -174,7 +174,7 @@ mod tests {
         util::testing::SettlementTester,
     };
 
-    use super::{calculate_funds, drawdown_met, funds_match_deposit, handle, is_accepted};
+    use super::{calculate_funds, funds_match_deposit, handle, is_accepted, securities_match};
 
     #[test]
     fn test_is_accepted_throws_error_on_invalid_lp() {
@@ -351,10 +351,10 @@ mod tests {
     }
 
     #[test]
-    fn test_drawdown_met_can_handle_empty() {
+    fn test_securities_match_can_handle_empty() {
         let mut deps = mock_dependencies(&[]);
         let initial_drawdown = vec![];
-        let res = drawdown_met(&deps.as_mut(), &initial_drawdown);
+        let res = securities_match(&deps.as_mut(), &initial_drawdown);
         assert_eq!(true, res);
     }
 
@@ -373,7 +373,7 @@ mod tests {
             },
         )
         .unwrap();
-        let res = drawdown_met(&deps.as_mut(), &commitment);
+        let res = securities_match(&deps.as_mut(), &commitment);
         assert_eq!(false, res);
     }
 
@@ -395,7 +395,7 @@ mod tests {
             },
         )
         .unwrap();
-        let res = drawdown_met(&deps.as_mut(), &commitment);
+        let res = securities_match(&deps.as_mut(), &commitment);
         assert_eq!(false, res);
     }
 
@@ -417,7 +417,7 @@ mod tests {
             },
         )
         .unwrap();
-        let res = drawdown_met(&deps.as_mut(), &commitment);
+        let res = securities_match(&deps.as_mut(), &commitment);
         assert_eq!(true, res);
     }
 

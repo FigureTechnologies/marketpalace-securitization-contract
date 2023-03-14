@@ -77,11 +77,19 @@
     {
       "type": "object",
       "required": [
-        "withdraw_commitments"
+        "withdraw_commitment"
       ],
       "properties": {
-        "withdraw_commitments": {
+        "withdraw_commitment": {
           "type": "object",
+          "required": [
+            "lp"
+          ],
+          "properties": {
+            "lp": {
+              "$ref": "#/definitions/Addr"
+            }
+          },
           "additionalProperties": false
         }
       },

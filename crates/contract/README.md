@@ -173,11 +173,11 @@ The DepositCommitment message is sent by one of the accepted LPs. It's purpose i
 }
 ```
 
-#### [Withdraw Commitments]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
-The WithdrawCommitments message is sent by the GP, and it allows them to take capital that was deposited into the contract. A commitment will only move into the `SETTLED` state when the GP has withdrawn all the funds that the LP promised to commit. When a commitment by a LP is settled the contract will mint and transfer them LP investment tokens. Additionally, the contract will emit an event for each newly settled LP.
+#### [Withdraw Commitment]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
+The WithdrawCommitment message is sent by the GP, and it allows them to take capital that was deposited into the contract by a specific LP. If and only if the LP's deposited capital  matches the funds that they promised to commit will the commitment transition to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. Additionally, the contract will emit an event for the settled LP.
 
 ##### Emitted Events
-- `settled`: An event representing a settled LP.
+- `settled`: An event representing the settled LP.
   - `lp`: The address of the settled LP.
 
 ##### Emitted Attributes
@@ -187,7 +187,9 @@ The WithdrawCommitments message is sent by the GP, and it allows them to take ca
 ##### Request Sample
 ```
 {
-    "withdraw_commitments": {}
+    "withdraw_commitment": {
+        "lp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d"
+    }
 }
 ```
 

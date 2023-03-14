@@ -7,7 +7,7 @@ use crate::core::{
 
 use crate::execute::{
     settlement::propose_commitment,
-    settlement::withdraw_commitments,
+    settlement::withdraw_commitment,
     settlement::{accept_commitments, deposit_commitment},
 };
 
@@ -22,7 +22,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ExecuteMsg::DepositCommitment { securities } => {
             deposit_commitment::handle(deps, info.sender, info.funds, securities)
         }
-        ExecuteMsg::WithdrawCommitments {} => withdraw_commitments::handle(deps, env, info.sender),
+        ExecuteMsg::WithdrawCommitment { lp } => {
+            withdraw_commitment::handle(deps, env, info.sender, lp)
+        }
     }
 }
 
