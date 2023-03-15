@@ -16,16 +16,21 @@ use crate::{
 
 use super::commitment::{Commitment, CommitmentState};
 
-pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, commitment: Addr) -> ProvTxResponse {
+pub fn handle(mut deps: ProvDepsMut, env: Env, sender: Addr, commitment: Addr) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(ContractError::Unauthorized {});
     }
 
-    withdraw_commitment(deps, env, sender, commitment)
+    withdraw_commitment(&mut deps, &env, sender, commitment)
 }
 
-fn withdraw_commitment(deps: ProvDepsMut, env: Env, sender: Addr, lp: Addr) -> ProvTxResponse {
+pub fn withdraw_commitment(
+    deps: &mut ProvDepsMut,
+    env: &Env,
+    sender: Addr,
+    lp: Addr,
+) -> ProvTxResponse {
     let commitment = commits::get(deps.storage, lp.clone())?;
 
     if util::settlement::is_expired(&env, &commitment) {
@@ -240,7 +245,7 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("gp");
         let lp = Addr::unchecked("lp");
-        withdraw_commitment(deps.as_mut(), mock_env(), sender, lp).unwrap_err();
+        withdraw_commitment(&mut deps.as_mut(), &mock_env(), sender, lp).unwrap_err();
     }
 
     #[test]
@@ -268,8 +273,8 @@ mod tests {
         paid_in_capital::set(deps.as_mut().storage, commitment.lp.clone(), &partial_paid).unwrap();
 
         let err = withdraw_commitment(
-            deps.as_mut(),
-            mock_env(),
+            &mut deps.as_mut(),
+            &mock_env(),
             sender.clone(),
             commitment.lp.clone(),
         )
@@ -306,8 +311,8 @@ mod tests {
         paid_in_capital::set(deps.as_mut().storage, commitment.lp.clone(), &partial_paid).unwrap();
 
         let err = withdraw_commitment(
-            deps.as_mut(),
-            mock_env(),
+            &mut deps.as_mut(),
+            &mock_env(),
             sender.clone(),
             commitment.lp.clone(),
         )
@@ -345,8 +350,13 @@ mod tests {
         )
         .unwrap();
 
-        let res = withdraw_commitment(deps.as_mut(), mock_env(), gp.clone(), commitment.lp.clone())
-            .unwrap();
+        let res = withdraw_commitment(
+            &mut deps.as_mut(),
+            &mock_env(),
+            gp.clone(),
+            commitment.lp.clone(),
+        )
+        .unwrap();
         assert_eq!(5, res.messages.len());
         assert_eq!(1, res.events.len());
         assert_eq!(

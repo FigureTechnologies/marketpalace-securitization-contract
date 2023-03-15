@@ -2,11 +2,12 @@ use cosmwasm_std::{to_binary, Storage};
 
 use crate::{
     core::{aliases::ProvQueryResponse, msg::QueryPendingCommitmentsResponse},
+    execute::settlement::commitment::CommitmentState,
     storage,
 };
 
 pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
-    let commitments = storage::commits::get_pending(storage);
+    let commitments = storage::commits::get_with_state(storage, CommitmentState::PENDING);
     let response = QueryPendingCommitmentsResponse { commitments };
     Ok(to_binary(&response)?)
 }

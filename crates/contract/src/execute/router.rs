@@ -11,6 +11,8 @@ use crate::execute::{
     settlement::{accept_commitments, deposit_commitment},
 };
 
+use super::settlement::withdraw_all_commitments;
+
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
         ExecuteMsg::ProposeCommitment { securities } => {
@@ -24,6 +26,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         }
         ExecuteMsg::WithdrawCommitment { lp } => {
             withdraw_commitment::handle(deps, env, info.sender, lp)
+        }
+        ExecuteMsg::WithdrawAllCommitments {} => {
+            withdraw_all_commitments::handle(deps, env, info.sender)
         }
     }
 }

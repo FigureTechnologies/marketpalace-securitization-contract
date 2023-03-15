@@ -20,10 +20,10 @@ pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
     COMMITS.has(storage, lp)
 }
 
-pub fn get_pending(storage: &dyn Storage) -> Vec<Commitment> {
+pub fn get_with_state(storage: &dyn Storage, state: CommitmentState) -> Vec<Commitment> {
     let commits: Vec<Commitment> = COMMITS
         .range(storage, None, None, Order::Ascending)
-        .filter(|item| item.is_ok() && item.as_ref().unwrap().1.state == CommitmentState::PENDING)
+        .filter(|item| item.is_ok() && item.as_ref().unwrap().1.state == state)
         .map(|item| item.unwrap().1)
         .collect();
     commits
