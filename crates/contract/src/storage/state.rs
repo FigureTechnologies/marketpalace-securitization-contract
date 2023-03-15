@@ -54,7 +54,7 @@ mod tests {
 
     use crate::{
         core::rules::InvestmentVehicleRule,
-        storage::state::{set, State},
+        storage::state::{get_settlement_time, set, State},
     };
 
     use super::get;
@@ -97,5 +97,38 @@ mod tests {
 
         let obtained = get(&deps.storage).unwrap();
         assert_eq!(state, obtained);
+    }
+
+    #[test]
+    fn test_get_settlement_time_not_set() {
+        let mut deps = mock_dependencies(&[]);
+        let expected_addr = Addr::unchecked("address");
+        let expected_capital_denom = "nhash";
+        let state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            vec![],
+        );
+        set(deps.as_mut().storage, &state).unwrap();
+
+        let settlement_time = get_settlement_time(&deps.storage).unwrap();
+        assert_eq!(None, settlement_time);
+    }
+
+    #[test]
+    fn test_get_settlement_time_set() {
+        let mut deps = mock_dependencies(&[]);
+        let expected_addr = Addr::unchecked("address");
+        let expected_capital_denom = "nhash";
+        let expected_rules = vec![InvestmentVehicleRule::SettlementTime { 0: Uint64::zero() }];
+        let state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            expected_rules.clone(),
+        );
+        set(deps.as_mut().storage, &state).unwrap();
+
+        let settlement_time = get_settlement_time(&deps.storage).unwrap();
+        assert_eq!(Some(Uint64::zero()), settlement_time);
     }
 }
