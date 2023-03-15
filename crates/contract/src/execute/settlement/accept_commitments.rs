@@ -6,7 +6,6 @@ use crate::{
         error::ContractError,
     },
     storage::{
-        self,
         commits::{self},
         paid_in_capital::{self},
         remaining_securities,

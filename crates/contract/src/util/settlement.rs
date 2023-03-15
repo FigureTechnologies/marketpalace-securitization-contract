@@ -72,7 +72,6 @@ mod tests {
     fn test_timestamp_expired_with_no_settlement_date() {
         let env = mock_env();
         let mut deps = mock_dependencies(&[]);
-        let commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
         create_test_state(&mut deps, &env, false);
         let res = timestamp_is_expired(&deps.storage, &env.block.time).unwrap();
         assert_eq!(false, res);
@@ -82,7 +81,6 @@ mod tests {
     fn test_timestamp_expired_with_unexpired_time() {
         let env = mock_env();
         let mut deps = mock_dependencies(&[]);
-        let commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
         create_test_state(&mut deps, &env, true);
         let res = timestamp_is_expired(&deps.storage, &env.block.time.plus_seconds(86400)).unwrap();
         assert_eq!(false, res);
