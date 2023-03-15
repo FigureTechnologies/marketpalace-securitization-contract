@@ -186,12 +186,12 @@ pub fn test_withdraw_message() -> ExecuteMsg {
 
 pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
 
-pub fn create_test_state(deps: &mut MockDeps, rules: bool) {
+pub fn create_test_state(deps: &mut MockDeps, env: &Env, rules: bool) {
     let mut state = State::new(Addr::unchecked("gp"), "denom".to_string(), vec![]);
     if rules {
-        state
-            .rules
-            .push(InvestmentVehicleRule::SettlementTime(Uint64::new(86400)));
+        state.rules.push(InvestmentVehicleRule::SettlementTime(
+            Uint64::new(86400) + Uint64::new(env.block.time.seconds()),
+        ));
     }
 
     storage::state::set(deps.as_mut().storage, &state).unwrap();

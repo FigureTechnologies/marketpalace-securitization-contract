@@ -6,24 +6,25 @@ use crate::{
         error::ContractError,
     },
     storage::{
+        self,
         commits::{self},
         paid_in_capital::{self},
         remaining_securities,
         state::{self},
     },
+    util::settlement::timestamp_is_expired,
 };
 
 use super::commitment::{Commitment, CommitmentState};
 
-pub fn handle(
-    deps: ProvDepsMut,
-    _env: Env,
-    sender: Addr,
-    commitments: Vec<Addr>,
-) -> ProvTxResponse {
+pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(crate::core::error::ContractError::Unauthorized {});
+    }
+
+    if timestamp_is_expired(deps.storage, &env.block.time)? {
+        return Err(crate::core::error::ContractError::SettlmentExpired {});
     }
 
     let mut response = Response::new()
@@ -163,7 +164,7 @@ mod tests {
         settlement_tester.create_security_commitments(1);
         let commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
-        create_test_state(&mut deps, true);
+        create_test_state(&mut deps, &mock_env(), true);
         commits::set(deps.as_mut().storage, &commitment).unwrap();
         remaining_securities::set(
             deps.as_mut().storage,
@@ -191,7 +192,7 @@ mod tests {
         let lp = Addr::unchecked("address");
         let mut deps = mock_dependencies(&[]);
         let mut settlement_tester = SettlementTester::new();
-        create_test_state(&mut deps, false);
+        create_test_state(&mut deps, &mock_env(), false);
         settlement_tester.create_security_commitments(1);
         let commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
@@ -285,6 +286,37 @@ mod tests {
         assert_eq!(res.attributes[0].value, "accept_commitments");
         assert_eq!(res.attributes[1].key, "gp");
         assert_eq!(res.attributes[1].value, gp);
+    }
+
+    #[test]
+    fn test_handle_succeeds_with_settlement_time() {
+        let gp = Addr::unchecked("gp");
+        let mut deps = mock_dependencies(&[]);
+        let env = mock_env();
+        create_test_state(&mut deps, &env, true);
+
+        let res = handle(deps.as_mut(), env, gp.clone(), vec![]).unwrap();
+        assert_eq!(res.attributes.len(), 2);
+        assert_eq!(res.events.len(), 0);
+        assert_eq!(res.attributes[0].key, "action");
+        assert_eq!(res.attributes[0].value, "accept_commitments");
+        assert_eq!(res.attributes[1].key, "gp");
+        assert_eq!(res.attributes[1].value, gp);
+    }
+
+    #[test]
+    fn test_handle_fails_with_invalid_settlement_time() {
+        let gp = Addr::unchecked("gp");
+        let mut deps = mock_dependencies(&[]);
+        let mut env = mock_env();
+        create_test_state(&mut deps, &env, true);
+        env.block.time = env.block.time.plus_seconds(86401);
+
+        let err = handle(deps.as_mut(), env, gp.clone(), vec![]).unwrap_err();
+        assert_eq!(
+            ContractError::SettlmentExpired {}.to_string(),
+            err.to_string()
+        );
     }
 
     #[test]

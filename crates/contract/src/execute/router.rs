@@ -14,7 +14,7 @@ use crate::execute::{
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
         ExecuteMsg::ProposeCommitment { securities } => {
-            propose_commitment::handle(deps, info.sender, securities)
+            propose_commitment::handle(deps, &env, info.sender, securities)
         }
         ExecuteMsg::AcceptCommitment { commitments } => {
             accept_commitments::handle(deps, env, info.sender, commitments)

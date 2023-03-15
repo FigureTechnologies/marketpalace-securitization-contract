@@ -1,8 +1,9 @@
-use cosmwasm_std::{Env, Storage};
+use cosmwasm_std::{Env, Storage, Timestamp};
 
 use crate::{
+    core::error::ContractError,
     execute::settlement::commitment::{Commitment, CommitmentState},
-    storage::paid_in_capital,
+    storage::{self, paid_in_capital},
 };
 
 pub fn is_expired(env: &Env, commitment: &Commitment) -> bool {
@@ -10,6 +11,16 @@ pub fn is_expired(env: &Env, commitment: &Commitment) -> bool {
         return env.block.time.seconds() > settlement_time.u64();
     }
     false
+}
+
+pub fn timestamp_is_expired(
+    storage: &dyn Storage,
+    time: &Timestamp,
+) -> Result<bool, ContractError> {
+    if let Some(settlement_time) = storage::state::get_settlement_time(storage)? {
+        return Ok(time.seconds() > settlement_time.u64());
+    }
+    Ok(false)
 }
 
 pub fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
@@ -26,8 +37,8 @@ mod tests {
         execute::settlement::commitment::{Commitment, CommitmentState},
         storage::paid_in_capital,
         util::{
-            settlement::{is_expired, is_settling},
-            testing::SettlementTester,
+            settlement::{is_expired, is_settling, timestamp_is_expired},
+            testing::{create_test_state, SettlementTester},
         },
     };
 
@@ -54,6 +65,36 @@ mod tests {
         let mut commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
         commitment.settlment_date = Some(Uint64::new(env.block.time.seconds() - 1));
         let res = is_expired(&env, &commitment);
+        assert_eq!(true, res);
+    }
+
+    #[test]
+    fn test_timestamp_expired_with_no_settlement_date() {
+        let env = mock_env();
+        let mut deps = mock_dependencies(&[]);
+        let commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
+        create_test_state(&mut deps, &env, false);
+        let res = timestamp_is_expired(&deps.storage, &env.block.time).unwrap();
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn test_timestamp_expired_with_unexpired_time() {
+        let env = mock_env();
+        let mut deps = mock_dependencies(&[]);
+        let commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
+        create_test_state(&mut deps, &env, true);
+        let res = timestamp_is_expired(&deps.storage, &env.block.time.plus_seconds(86400)).unwrap();
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn test_timestamp_expired_with_expired_time() {
+        let env = mock_env();
+        let mut deps = mock_dependencies(&[]);
+        let commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
+        create_test_state(&mut deps, &env, true);
+        let res = timestamp_is_expired(&deps.storage, &env.block.time.plus_seconds(86401)).unwrap();
         assert_eq!(true, res);
     }
 

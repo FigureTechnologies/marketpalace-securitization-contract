@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Response};
+use cosmwasm_std::{Addr, Env, Response};
 
 use crate::{
     core::{
@@ -10,13 +10,23 @@ use crate::{
         remaining_securities,
         securities::{self},
     },
+    util::settlement::timestamp_is_expired,
 };
 
 use super::commitment::Commitment;
 
-pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>) -> ProvTxResponse {
+pub fn handle(
+    deps: ProvDepsMut,
+    env: &Env,
+    lp: Addr,
+    commitments: Vec<SecurityCommitment>,
+) -> ProvTxResponse {
     if commits::exists(deps.storage, lp.clone()) {
         return Err(crate::core::error::ContractError::CommitmentAlreadyExists {});
+    }
+
+    if timestamp_is_expired(deps.storage, &env.block.time)? {
+        return Err(crate::core::error::ContractError::SettlmentExpired {});
     }
 
     for commitment in &commitments {
@@ -44,7 +54,7 @@ pub fn handle(deps: ProvDepsMut, lp: Addr, commitments: Vec<SecurityCommitment>)
 
 #[cfg(test)]
 mod test {
-    use cosmwasm_std::{Addr, Attribute, Coin, Uint128};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -60,7 +70,7 @@ mod test {
             remaining_securities,
             securities::{self},
         },
-        util::testing::SettlementTester,
+        util::testing::{create_test_state, SettlementTester},
     };
 
     #[test]
@@ -69,6 +79,7 @@ mod test {
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
+        create_test_state(&mut deps, &mock_env(), false);
         let commitments = settlement_tester.security_commitments.clone();
         securities::set(
             &mut deps.storage,
@@ -81,7 +92,7 @@ mod test {
             },
         )
         .unwrap();
-        let res = handle(deps.as_mut(), lp, commitments).unwrap_err();
+        let res = handle(deps.as_mut(), &mock_env(), lp, commitments).unwrap_err();
 
         assert_eq!(
             ContractError::InvalidSecurityCommitmentAmount {}.to_string(),
@@ -94,17 +105,21 @@ mod test {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
+        create_test_state(&mut deps, &mock_env(), false);
         settlement_tester.create_security_commitments(1);
         let commitments = settlement_tester.security_commitments.clone();
-        handle(deps.as_mut(), lp, commitments).unwrap_err();
+        handle(deps.as_mut(), &mock_env(), lp, commitments).unwrap_err();
     }
 
     #[test]
-    fn test_commit_is_added_on_success() {
+    fn test_fails_on_expired_timestamp() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
+        let mut env = mock_env();
+        create_test_state(&mut deps, &env, true);
+        env.block.time = env.block.time.plus_seconds(86401);
         let commitments = settlement_tester.security_commitments.clone();
         securities::set(
             &mut deps.storage,
@@ -123,7 +138,78 @@ mod test {
             commitments[0].amount.u128(),
         )
         .unwrap();
-        let res = handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
+        let err = handle(deps.as_mut(), &env, lp.clone(), commitments.clone()).unwrap_err();
+        assert_eq!(
+            ContractError::SettlmentExpired {}.to_string(),
+            err.to_string()
+        );
+    }
+
+    #[test]
+    fn test_commit_is_added_on_success_with_unexpired_timestamp() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("address");
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        create_test_state(&mut deps, &mock_env(), true);
+        let commitments = settlement_tester.security_commitments.clone();
+        securities::set(
+            &mut deps.storage,
+            &Security {
+                name: commitments[0].name.clone(),
+                amount: Uint128::new(10),
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: commitments[0].amount,
+                price_per_unit: Coin::new(5, "denom".to_string()),
+            },
+        )
+        .unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            commitments[0].name.clone(),
+            commitments[0].amount.u128(),
+        )
+        .unwrap();
+        let res = handle(deps.as_mut(), &mock_env(), lp.clone(), commitments.clone()).unwrap();
+
+        let commitment = commits::get(&deps.storage, lp.clone()).unwrap();
+        assert_eq!(commitments, commitment.commitments);
+        assert_eq!(CommitmentState::PENDING, commitment.state);
+        assert_eq!(lp, commitment.lp);
+        assert_eq!(2, res.attributes.len());
+        assert_eq!(
+            Attribute::new("action", "propose_commitment"),
+            res.attributes[0]
+        );
+        assert_eq!(Attribute::new("lp", lp), res.attributes[1]);
+    }
+
+    #[test]
+    fn test_commit_is_added_on_success() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("address");
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        create_test_state(&mut deps, &mock_env(), false);
+        let commitments = settlement_tester.security_commitments.clone();
+        securities::set(
+            &mut deps.storage,
+            &Security {
+                name: commitments[0].name.clone(),
+                amount: Uint128::new(10),
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: commitments[0].amount,
+                price_per_unit: Coin::new(5, "denom".to_string()),
+            },
+        )
+        .unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            commitments[0].name.clone(),
+            commitments[0].amount.u128(),
+        )
+        .unwrap();
+        let res = handle(deps.as_mut(), &mock_env(), lp.clone(), commitments.clone()).unwrap();
 
         let commitment = commits::get(&deps.storage, lp.clone()).unwrap();
         assert_eq!(commitments, commitment.commitments);
@@ -143,6 +229,7 @@ mod test {
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
+        create_test_state(&mut deps, &mock_env(), false);
         let commitments = settlement_tester.security_commitments.clone();
         securities::set(
             &mut deps.storage,
@@ -161,8 +248,8 @@ mod test {
             commitments[0].amount.u128(),
         )
         .unwrap();
-        handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap();
-        let res = handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap_err();
+        handle(deps.as_mut(), &mock_env(), lp.clone(), commitments.clone()).unwrap();
+        let res = handle(deps.as_mut(), &mock_env(), lp.clone(), commitments.clone()).unwrap_err();
         assert_eq!(
             ContractError::CommitmentAlreadyExists {}.to_string(),
             res.to_string()
@@ -175,6 +262,7 @@ mod test {
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
+        create_test_state(&mut deps, &mock_env(), false);
         let commitments = settlement_tester.security_commitments.clone();
         securities::set(
             &mut deps.storage,
@@ -187,7 +275,8 @@ mod test {
             },
         )
         .unwrap();
-        let error = handle(deps.as_mut(), lp.clone(), commitments.clone()).unwrap_err();
+        let error =
+            handle(deps.as_mut(), &mock_env(), lp.clone(), commitments.clone()).unwrap_err();
         assert_eq!(
             ContractError::CommitmentExceedsRemainingSecurityAmount {}.to_string(),
             error.to_string()
