@@ -9,10 +9,9 @@ use crate::{
     storage::{
         available_capital::{self},
         commits::{self},
-        paid_in_capital::{self},
         state::{self},
     },
-    util::to,
+    util::{self, to},
 };
 
 use super::commitment::{Commitment, CommitmentState};
@@ -29,7 +28,11 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, commitment: Addr) -> Pr
 fn withdraw_commitment(deps: ProvDepsMut, env: Env, sender: Addr, lp: Addr) -> ProvTxResponse {
     let commitment = commits::get(deps.storage, lp.clone())?;
 
-    if !is_settling(deps.storage, &commitment) {
+    if util::settlement::is_expired(&env, &commitment) {
+        return Err(ContractError::SettlmentExpired {});
+    }
+
+    if !util::settlement::is_settling(deps.storage, &commitment) {
         return Err(ContractError::CommitmentNotMet {});
     }
 
@@ -85,14 +88,9 @@ fn transfer_investment_tokens(
     Ok(messages)
 }
 
-fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
-    let paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone());
-    paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED
-}
-
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Event, Uint128};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Event, Uint128, Uint64};
     use provwasm_mocks::mock_dependencies;
     use provwasm_std::{mint_marker_supply, withdraw_coins};
 
@@ -107,72 +105,7 @@ mod tests {
         util::{testing::SettlementTester, to},
     };
 
-    use super::{
-        handle, is_settling, process_withdraw, transfer_investment_tokens, withdraw_commitment,
-    };
-
-    #[test]
-    fn test_is_settling_success() {
-        let mut deps = mock_dependencies(&[]);
-        let mut settlement_tester = SettlementTester::new();
-        settlement_tester.create_security_commitments(1);
-        let lp = Addr::unchecked("bad address");
-        let mut commitment =
-            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
-        commitment.state = CommitmentState::ACCEPTED;
-        paid_in_capital::set(
-            deps.as_mut().storage,
-            lp.clone(),
-            &settlement_tester.security_commitments,
-        )
-        .unwrap();
-        let settling = is_settling(&deps.storage, &commitment);
-        assert_eq!(true, settling);
-    }
-
-    #[test]
-    fn test_is_settling_fails_on_already_settled() {
-        let mut deps = mock_dependencies(&[]);
-        let settlement_tester = SettlementTester::new();
-        let lp = Addr::unchecked("bad address");
-        let mut commitment =
-            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
-        commitment.state = CommitmentState::SETTLED;
-        paid_in_capital::set(
-            deps.as_mut().storage,
-            lp.clone(),
-            &settlement_tester.security_commitments,
-        )
-        .unwrap();
-        let settling = is_settling(&deps.storage, &commitment);
-        assert_eq!(false, settling);
-    }
-
-    #[test]
-    fn test_is_settling_handles_invalid_lp() {
-        let deps = mock_dependencies(&[]);
-        let settlement_tester = SettlementTester::new();
-        let lp = Addr::unchecked("bad address");
-        let commitment = Commitment::new(lp.clone(), settlement_tester.security_commitments);
-        let settling = is_settling(&deps.storage, &commitment);
-        assert_eq!(false, settling);
-    }
-
-    #[test]
-    fn test_is_settling_fails_on_missing_capital() {
-        let mut deps = mock_dependencies(&[]);
-        let mut settlement_tester = SettlementTester::new();
-        settlement_tester.create_security_commitments(1);
-        let lp = Addr::unchecked("bad address");
-        let mut commitment =
-            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
-        commitment.state = CommitmentState::ACCEPTED;
-        let mut capital = commitment.clone();
-        capital.clear_amounts();
-        paid_in_capital::set(deps.as_mut().storage, lp.clone(), &capital.commitments).unwrap();
-        let settling = is_settling(&deps.storage, &commitment);
-        assert_eq!(false, settling);
-    }
+    use super::{handle, process_withdraw, transfer_investment_tokens, withdraw_commitment};
 
     #[test]
     fn test_transfer_investment_tokens_success() {
@@ -343,6 +276,44 @@ mod tests {
         .unwrap_err();
         assert_eq!(
             ContractError::CommitmentNotMet {}.to_string(),
+            err.to_string()
+        );
+    }
+
+    #[test]
+    fn test_withdraw_commitments_with_expired_settlement() {
+        let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(2);
+        let lp = Addr::unchecked("lp");
+        let sender = Addr::unchecked("gp");
+        let capital_denom = "denom".to_string();
+        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
+        commitment.state = CommitmentState::ACCEPTED;
+        commitment.settlment_date = Some(Uint64::new(mock_env().block.time.seconds() - 1));
+
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+
+        available_capital::add_capital(
+            deps.as_mut().storage,
+            commitment.lp.clone(),
+            vec![Coin::new(100, &capital_denom)],
+        )
+        .unwrap();
+
+        let mut partial_paid = settlement_tester.security_commitments.clone();
+        partial_paid[0].amount = Uint128::new(1);
+        paid_in_capital::set(deps.as_mut().storage, commitment.lp.clone(), &partial_paid).unwrap();
+
+        let err = withdraw_commitment(
+            deps.as_mut(),
+            mock_env(),
+            sender.clone(),
+            commitment.lp.clone(),
+        )
+        .unwrap_err();
+        assert_eq!(
+            ContractError::SettlmentExpired {}.to_string(),
             err.to_string()
         );
     }

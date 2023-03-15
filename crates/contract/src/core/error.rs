@@ -35,6 +35,9 @@ pub enum ContractError {
     #[error("Commitment has not been met")]
     CommitmentNotMet {},
 
+    #[error("Settlment time for this commitment has expired")]
+    SettlmentExpired {},
+
     #[error("Missing required funds")]
     MissingFunds {},
 

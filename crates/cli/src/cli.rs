@@ -98,12 +98,19 @@ impl Cli {
                         .subcommand(
                             Command::new("deposit_commitment")
                                 .alias("deposit")
-                                .about("Create a deposit commitment transaction."),
+                                .about("Create a deposit commitment transaction.")
                         )
                         .subcommand(
-                            Command::new("withdraw_commitments")
+                            Command::new("withdraw_commitment")
                                 .alias("withdraw")
-                                .about("Create a transaction to withdraw deposited funds"),
+                                .about("Create a transaction to withdraw deposited funds")
+                                .arg(
+                                    Arg::new("address")
+                                    .short('a')
+                                    .long("address")
+                                    .required(true)
+                                    .help("The address of the investor")
+                                )
                         ),
                 ),
             args: ArgMatches::default(),
@@ -161,8 +168,12 @@ impl Cli {
                     Some(("deposit_commitment", _init_matches)) => {
                         tx::deposit_commitment::create();
                     }
-                    Some(("withdraw_commitments", _init_matches)) => {
-                        tx::withdraw_commitments::create();
+                    Some(("withdraw_commitments", withdraw_matches)) => {
+                        let lp: String = withdraw_matches
+                            .get_one::<String>("address")
+                            .unwrap()
+                            .clone();
+                        tx::withdraw_commitments::create(lp);
                     }
                     _ => println!("Unrecognized transaction"),
                 };

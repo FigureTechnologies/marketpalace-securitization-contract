@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Event, Response, Storage};
+use cosmwasm_std::{Addr, Env, Event, Response, Storage};
 
 use crate::{
     core::{
@@ -15,7 +15,12 @@ use crate::{
 
 use super::commitment::{Commitment, CommitmentState};
 
-pub fn handle(deps: ProvDepsMut, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
+pub fn handle(
+    deps: ProvDepsMut,
+    _env: Env,
+    sender: Addr,
+    commitments: Vec<Addr>,
+) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(crate::core::error::ContractError::Unauthorized {});
@@ -53,6 +58,7 @@ fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), Contract
     }
 
     commitment.state = CommitmentState::ACCEPTED;
+    commitment.settlment_date = state::get_settlement_time(storage)?;
     commits::set(storage, &commitment)?;
 
     track_paid_capital(storage, commitment)?;
@@ -69,7 +75,7 @@ fn track_paid_capital(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr, Attribute};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -81,7 +87,7 @@ mod tests {
             remaining_securities,
             state::{self, State},
         },
-        util::testing::SettlementTester,
+        util::testing::{create_test_state, SettlementTester},
     };
 
     use super::{accept_commitment, handle, track_paid_capital};
@@ -150,10 +156,42 @@ mod tests {
     }
 
     #[test]
+    fn test_accept_commit_succeeds_and_updates_settlement_time() {
+        let lp = Addr::unchecked("address");
+        let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
+        let commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
+        create_test_state(&mut deps, true);
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            settlement_tester.security_commitments[0].name.clone(),
+            settlement_tester.security_commitments[0].amount.u128(),
+        )
+        .unwrap();
+        accept_commitment(deps.as_mut().storage, lp.clone()).unwrap();
+
+        // We need to check the state
+        let added_commitment = commits::get(&deps.storage, lp).unwrap();
+        let expected_time = state::get_settlement_time(&deps.storage).unwrap();
+        assert_eq!(CommitmentState::ACCEPTED, added_commitment.state);
+        assert_eq!(expected_time, added_commitment.settlment_date);
+
+        // We need to check capital
+        let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp);
+        for capital in &paid_capital {
+            assert_eq!(0, capital.amount.u128());
+        }
+    }
+
+    #[test]
     fn test_accept_commit_succeeds() {
         let lp = Addr::unchecked("address");
         let mut deps = mock_dependencies(&[]);
         let mut settlement_tester = SettlementTester::new();
+        create_test_state(&mut deps, false);
         settlement_tester.create_security_commitments(1);
         let commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
@@ -169,6 +207,7 @@ mod tests {
         // We need to check the state
         let added_commitment = commits::get(&deps.storage, lp).unwrap();
         assert_eq!(CommitmentState::ACCEPTED, added_commitment.state);
+        assert_eq!(None, added_commitment.settlment_date);
 
         // We need to check capital
         let paid_capital = paid_in_capital::get(&deps.storage, commitment.lp);
@@ -184,6 +223,7 @@ mod tests {
         let lp2 = Addr::unchecked("lp2");
         let mut deps = mock_dependencies(&[]);
         let mut settlement_tester = SettlementTester::new();
+        let env = mock_env();
         settlement_tester.setup_test_state(deps.as_mut().storage);
 
         settlement_tester.create_security_commitments(2);
@@ -213,7 +253,7 @@ mod tests {
         )
         .unwrap();
 
-        let res = handle(deps.as_mut(), gp.clone(), vec![lp1, lp2]).unwrap();
+        let res = handle(deps.as_mut(), env, gp.clone(), vec![lp1, lp2]).unwrap();
         assert_eq!(res.attributes.len(), 2);
         assert_eq!(
             Attribute::new("action", "accept_commitments"),
@@ -231,13 +271,14 @@ mod tests {
     fn test_handle_succeeds_with_no_commits() {
         let gp = Addr::unchecked("gp");
         let mut deps = mock_dependencies(&[]);
+        let env = mock_env();
         state::set(
             deps.as_mut().storage,
             &State::new(gp.clone(), "denom".to_string(), vec![]),
         )
         .unwrap();
 
-        let res = handle(deps.as_mut(), gp.clone(), vec![]).unwrap();
+        let res = handle(deps.as_mut(), env, gp.clone(), vec![]).unwrap();
         assert_eq!(res.attributes.len(), 2);
         assert_eq!(res.events.len(), 0);
         assert_eq!(res.attributes[0].key, "action");
@@ -251,13 +292,14 @@ mod tests {
         let gp = Addr::unchecked("gp");
         let sender = Addr::unchecked("lp1");
         let mut deps = mock_dependencies(&[]);
+        let env = mock_env();
         state::set(
             deps.as_mut().storage,
             &State::new(gp, "denom".to_string(), vec![]),
         )
         .unwrap();
 
-        let error = handle(deps.as_mut(), sender, vec![]).unwrap_err();
+        let error = handle(deps.as_mut(), env, sender, vec![]).unwrap_err();
         assert_eq!(
             ContractError::Unauthorized {}.to_string(),
             error.to_string()

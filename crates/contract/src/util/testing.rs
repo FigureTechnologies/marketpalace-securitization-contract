@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     testing::{mock_env, mock_info, MockApi, MockStorage},
-    Addr, Coin, Env, OwnedDeps, Storage, Uint128,
+    Addr, Coin, Env, OwnedDeps, Storage, Uint128, Uint64,
 };
 use provwasm_mocks::ProvenanceMockQuerier;
 use provwasm_std::ProvenanceQuery;
@@ -10,9 +10,13 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         msg::{ExecuteMsg, InstantiateMsg},
+        rules::InvestmentVehicleRule,
         security::{FundSecurity, Security, SecurityCommitment},
     },
-    storage::state::{self, State},
+    storage::{
+        self,
+        state::{self, State},
+    },
 };
 
 #[cfg(tests)]
@@ -181,6 +185,17 @@ pub fn test_withdraw_message() -> ExecuteMsg {
 }
 
 pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
+
+pub fn create_test_state(deps: &mut MockDeps, rules: bool) {
+    let mut state = State::new(Addr::unchecked("gp"), "denom".to_string(), vec![]);
+    if rules {
+        state
+            .rules
+            .push(InvestmentVehicleRule::SettlementTime(Uint64::new(86400)));
+    }
+
+    storage::state::set(deps.as_mut().storage, &state).unwrap();
+}
 
 pub fn create_testing_commitments(deps: &mut MockDeps) {
     // Multiple LPs propose

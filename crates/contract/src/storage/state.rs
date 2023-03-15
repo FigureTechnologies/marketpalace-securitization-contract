@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Storage};
+use cosmwasm_std::{Addr, Storage, Uint64};
 use cw_storage_plus::Item;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -33,13 +33,27 @@ pub fn set(storage: &mut dyn Storage, state: &State) -> Result<(), ContractError
     Ok(STATE.save(storage, state)?)
 }
 
+pub fn get_settlement_time(storage: &dyn Storage) -> Result<Option<Uint64>, ContractError> {
+    let state = get(storage)?;
+
+    let duration: Option<Uint64> = state
+        .rules
+        .iter()
+        .map(|rule| match rule {
+            InvestmentVehicleRule::SettlementTime(offset) => offset.to_owned(),
+        })
+        .next();
+
+    Ok(duration)
+}
+
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Addr;
+    use cosmwasm_std::{Addr, Uint64};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
-        core::rules::{InvestmentVehicleRule, SettlementDate},
+        core::rules::InvestmentVehicleRule,
         storage::state::{set, State},
     };
 
@@ -49,9 +63,7 @@ mod tests {
     fn test_new_state() {
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
-        let expected_rules = vec![InvestmentVehicleRule::SettlementDate {
-            0: SettlementDate {},
-        }];
+        let expected_rules = vec![InvestmentVehicleRule::SettlementTime { 0: Uint64::zero() }];
         let state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
@@ -74,9 +86,7 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
-        let expected_rules = vec![InvestmentVehicleRule::SettlementDate {
-            0: SettlementDate {},
-        }];
+        let expected_rules = vec![InvestmentVehicleRule::SettlementTime { 0: Uint64::zero() }];
         let state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),

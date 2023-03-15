@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Uint128, Uint64};
 
 use crate::core::security::SecurityCommitment;
 
@@ -8,6 +8,7 @@ pub struct Commitment {
     pub lp: Addr,
     pub commitments: Vec<SecurityCommitment>,
     pub state: CommitmentState,
+    pub settlment_date: Option<Uint64>,
 }
 
 impl Commitment {
@@ -16,6 +17,7 @@ impl Commitment {
             lp,
             commitments,
             state: CommitmentState::PENDING,
+            settlment_date: None,
         }
     }
 
@@ -71,5 +73,6 @@ mod tests {
         assert_eq!(lp, commitment.lp);
         assert_eq!(CommitmentState::PENDING, commitment.state);
         assert_eq!(securities, commitment.commitments);
+        assert_eq!(None, commitment.settlment_date);
     }
 }
