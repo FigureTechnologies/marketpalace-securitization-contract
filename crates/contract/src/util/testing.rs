@@ -184,6 +184,28 @@ pub fn test_withdraw_message() -> ExecuteMsg {
     }
 }
 
+pub fn withdraw_all_commitments_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
+    let info = mock_info(sender, &[]);
+    let msg = test_withdraw_all_commitments_message();
+    execute(deps, env, info, msg)
+}
+
+pub fn test_withdraw_all_commitments_message() -> ExecuteMsg {
+    ExecuteMsg::WithdrawAllCommitments {}
+}
+
+pub fn update_settlement_time_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
+    let info = mock_info(sender, &[]);
+    let msg = test_update_settlement_time_message();
+    execute(deps, env, info, msg)
+}
+
+pub fn test_update_settlement_time_message() -> ExecuteMsg {
+    ExecuteMsg::UpdateSettlementTime {
+        settlement_time: Some(Uint64::new(99999)),
+    }
+}
+
 pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
 
 pub fn create_test_state(deps: &mut MockDeps, env: &Env, rules: bool) {

@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint64};
 use cw2::ContractVersion;
 
 use crate::execute::settlement::commitment::Commitment;
@@ -26,6 +26,7 @@ pub enum ExecuteMsg {
     DepositCommitment { securities: Vec<SecurityCommitment> },
     WithdrawCommitment { lp: Addr },
     WithdrawAllCommitments {},
+    UpdateSettlementTime { settlement_time: Option<Uint64> },
 }
 
 #[cw_serde]

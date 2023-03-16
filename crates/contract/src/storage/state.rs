@@ -47,6 +47,37 @@ pub fn get_settlement_time(storage: &dyn Storage) -> Result<Option<Uint64>, Cont
     Ok(duration)
 }
 
+pub fn set_settlement_time(
+    storage: &mut dyn Storage,
+    new_settlement_time: Option<Uint64>,
+) -> Result<(), ContractError> {
+    let mut state = get(storage)?;
+
+    if new_settlement_time.is_some() {
+        state.rules = state
+            .rules
+            .iter()
+            .map(|rule| match rule {
+                InvestmentVehicleRule::SettlementTime(_settlement_time) => {
+                    InvestmentVehicleRule::SettlementTime(new_settlement_time.unwrap())
+                }
+            })
+            .collect();
+    } else {
+        state.rules = state
+            .rules
+            .into_iter()
+            .filter(|rule| -> bool {
+                match rule {
+                    InvestmentVehicleRule::SettlementTime(_settlement_time) => false,
+                }
+            })
+            .collect();
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Uint64};
@@ -130,5 +161,20 @@ mod tests {
 
         let settlement_time = get_settlement_time(&deps.storage).unwrap();
         assert_eq!(Some(Uint64::zero()), settlement_time);
+    }
+
+    #[test]
+    fn test_set_settlement_time_with_no_entries() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_set_settlement_with_entries() {
+        assert!(false);
+    }
+
+    #[test]
+    fn test_set_settlement_removal_with_no_time() {
+        assert!(false);
     }
 }

@@ -11,7 +11,7 @@ use crate::execute::{
     settlement::{accept_commitments, deposit_commitment},
 };
 
-use super::settlement::withdraw_all_commitments;
+use super::settlement::{update_settlement_time, withdraw_all_commitments};
 
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -29,6 +29,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         }
         ExecuteMsg::WithdrawAllCommitments {} => {
             withdraw_all_commitments::handle(deps, env, info.sender)
+        }
+        ExecuteMsg::UpdateSettlementTime { settlement_time } => {
+            update_settlement_time::handle(deps, info.sender, settlement_time)
         }
     }
 }
@@ -84,5 +87,42 @@ mod tests {
         )
         .unwrap();
         util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp").unwrap();
+    }
+
+    #[test]
+    fn test_withdraw_all_commitments() {
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp2").unwrap();
+        util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp", "lp2"])
+            .unwrap();
+        util::testing::deposit_test(
+            deps.as_mut(),
+            mock_env(),
+            "lp",
+            &test_security_commitments(),
+        )
+        .unwrap();
+        util::testing::withdraw_all_commitments_test(deps.as_mut(), mock_env(), "gp").unwrap();
+    }
+
+    #[test]
+    fn test_update_settlement_time() {
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp2").unwrap();
+        util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp", "lp2"])
+            .unwrap();
+        util::testing::deposit_test(
+            deps.as_mut(),
+            mock_env(),
+            "lp",
+            &test_security_commitments(),
+        )
+        .unwrap();
+        util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp").unwrap();
+        util::testing::update_settlement_time_test(deps.as_mut(), mock_env(), "gp").unwrap();
     }
 }

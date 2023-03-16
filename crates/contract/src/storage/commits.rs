@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Order, Storage};
+use cosmwasm_std::{Addr, Order, Storage, Uint64};
 use cw_storage_plus::Map;
 
 use crate::{
@@ -29,9 +29,25 @@ pub fn get_with_state(storage: &dyn Storage, state: CommitmentState) -> Vec<Comm
     commits
 }
 
+pub fn set_settlement_time(
+    storage: &mut dyn Storage,
+    new_settlement_time: Option<Uint64>,
+) -> Result<(), ContractError> {
+    let commits: Vec<Commitment> = COMMITS
+        .range(storage, None, None, Order::Ascending)
+        .filter(Result::is_ok)
+        .map(|item| item.unwrap().1)
+        .collect();
+    for mut commit in commits {
+        commit.settlment_date = new_settlement_time;
+        set(storage, &commit)?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Addr;
+    use cosmwasm_std::{Addr, Uint64};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -39,6 +55,8 @@ mod tests {
         storage::commits::set,
         storage::commits::{exists, get},
     };
+
+    use super::set_settlement_time;
 
     #[test]
     fn test_get_invalid() {
@@ -66,5 +84,27 @@ mod tests {
         assert!(!exists(&deps.storage, lp.clone()));
         set(deps.as_mut().storage, &commitment).unwrap();
         assert!(exists(&deps.storage, lp));
+    }
+
+    #[test]
+    fn test_update_settlement_time() {
+        let mut deps = mock_dependencies(&[]);
+        let lps = vec![Addr::unchecked("lp"), Addr::unchecked("lp2")];
+        let settlement_time = Some(Uint64::new(9999));
+        for lp in lps.clone() {
+            let commitment = Commitment::new(lp.clone(), vec![]);
+            set(deps.as_mut().storage, &commitment).unwrap();
+        }
+        set_settlement_time(deps.as_mut().storage, settlement_time).unwrap();
+        for lp in lps {
+            let commit = get(deps.as_ref().storage, lp).unwrap();
+            assert_eq!(settlement_time, commit.settlment_date);
+        }
+    }
+
+    #[test]
+    fn test_update_settlement_time_empty() {
+        let mut deps = mock_dependencies(&[]);
+        set_settlement_time(deps.as_mut().storage, None).unwrap();
     }
 }

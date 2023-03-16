@@ -225,6 +225,21 @@ This contract will emit an event each settled LP.
 }
 ```
 
+#### [Update Settlement Time](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L28)
+The UpdateSettlementTime message is sent by the GP, and it allows them to change the settlement time. The settlement_time is in seconds since epoch, and a value of null will disable the settlement time. A contract with no settlement time will act is if there is unlimited time to settle.
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `update_settlement_time`.
+
+##### Request Sample
+```
+{
+    "update_settlement_time": {
+        "settlement_time": "86400"
+    }
+}
+```
+
 ### Query Routes
 This contract exposes five different query routes which allow users to view the state of the contract, investors, and the investor's commitments. A more detailed view of these messages can be seen in the [json](schema/query_msg.json).
 
