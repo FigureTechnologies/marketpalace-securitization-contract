@@ -26,7 +26,7 @@ pub fn handle(
     msg: InstantiateMsg,
 ) -> ProvTxResponse {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    let state = State::new(msg.gp, msg.capital_denom, msg.rules);
+    let state = State::new(msg.gp, msg.capital_denom, msg.settlement_time);
     let mut response = Response::new();
     state::set(deps.storage, &state)?;
 
@@ -86,7 +86,7 @@ fn new_active_marker(
 mod tests {
     use cosmwasm_std::{
         testing::{mock_env, mock_info},
-        Addr, Coin, StdError,
+        Addr, Coin, StdError, Uint64,
     };
     use cosmwasm_std::{Attribute, Uint128};
     use cw2::get_contract_version;
@@ -102,7 +102,6 @@ mod tests {
         core::{
             constants::{CONTRACT_NAME, CONTRACT_VERSION},
             msg::InstantiateMsg,
-            rules::InvestmentVehicleRule,
             security::{Security, TrancheSecurity},
         },
     };
@@ -158,7 +157,7 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
-        const DEFAULT_RULES: Vec<InvestmentVehicleRule> = vec![];
+        const DEFAULT_TIME: Option<Uint64> = None;
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         let securities = vec![
             Security {
@@ -180,7 +179,7 @@ mod tests {
             gp: Addr::unchecked(DEFAULT_GP),
             securities: securities.clone(),
             capital_denom: DEFAULT_CAPITAL_DENOM.to_string(),
-            rules: DEFAULT_RULES,
+            settlement_time: DEFAULT_TIME,
             fee: None,
         };
 
@@ -207,7 +206,7 @@ mod tests {
         let state = state::get(&deps.storage).unwrap();
         assert_eq!(DEFAULT_CAPITAL_DENOM.to_string(), state.capital_denom);
         assert_eq!(Addr::unchecked(DEFAULT_GP), state.gp);
-        assert_eq!(DEFAULT_RULES, state.rules);
+        assert_eq!(DEFAULT_TIME, state.settlement_time);
 
         // Check the SECURITIES_MAP
         for security in securities {
@@ -225,8 +224,8 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
-        const DEFAULT_RULES: Vec<InvestmentVehicleRule> = vec![];
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
+        const DEFAULT_TIME: Option<Uint64> = None;
         let securities = vec![
             Security {
                 name: "Tranche 1".to_string(),
@@ -247,7 +246,7 @@ mod tests {
             gp: Addr::unchecked(DEFAULT_GP),
             securities: securities.clone(),
             capital_denom: DEFAULT_CAPITAL_DENOM.to_string(),
-            rules: DEFAULT_RULES,
+            settlement_time: DEFAULT_TIME,
             fee: Some(Fee {
                 recipient: Addr::unchecked("recipient"),
                 amount: Coin::new(100, "nhash"),
@@ -282,7 +281,7 @@ mod tests {
         let state = state::get(&deps.storage).unwrap();
         assert_eq!(DEFAULT_CAPITAL_DENOM.to_string(), state.capital_denom);
         assert_eq!(Addr::unchecked(DEFAULT_GP), state.gp);
-        assert_eq!(DEFAULT_RULES, state.rules);
+        assert_eq!(DEFAULT_TIME, state.settlement_time);
 
         // Check the SECURITIES_MAP
         for security in securities {
@@ -300,14 +299,14 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
-        const DEFAULT_RULES: Vec<InvestmentVehicleRule> = vec![];
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
+        const DEFAULT_TIME: Option<Uint64> = None;
         let securities = vec![];
         let init_msg = InstantiateMsg {
             gp: Addr::unchecked(DEFAULT_GP),
             securities: securities.clone(),
             capital_denom: DEFAULT_CAPITAL_DENOM.to_string(),
-            rules: DEFAULT_RULES,
+            settlement_time: DEFAULT_TIME,
             fee: None,
         };
 

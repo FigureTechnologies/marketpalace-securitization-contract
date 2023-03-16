@@ -90,7 +90,7 @@ mod tests {
                 },
             ],
             capital_denom: "denom".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: Some(Fee {
                 recipient: Addr::unchecked("receiver"),
                 amount: Coin::new(100, "nhash"),
@@ -129,7 +129,7 @@ mod tests {
                 },
             ],
             capital_denom: "denom".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: None,
         };
         let expected = ContractError::InvalidSecurityPriceDenom {}.to_string();
@@ -164,7 +164,7 @@ mod tests {
                 },
             ],
             capital_denom: "denom".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: None,
         };
         let expected = ContractError::InvalidSecurityList {}.to_string();
@@ -178,7 +178,7 @@ mod tests {
             gp: Addr::unchecked("address"),
             securities: vec![],
             capital_denom: "denom".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: None,
         };
         let output = msg.validate().unwrap_err();
@@ -213,7 +213,7 @@ mod tests {
                 },
             ],
             capital_denom: "denom".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: None,
         };
         let expected = ContractError::InvalidSecurityList {}.to_string();
@@ -236,7 +236,7 @@ mod tests {
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             }],
             capital_denom: "".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: None,
         };
         let expected = ContractError::InvalidCapitalDenom {}.to_string();
@@ -271,7 +271,7 @@ mod tests {
                 },
             ],
             capital_denom: "denom".to_string(),
-            rules: vec![],
+            settlement_time: None,
             fee: None,
         };
         let funds = vec![Coin {

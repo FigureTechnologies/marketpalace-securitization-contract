@@ -10,7 +10,6 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         msg::{ExecuteMsg, InstantiateMsg},
-        rules::InvestmentVehicleRule,
         security::{FundSecurity, Security, SecurityCommitment},
     },
     storage::{
@@ -49,7 +48,7 @@ impl SettlementTester {
             &State {
                 gp: Addr::unchecked("gp"),
                 capital_denom: "denom".to_string(),
-                rules: vec![],
+                settlement_time: None,
             },
         )
         .unwrap();
@@ -95,7 +94,7 @@ pub fn test_init_message() -> InstantiateMsg {
         gp: Addr::unchecked("gp"),
         securities: create_test_securities(),
         capital_denom: "denom".to_string(),
-        rules: vec![],
+        settlement_time: None,
         fee: None,
     }
 }
@@ -208,14 +207,12 @@ pub fn test_update_settlement_time_message() -> ExecuteMsg {
 
 pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
 
-pub fn create_test_state(deps: &mut MockDeps, env: &Env, rules: bool) {
-    let mut state = State::new(Addr::unchecked("gp"), "denom".to_string(), vec![]);
-    if rules {
-        state.rules.push(InvestmentVehicleRule::SettlementTime(
-            Uint64::new(86400) + Uint64::new(env.block.time.seconds()),
-        ));
-    }
-
+pub fn create_test_state(deps: &mut MockDeps, env: &Env, has_settlement: bool) {
+    let settlement_time = match has_settlement {
+        true => Some(Uint64::new(86400) + Uint64::new(env.block.time.seconds())),
+        false => None,
+    };
+    let state = State::new(Addr::unchecked("gp"), "denom".to_string(), settlement_time);
     storage::state::set(deps.as_mut().storage, &state).unwrap();
 }
 

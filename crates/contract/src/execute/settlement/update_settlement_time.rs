@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Env, Response, Uint64};
+use cosmwasm_std::{Addr, Response, Uint64};
 
 use crate::{
     core::{

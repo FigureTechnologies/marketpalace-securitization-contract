@@ -3,21 +3,21 @@ use cw_storage_plus::Item;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::core::{constants::STATE_KEY, error::ContractError, rules::InvestmentVehicleRule};
+use crate::core::{constants::STATE_KEY, error::ContractError};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct State {
     pub gp: Addr,
     pub capital_denom: String,
-    pub rules: Vec<InvestmentVehicleRule>,
+    pub settlement_time: Option<Uint64>,
 }
 
 impl State {
-    pub fn new(gp: Addr, capital_denom: String, rules: Vec<InvestmentVehicleRule>) -> Self {
+    pub fn new(gp: Addr, capital_denom: String, settlement_time: Option<Uint64>) -> Self {
         Self {
             gp,
             capital_denom,
-            rules,
+            settlement_time,
         }
     }
 }
@@ -35,16 +35,7 @@ pub fn set(storage: &mut dyn Storage, state: &State) -> Result<(), ContractError
 
 pub fn get_settlement_time(storage: &dyn Storage) -> Result<Option<Uint64>, ContractError> {
     let state = get(storage)?;
-
-    let duration: Option<Uint64> = state
-        .rules
-        .iter()
-        .map(|rule| match rule {
-            InvestmentVehicleRule::SettlementTime(offset) => offset.to_owned(),
-        })
-        .next();
-
-    Ok(duration)
+    Ok(state.settlement_time)
 }
 
 pub fn set_settlement_time(
@@ -52,29 +43,8 @@ pub fn set_settlement_time(
     new_settlement_time: Option<Uint64>,
 ) -> Result<(), ContractError> {
     let mut state = get(storage)?;
-
-    if new_settlement_time.is_some() {
-        state.rules = state
-            .rules
-            .iter()
-            .map(|rule| match rule {
-                InvestmentVehicleRule::SettlementTime(_settlement_time) => {
-                    InvestmentVehicleRule::SettlementTime(new_settlement_time.unwrap())
-                }
-            })
-            .collect();
-    } else {
-        state.rules = state
-            .rules
-            .into_iter()
-            .filter(|rule| -> bool {
-                match rule {
-                    InvestmentVehicleRule::SettlementTime(_settlement_time) => false,
-                }
-            })
-            .collect();
-    }
-
+    state.settlement_time = new_settlement_time;
+    set(storage, &state)?;
     Ok(())
 }
 
@@ -83,10 +53,7 @@ mod tests {
     use cosmwasm_std::{Addr, Uint64};
     use provwasm_mocks::mock_dependencies;
 
-    use crate::{
-        core::rules::InvestmentVehicleRule,
-        storage::state::{get_settlement_time, set, State},
-    };
+    use crate::storage::state::{get_settlement_time, set, State};
 
     use super::get;
 
@@ -94,16 +61,16 @@ mod tests {
     fn test_new_state() {
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
-        let expected_rules = vec![InvestmentVehicleRule::SettlementTime { 0: Uint64::zero() }];
+        let expected_time = Some(Uint64::zero());
         let state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
-            expected_rules.clone(),
+            expected_time.clone(),
         );
 
         assert_eq!(expected_addr, state.gp);
         assert_eq!(expected_capital_denom, state.capital_denom);
-        assert_eq!(expected_rules, state.rules);
+        assert_eq!(expected_time, state.settlement_time);
     }
 
     #[test]
@@ -117,11 +84,11 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
-        let expected_rules = vec![InvestmentVehicleRule::SettlementTime { 0: Uint64::zero() }];
+        let expected_time = Some(Uint64::zero());
         let state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
-            expected_rules.clone(),
+            expected_time.clone(),
         );
 
         set(deps.as_mut().storage, &state).unwrap();
@@ -135,10 +102,11 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
+        let expected_time = None;
         let state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
-            vec![],
+            expected_time.clone(),
         );
         set(deps.as_mut().storage, &state).unwrap();
 
@@ -151,30 +119,33 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
-        let expected_rules = vec![InvestmentVehicleRule::SettlementTime { 0: Uint64::zero() }];
+        let expected_time = Some(Uint64::zero());
         let state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
-            expected_rules.clone(),
+            expected_time.clone(),
         );
         set(deps.as_mut().storage, &state).unwrap();
 
         let settlement_time = get_settlement_time(&deps.storage).unwrap();
-        assert_eq!(Some(Uint64::zero()), settlement_time);
+        assert_eq!(expected_time, settlement_time);
     }
 
     #[test]
-    fn test_set_settlement_time_with_no_entries() {
-        assert!(false);
-    }
+    fn test_set_settlement() {
+        let mut deps = mock_dependencies(&[]);
+        let expected_addr = Addr::unchecked("address");
+        let expected_capital_denom = "nhash";
+        let expected_time = Some(Uint64::new(9999));
+        let state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            None,
+        );
 
-    #[test]
-    fn test_set_settlement_with_entries() {
-        assert!(false);
-    }
-
-    #[test]
-    fn test_set_settlement_removal_with_no_time() {
-        assert!(false);
+        set(deps.as_mut().storage, &state).unwrap();
+        super::set_settlement_time(deps.as_mut().storage, expected_time.clone()).unwrap();
+        let obtained = get(&deps.storage).unwrap();
+        assert_eq!(expected_time, obtained.settlement_time);
     }
 }

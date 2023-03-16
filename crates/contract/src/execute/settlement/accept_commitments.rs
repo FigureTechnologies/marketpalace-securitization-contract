@@ -274,7 +274,7 @@ mod tests {
         let env = mock_env();
         state::set(
             deps.as_mut().storage,
-            &State::new(gp.clone(), "denom".to_string(), vec![]),
+            &State::new(gp.clone(), "denom".to_string(), None),
         )
         .unwrap();
 
@@ -326,7 +326,7 @@ mod tests {
         let env = mock_env();
         state::set(
             deps.as_mut().storage,
-            &State::new(gp, "denom".to_string(), vec![]),
+            &State::new(gp, "denom".to_string(), None),
         )
         .unwrap();
 

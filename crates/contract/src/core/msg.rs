@@ -6,7 +6,6 @@ use crate::execute::settlement::commitment::Commitment;
 
 use super::{
     fee::Fee,
-    rules::InvestmentVehicleRule,
     security::{Security, SecurityCommitment},
 };
 
@@ -15,7 +14,7 @@ pub struct InstantiateMsg {
     pub gp: Addr,
     pub securities: Vec<Security>,
     pub capital_denom: String,
-    pub rules: Vec<InvestmentVehicleRule>,
+    pub settlement_time: Option<Uint64>,
     pub fee: Option<Fee>,
 }
 
@@ -69,7 +68,7 @@ pub struct QueryStateResponse {
     pub gp: Addr,
     pub securities: Vec<String>,
     pub capital_denom: String,
-    pub rules: Vec<InvestmentVehicleRule>,
+    pub settlement_time: Option<Uint64>,
 }
 
 #[cw_serde]

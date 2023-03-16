@@ -12,7 +12,7 @@ pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
         gp: state.gp,
         securities,
         capital_denom: state.capital_denom,
-        rules: state.rules,
+        settlement_time: state.settlement_time,
     };
     Ok(to_binary(&response)?)
 }
@@ -44,7 +44,7 @@ mod tests {
 
         assert_eq!(expected.gp, value.gp);
         assert_eq!(expected.capital_denom, value.capital_denom);
-        assert_eq!(expected.rules, value.rules);
+        assert_eq!(expected.settlement_time, value.settlement_time);
         assert_eq!(securities, value.securities);
     }
 }
