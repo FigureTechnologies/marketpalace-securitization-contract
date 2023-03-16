@@ -21,7 +21,7 @@ There are three types of accounts that interact with this smart contract.
 ## Contract Interaction
 
 
-### [Instantiation](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/057cc028f64ad67e1de2ceb76ecf943ea060025c/crates/contract/src/core/msg.rs#L13-L18)
+### [Instantiation](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L13-L20)
 In order to use this contract it must first be instantiated by the admin. The admin will specify who the GP is, what securities will be involved, the denomination of the deposits, and the investment vehicle rules. A more detailed view of message can be seen in the [json](schema/instantiate_msg.json).
 
 When a contract is instantiated it first validates the message and ensures the following are true:
@@ -99,7 +99,7 @@ This rule can only be supplied once, and only the first instance of it will be t
 ### Execution Routes
 This contract contains four different types of execution messages. Every message is first validated and then handed off to the execute router. The router will then forward the message to the correct handler to be ran. A more detailed view of these messages can be seen in the [json](schema/execute_msg.json).
 
-#### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/7fb595c57620ada63566f0ceabaf0bade62ffddf/crates/contract/src/core/msg.rs#L22)
+#### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L24)
 The ProposeCommitment message is sent by a Limited Partner. When they are interested in funding a GP they will make an offer containing how many of each security they are interested in purchasing.
 
 This message must contain a non-empty list of existing securities. If a commitment already exists for the LP or the security amounts don't match the minimum, then the message will be rejected. Lastly, the message will be rejected if the blocktime is greater than the settlement time.
@@ -129,7 +129,7 @@ This message must contain a non-empty list of existing securities. If a commitme
 }
 ```
 
-#### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L23)
+#### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L25)
 The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and each supplied commitment must be in the `PENDING` state. The number of shares/units these commitments have cannot be greater than the remaining amount of their respective security. Lastly, this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
@@ -155,7 +155,7 @@ The AcceptCommitments message is sent by the General Partner. They will submit t
 }
 ```
 
-#### [Deposit Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L24)
+#### [Deposit Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L26)
 The DepositCommitment message is sent by one of the accepted LPs. Its purpose is for the LP to partially or completely pay off their commitment. The included funds will then be stored in the contract, and the GP can withdraw them at a later time. LPs cannot deposit more than they have committed, the funds must equal the sum of the cost of all the message's securities. Lastly, every deposit must have funds and this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
@@ -183,7 +183,7 @@ The DepositCommitment message is sent by one of the accepted LPs. Its purpose is
 }
 ```
 
-#### [Withdraw Commitment]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
+#### [Withdraw Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L27)
 The WithdrawCommitment message is sent by the GP, and it allows them to take capital that was deposited into the contract by a specific LP. If and only if the LP's deposited capital  matches the promised commitment funds will the tx succeed and transition the commitment to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. This transaction will fail if the blocktime is greater than the settlement time.
 
 This contract will emit an event for the settled LP.
@@ -205,10 +205,30 @@ This contract will emit an event for the settled LP.
 }
 ```
 
+#### [Withdraw All Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L28)
+The WithdrawAllCommitments message is sent by the GP, and it allows them to attempt take capital that was deposited into the contract by all `ACCEPTED` LPs. If and only if the LP's deposited capital matches the promised commitment funds will the commitment transition to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. This transaction will fail if the blocktime is greater than the settlement time.
+
+This contract will emit an event each settled LP.
+
+##### Emitted Events
+- `settled`: An event representing the settled LP.
+  - `lp`: The address of the settled LP.
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `withdraw_all_commitments`.
+- `gp`: The address of the GP withdrawing funds.
+
+##### Request Sample
+```
+{
+    "withdraw_all_commitments": {}
+}
+```
+
 ### Query Routes
 This contract exposes five different query routes which allow users to view the state of the contract, investors, and the investor's commitments. A more detailed view of these messages can be seen in the [json](schema/query_msg.json).
 
-#### Query Version
+#### [Query Version](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L46-L47)
 This route can be used to obtain the contract's version.
 
 ##### Request Sample
@@ -218,7 +238,7 @@ This route can be used to obtain the contract's version.
 }
 ```
 
-#### Query State
+#### [Query State](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L43-L44)
 This route can be used to obtain gp, securities, capital denom, and rules that were setup during instatiation.
 
 ##### Request Sample
@@ -228,7 +248,7 @@ This route can be used to obtain gp, securities, capital denom, and rules that w
 }
 ```
 
-#### Query Investor
+#### [Query Investor](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L34-L35)
 This route can be used to obtain the commitment made by an investor, and how much of that commitment they have paid.
 
 ##### Request Sample
@@ -240,7 +260,7 @@ This route can be used to obtain the commitment made by an investor, and how muc
 }
 ```
 
-#### Query Pending Commitments
+#### [Query Pending Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L37-L38)
 This route can be used to obtain a list of all the commitments in the `PENDING` state.
 
 ##### Request Sample
@@ -250,7 +270,7 @@ This route can be used to obtain a list of all the commitments in the `PENDING` 
 }
 ```
 
-#### Query Securitizations
+#### [Query Securitizations](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L40-L41)
 This route can be used to obtain initialization information about one or more securities. 
 
 ##### Request Sample
