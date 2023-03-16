@@ -195,46 +195,29 @@ mod tests {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(2);
-        let lp = Addr::unchecked("lp");
-        let lp2 = Addr::unchecked("lp2");
+        let lps = vec![Addr::unchecked("lp"), Addr::unchecked("l2")];
         let gp = Addr::unchecked("gp");
         let capital_denom = "denom".to_string();
+        for lp in lps {
+            let mut commitment =
+                Commitment::new(lp, settlement_tester.security_commitments.clone());
+            commitment.state = CommitmentState::ACCEPTED;
+            commits::set(deps.as_mut().storage, &commitment).unwrap();
 
-        let mut commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
-        commitment.state = CommitmentState::ACCEPTED;
-        let mut commitment2 = Commitment::new(lp2, settlement_tester.security_commitments.clone());
-        commitment2.state = CommitmentState::ACCEPTED;
+            available_capital::add_capital(
+                deps.as_mut().storage,
+                commitment.lp.clone(),
+                vec![Coin::new(100, &capital_denom)],
+            )
+            .unwrap();
 
-        commits::set(deps.as_mut().storage, &commitment).unwrap();
-        commits::set(deps.as_mut().storage, &commitment2).unwrap();
-
-        available_capital::add_capital(
-            deps.as_mut().storage,
-            commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
-        )
-        .unwrap();
-
-        available_capital::add_capital(
-            deps.as_mut().storage,
-            commitment2.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
-        )
-        .unwrap();
-
-        paid_in_capital::set(
-            deps.as_mut().storage,
-            commitment.lp.clone(),
-            &settlement_tester.security_commitments.clone(),
-        )
-        .unwrap();
-
-        paid_in_capital::set(
-            deps.as_mut().storage,
-            commitment2.lp.clone(),
-            &settlement_tester.security_commitments.clone(),
-        )
-        .unwrap();
+            paid_in_capital::set(
+                deps.as_mut().storage,
+                commitment.lp.clone(),
+                &settlement_tester.security_commitments.clone(),
+            )
+            .unwrap();
+        }
 
         let res = handle(deps.as_mut(), mock_env(), gp.clone()).unwrap();
         assert_eq!(2, res.events.len());
