@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Env, Response};
 
 use crate::{
     core::{
-        aliases::{ProvDepsMut, ProvResponse, ProvTxResponse},
+        aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
     },
     storage::{self, state},

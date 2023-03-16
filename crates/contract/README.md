@@ -32,6 +32,12 @@ When a contract is instantiated it first validates the message and ensures the f
 
 After validation has succeed, the contract routes the message to the correct handler and begins updating state. The contract version is updated, and the stores are updated with the request params. Lastly, a marker is created for each security. If a fee is provided, then a `MsgFees` message will be added to the response.
 
+#### Investment Vehicle Rules
+In order to make this contract as generic as possible we have included a `rules` attribute. This allows the user to specify one or more investment vehicle rules that they want to be applied to the contract. At the moment there is a limited number of rules.
+
+##### SettlementTime
+This rule can only be supplied once, and only the first instance of it will be taken into consideration. This is the time in `seconds since epoch` that the contract will settle at.
+
 #### Request Parameters
 - `gp`: The address of the General Partner. They will be the one to accept commitments and withdraw capital.
 - `securities`: The list of securities that Limited Partners can commit to. A security can either be a `Tranche`, `Primary`, or `Fund`.
@@ -75,7 +81,11 @@ After validation has succeed, the contract routes the message to the correct han
         }
     ],
     "capital_denom": "nhash",
-    "rules": [],
+    "rules": [
+        {
+            "settlement_time": "1678975183"
+        }
+    ],
     "fee": {
         "recipient": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
         "amount": {
@@ -92,7 +102,7 @@ This contract contains four different types of execution messages. Every message
 #### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/7fb595c57620ada63566f0ceabaf0bade62ffddf/crates/contract/src/core/msg.rs#L22)
 The ProposeCommitment message is sent by a Limited Partner. When they are interested in funding a GP they will make an offer containing how many of each security they are interested in purchasing.
 
-This message must contain a non-empty list of existing securities. If a commitment already exists for the LP or the security amounts don't match the minimum, then the message will be rejected.
+This message must contain a non-empty list of existing securities. If a commitment already exists for the LP or the security amounts don't match the minimum, then the message will be rejected. Lastly, the message will be rejected if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
 - `securities`: A list containing the name and amount of each security they are interested in exchanging funding for.
@@ -120,7 +130,7 @@ This message must contain a non-empty list of existing securities. If a commitme
 ```
 
 #### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L23)
-The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and they must be considered pending. Lastly, the accepted commitments cannot commit to more than the remaining amount of each security.
+The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and each supplied commitment must be in the `PENDING` state. The number of shares/units these commitments have cannot be greater than the remaining amount of their respective security. Lastly, this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
 - `commitments`: The addresses of the LPs that the GP wishes to approve.
@@ -146,7 +156,7 @@ The AcceptCommitments message is sent by the General Partner. They will submit t
 ```
 
 #### [Deposit Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L24)
-The DepositCommitment message is sent by one of the accepted LPs. It's purpose is for the LP to partially or completely pay their commitment. These funds will then be stored in the contract, and the GP can withdraw them at a later time. LPs cannot deposit more than they have committed, and every deposit must include funds. These included funds must equal the sum of the cost of all the message's securities.
+The DepositCommitment message is sent by one of the accepted LPs. Its purpose is for the LP to partially or completely pay off their commitment. The included funds will then be stored in the contract, and the GP can withdraw them at a later time. LPs cannot deposit more than they have committed, the funds must equal the sum of the cost of all the message's securities. Lastly, every deposit must have funds and this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
 - `securities`: A list of partial or complete security commitments that the LP is depositing funds for.
@@ -174,7 +184,9 @@ The DepositCommitment message is sent by one of the accepted LPs. It's purpose i
 ```
 
 #### [Withdraw Commitment]((https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2342bec0f0b58472747038eab51d74cc468809d0/crates/contract/src/core/msg.rs#L25))
-The WithdrawCommitment message is sent by the GP, and it allows them to take capital that was deposited into the contract by a specific LP. If and only if the LP's deposited capital  matches the funds that they promised to commit will the commitment transition to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. Additionally, the contract will emit an event for the settled LP.
+The WithdrawCommitment message is sent by the GP, and it allows them to take capital that was deposited into the contract by a specific LP. If and only if the LP's deposited capital  matches the promised commitment funds will the tx succeed and transition the commitment to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. This transaction will fail if the blocktime is greater than the settlement time.
+
+This contract will emit an event for the settled LP.
 
 ##### Emitted Events
 - `settled`: An event representing the settled LP.

@@ -90,7 +90,6 @@ mod tests {
     fn test_timestamp_expired_with_expired_time() {
         let env = mock_env();
         let mut deps = mock_dependencies(&[]);
-        let commitment = Commitment::new(Addr::unchecked("lp"), vec![]);
         create_test_state(&mut deps, &env, true);
         let res = timestamp_is_expired(&deps.storage, &env.block.time.plus_seconds(86401)).unwrap();
         assert_eq!(true, res);

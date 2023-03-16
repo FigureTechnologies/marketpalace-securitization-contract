@@ -1,5 +1,5 @@
-use contract::core::{fee::Fee, security::Security};
-use cosmwasm_std::{Addr, Coin};
+use contract::core::{fee::Fee, rules::InvestmentVehicleRule, security::Security};
+use cosmwasm_std::{Addr, Coin, Uint64};
 
 use crate::{security, user};
 
@@ -9,7 +9,9 @@ pub fn create(gp: &str, denom: String) {
         gp: Addr::unchecked(gp),
         securities: securities,
         capital_denom: denom,
-        rules: vec![],
+        rules: vec![InvestmentVehicleRule::SettlementTime(Uint64::new(
+            1678975183,
+        ))],
         fee: Some(Fee {
             recipient: Addr::unchecked("receiver"),
             amount: Coin::new(100, "nhash"),
