@@ -99,7 +99,7 @@ This rule can only be supplied once, and only the first instance of it will be t
 ### Execution Routes
 This contract contains four different types of execution messages. Every message is first validated and then handed off to the execute router. The router will then forward the message to the correct handler to be ran. A more detailed view of these messages can be seen in the [json](schema/execute_msg.json).
 
-#### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L24)
+#### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L24)
 The ProposeCommitment message is sent by a Limited Partner. When they are interested in funding a GP they will make an offer containing how many of each security they are interested in purchasing.
 
 This message must contain a non-empty list of existing securities. If a commitment already exists for the LP or the security amounts don't match the minimum, then the message will be rejected. Lastly, the message will be rejected if the blocktime is greater than the settlement time.
@@ -129,7 +129,7 @@ This message must contain a non-empty list of existing securities. If a commitme
 }
 ```
 
-#### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L25)
+#### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L25)
 The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and each supplied commitment must be in the `PENDING` state. The number of shares/units these commitments have cannot be greater than the remaining amount of their respective security. Lastly, this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
@@ -155,7 +155,7 @@ The AcceptCommitments message is sent by the General Partner. They will submit t
 }
 ```
 
-#### [Deposit Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L26)
+#### [Deposit Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L26)
 The DepositCommitment message is sent by one of the accepted LPs. Its purpose is for the LP to partially or completely pay off their commitment. The included funds will then be stored in the contract, and the GP can withdraw them at a later time. LPs cannot deposit more than they have committed, the funds must equal the sum of the cost of all the message's securities. Lastly, every deposit must have funds and this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
@@ -183,7 +183,7 @@ The DepositCommitment message is sent by one of the accepted LPs. Its purpose is
 }
 ```
 
-#### [Withdraw Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L27)
+#### [Withdraw Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L27)
 The WithdrawCommitment message is sent by the GP, and it allows them to take capital that was deposited into the contract by a specific LP. If and only if the LP's deposited capital  matches the promised commitment funds will the tx succeed and transition the commitment to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. This transaction will fail if the blocktime is greater than the settlement time.
 
 This contract will emit an event for the settled LP.
@@ -205,7 +205,7 @@ This contract will emit an event for the settled LP.
 }
 ```
 
-#### [Withdraw All Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L28)
+#### [Withdraw All Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L28)
 The WithdrawAllCommitments message is sent by the GP, and it allows them to attempt take capital that was deposited into the contract by all `ACCEPTED` LPs. If and only if the LP's deposited capital matches the promised commitment funds will the commitment transition to `SETTLED`. Once settled, the contract will mint and transfer the LP their investment tokens. This transaction will fail if the blocktime is greater than the settlement time.
 
 This contract will emit an event each settled LP.
@@ -225,7 +225,7 @@ This contract will emit an event each settled LP.
 }
 ```
 
-#### [Update Settlement Time](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L28)
+#### [Update Settlement Time](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L29)
 The UpdateSettlementTime message is sent by the GP, and it allows them to change the settlement time. The settlement_time is in seconds since epoch, and a value of null will disable the settlement time. A contract with no settlement time will act is if there is unlimited time to settle.
 
 ##### Emitted Attributes
