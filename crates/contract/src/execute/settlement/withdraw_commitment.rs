@@ -33,7 +33,7 @@ pub fn withdraw_commitment(
 ) -> ProvTxResponse {
     let commitment = commits::get(deps.storage, lp.clone())?;
 
-    if util::settlement::is_expired(&env, &commitment) {
+    if util::settlement::is_expired(env, &commitment) {
         return Err(ContractError::SettlmentExpired {});
     }
 

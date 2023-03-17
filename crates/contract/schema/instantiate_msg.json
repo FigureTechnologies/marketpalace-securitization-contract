@@ -5,7 +5,6 @@
   "required": [
     "capital_denom",
     "gp",
-    "rules",
     "securities"
   ],
   "properties": {
@@ -25,17 +24,21 @@
     "gp": {
       "$ref": "#/definitions/Addr"
     },
-    "rules": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/InvestmentVehicleRule"
-      }
-    },
     "securities": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/Security"
       }
+    },
+    "settlement_time": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Uint64"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "additionalProperties": false,
@@ -78,22 +81,6 @@
     "FundSecurity": {
       "type": "object",
       "additionalProperties": false
-    },
-    "InvestmentVehicleRule": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "settlement_time"
-          ],
-          "properties": {
-            "settlement_time": {
-              "$ref": "#/definitions/Uint64"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
     },
     "PrimarySecurity": {
       "type": "object",
