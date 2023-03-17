@@ -36,7 +36,6 @@ After validation has succeed, the contract routes the message to the correct han
 - `gp`: The address of the General Partner. They will be the one to accept commitments and withdraw capital.
 - `securities`: The list of securities that Limited Partners can commit to. A security can either be a `Tranche`, `Primary`, or `Fund`.
 - `capital_denom`: The denomination of the collected capital.
-- `rules`: A list of investment vehicle rules.
 - `fee`: An optional additional fee that can be added to the instantiation.
 - `settlement_time`: An optional time in seconds since epoch, and a value of null will disable the settlement time. A contract with no settlement time will act is if there is unlimited time to settle.
 
