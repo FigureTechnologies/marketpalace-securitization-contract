@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["REMAINING_SECURITIES",""]],"fn":[["get",""],["has_amount",""],["set",""],["subtract",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["REMAINING_SECURITIES",""]],"fn":[["add",""],["get",""],["has_amount",""],["set",""],["subtract",""]]};

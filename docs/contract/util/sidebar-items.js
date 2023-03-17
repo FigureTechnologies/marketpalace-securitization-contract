@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["to",""],["validate",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["settlement",""],["to",""],["validate",""]]};

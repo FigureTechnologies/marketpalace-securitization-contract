@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["aliases",""],["constants",""],["error",""],["msg",""],["rules",""],["security",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["aliases",""],["constants",""],["error",""],["fee",""],["msg",""],["security",""]]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["COMMITS",""]],"fn":[["exists",""],["get",""],["get_pending",""],["set",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["COMMITS",""]],"fn":[["exists",""],["get",""],["get_with_state",""],["remove",""],["set",""],["set_settlement_time",""]]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["accept_commitments",""],["commitment",""],["deposit_commitment",""],["propose_commitment",""],["withdraw_commitments",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["accept_commitments",""],["cancel_commitment",""],["commitment",""],["deposit_commitment",""],["propose_commitment",""],["update_settlement_time",""],["withdraw_all_commitments",""],["withdraw_commitment",""]]};

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/contract/src/storage/state.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../contract/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/contract/src/storage/state.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../contract/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -89,26 +89,86 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
-</pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Storage};
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+</pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Storage, Uint64};
 <span class="kw">use </span>cw_storage_plus::Item;
 <span class="kw">use </span>schemars::JsonSchema;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use </span><span class="kw">crate</span>::core::{constants::STATE_KEY, error::ContractError, rules::InvestmentVehicleRule};
+<span class="kw">use </span><span class="kw">crate</span>::core::{constants::STATE_KEY, error::ContractError};
 
 <span class="attr">#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 </span><span class="kw">pub struct </span>State {
     <span class="kw">pub </span>gp: Addr,
     <span class="kw">pub </span>capital_denom: String,
-    <span class="kw">pub </span>rules: Vec&lt;InvestmentVehicleRule&gt;,
+    <span class="kw">pub </span>settlement_time: <span class="prelude-ty">Option</span>&lt;Uint64&gt;,
 }
 
 <span class="kw">impl </span>State {
-    <span class="kw">pub fn </span>new(gp: Addr, capital_denom: String, rules: Vec&lt;InvestmentVehicleRule&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(gp: Addr, capital_denom: String, settlement_time: <span class="prelude-ty">Option</span>&lt;Uint64&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             gp,
             capital_denom,
-            rules,
+            settlement_time,
         }
     }
 }
@@ -124,15 +184,27 @@
     <span class="prelude-val">Ok</span>(STATE.save(storage, state)<span class="question-mark">?</span>)
 }
 
+<span class="kw">pub fn </span>get_settlement_time(storage: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Storage) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Uint64&gt;, ContractError&gt; {
+    <span class="kw">let </span>state = get(storage)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(state.settlement_time)
+}
+
+<span class="kw">pub fn </span>set_settlement_time(
+    storage: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Storage,
+    new_settlement_time: <span class="prelude-ty">Option</span>&lt;Uint64&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>state = get(storage)<span class="question-mark">?</span>;
+    state.settlement_time = new_settlement_time;
+    set(storage, <span class="kw-2">&amp;</span>state)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+}
+
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>cosmwasm_std::Addr;
+    <span class="kw">use </span>cosmwasm_std::{Addr, Uint64};
     <span class="kw">use </span>provwasm_mocks::mock_dependencies;
 
-    <span class="kw">use crate</span>::{
-        core::rules::{InvestmentVehicleRule, SettlementDate},
-        storage::state::{set, State},
-    };
+    <span class="kw">use </span><span class="kw">crate</span>::storage::state::{get_settlement_time, set, State};
 
     <span class="kw">use </span><span class="kw">super</span>::get;
 
@@ -140,18 +212,16 @@
     </span><span class="kw">fn </span>test_new_state() {
         <span class="kw">let </span>expected_addr = Addr::unchecked(<span class="string">&quot;address&quot;</span>);
         <span class="kw">let </span>expected_capital_denom = <span class="string">&quot;nhash&quot;</span>;
-        <span class="kw">let </span>expected_rules = <span class="macro">vec!</span>[InvestmentVehicleRule::SettlementDate {
-            <span class="number">0</span>: SettlementDate {},
-        }];
+        <span class="kw">let </span>expected_time = <span class="prelude-val">Some</span>(Uint64::zero());
         <span class="kw">let </span>state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
-            expected_rules.clone(),
+            expected_time.clone(),
         );
 
         <span class="macro">assert_eq!</span>(expected_addr, state.gp);
         <span class="macro">assert_eq!</span>(expected_capital_denom, state.capital_denom);
-        <span class="macro">assert_eq!</span>(expected_rules, state.rules);
+        <span class="macro">assert_eq!</span>(expected_time, state.settlement_time);
     }
 
     <span class="attr">#[test]
@@ -165,13 +235,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
         <span class="kw">let </span>expected_addr = Addr::unchecked(<span class="string">&quot;address&quot;</span>);
         <span class="kw">let </span>expected_capital_denom = <span class="string">&quot;nhash&quot;</span>;
-        <span class="kw">let </span>expected_rules = <span class="macro">vec!</span>[InvestmentVehicleRule::SettlementDate {
-            <span class="number">0</span>: SettlementDate {},
-        }];
+        <span class="kw">let </span>expected_time = <span class="prelude-val">Some</span>(Uint64::zero());
         <span class="kw">let </span>state = State::new(
             expected_addr.clone(),
             expected_capital_denom.to_string(),
-            expected_rules.clone(),
+            expected_time.clone(),
         );
 
         set(deps.as_mut().storage, <span class="kw-2">&amp;</span>state).unwrap();
@@ -179,6 +247,58 @@
         <span class="kw">let </span>obtained = get(<span class="kw-2">&amp;</span>deps.storage).unwrap();
         <span class="macro">assert_eq!</span>(state, obtained);
     }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_get_settlement_time_not_set() {
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>expected_addr = Addr::unchecked(<span class="string">&quot;address&quot;</span>);
+        <span class="kw">let </span>expected_capital_denom = <span class="string">&quot;nhash&quot;</span>;
+        <span class="kw">let </span>expected_time = <span class="prelude-val">None</span>;
+        <span class="kw">let </span>state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            expected_time.clone(),
+        );
+        set(deps.as_mut().storage, <span class="kw-2">&amp;</span>state).unwrap();
+
+        <span class="kw">let </span>settlement_time = get_settlement_time(<span class="kw-2">&amp;</span>deps.storage).unwrap();
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, settlement_time);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_get_settlement_time_set() {
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>expected_addr = Addr::unchecked(<span class="string">&quot;address&quot;</span>);
+        <span class="kw">let </span>expected_capital_denom = <span class="string">&quot;nhash&quot;</span>;
+        <span class="kw">let </span>expected_time = <span class="prelude-val">Some</span>(Uint64::zero());
+        <span class="kw">let </span>state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            expected_time.clone(),
+        );
+        set(deps.as_mut().storage, <span class="kw-2">&amp;</span>state).unwrap();
+
+        <span class="kw">let </span>settlement_time = get_settlement_time(<span class="kw-2">&amp;</span>deps.storage).unwrap();
+        <span class="macro">assert_eq!</span>(expected_time, settlement_time);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_set_settlement() {
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>expected_addr = Addr::unchecked(<span class="string">&quot;address&quot;</span>);
+        <span class="kw">let </span>expected_capital_denom = <span class="string">&quot;nhash&quot;</span>;
+        <span class="kw">let </span>expected_time = <span class="prelude-val">Some</span>(Uint64::new(<span class="number">9999</span>));
+        <span class="kw">let </span>state = State::new(
+            expected_addr.clone(),
+            expected_capital_denom.to_string(),
+            <span class="prelude-val">None</span>,
+        );
+
+        set(deps.as_mut().storage, <span class="kw-2">&amp;</span>state).unwrap();
+        <span class="kw">super</span>::set_settlement_time(deps.as_mut().storage, expected_time.clone()).unwrap();
+        <span class="kw">let </span>obtained = get(<span class="kw-2">&amp;</span>deps.storage).unwrap();
+        <span class="macro">assert_eq!</span>(expected_time, obtained.settlement_time);
+    }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

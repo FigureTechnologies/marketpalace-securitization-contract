@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"type":[["ProvDeps",""],["ProvDepsMut",""],["ProvMsg",""],["ProvQueryResponse",""],["ProvTxResponse",""]]};
+window.SIDEBAR_ITEMS = {"type":[["ProvDeps",""],["ProvDepsMut",""],["ProvMsg",""],["ProvQueryResponse",""],["ProvResponse",""],["ProvTxResponse",""]]};
