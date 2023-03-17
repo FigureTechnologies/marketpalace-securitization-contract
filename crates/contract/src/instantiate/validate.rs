@@ -20,6 +20,22 @@ impl Validate for InstantiateMsg {
             return Err(ContractError::InvalidSecurityList {});
         }
 
+        let minimums_are_valid = self
+            .securities
+            .iter()
+            .all(|security| security.minimum_amount <= security.amount);
+        if !minimums_are_valid {
+            return Err(ContractError::InvalidSecurityList {});
+        }
+
+        let amounts_are_valid = self
+            .securities
+            .iter()
+            .all(|security| !security.amount.is_zero());
+        if !amounts_are_valid {
+            return Err(ContractError::InvalidSecurityList {});
+        }
+
         let slice = self.securities.iter().as_slice();
         let has_duplicate = (1..slice.len()).any(|i| slice[i..].contains(&slice[i - 1]));
         if has_duplicate {
@@ -210,6 +226,76 @@ mod tests {
                         amount: Uint128::new(5),
                     },
                     security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                },
+            ],
+            capital_denom: "denom".to_string(),
+            settlement_time: None,
+            fee: None,
+        };
+        let expected = ContractError::InvalidSecurityList {}.to_string();
+        let output = msg.validate().unwrap_err();
+        assert_eq!(expected, output.to_string());
+    }
+
+    #[test]
+    fn test_securities_have_invalid_amount() {
+        let msg = InstantiateMsg {
+            gp: Addr::unchecked("address"),
+            securities: vec![
+                Security {
+                    name: "security 1".to_string(),
+                    amount: Uint128::new(0),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                },
+                Security {
+                    name: "security 2".to_string(),
+                    amount: Uint128::new(0),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                },
+            ],
+            capital_denom: "denom".to_string(),
+            settlement_time: None,
+            fee: None,
+        };
+        let expected = ContractError::InvalidSecurityList {}.to_string();
+        let output = msg.validate().unwrap_err();
+        assert_eq!(expected, output.to_string());
+    }
+
+    #[test]
+    fn test_minimum_not_greater_than_amount() {
+        let msg = InstantiateMsg {
+            gp: Addr::unchecked("address"),
+            securities: vec![
+                Security {
+                    name: "security 1".to_string(),
+                    amount: Uint128::new(2),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                },
+                Security {
+                    name: "security 2".to_string(),
+                    amount: Uint128::new(2),
+                    minimum_amount: Uint128::new(5),
+                    price_per_unit: Coin {
+                        denom: "denom".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 },
             ],
             capital_denom: "denom".to_string(),

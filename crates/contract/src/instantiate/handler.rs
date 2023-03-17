@@ -22,7 +22,7 @@ use crate::{
 pub fn handle(
     deps: ProvDepsMut,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> ProvTxResponse {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -50,7 +50,7 @@ pub fn handle(
         response = response.add_message(assess_custom_fee(
             fee.amount.to_owned(),
             Some("security_creation_fee"),
-            info.sender,
+            env.contract.address,
             Some(fee.recipient.to_owned()),
         )?);
         response = response.add_attributes(vec![
