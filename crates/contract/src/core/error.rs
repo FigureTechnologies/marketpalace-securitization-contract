@@ -38,6 +38,9 @@ pub enum ContractError {
     #[error("Settlment time for this commitment has expired")]
     SettlmentExpired {},
 
+    #[error("This action cannot be performed on a settled commitment")]
+    AlreadySettled {},
+
     #[error("Missing required funds")]
     MissingFunds {},
 

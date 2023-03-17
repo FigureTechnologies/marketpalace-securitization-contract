@@ -26,6 +26,7 @@ pub enum ExecuteMsg {
     WithdrawCommitment { lp: Addr },
     WithdrawAllCommitments {},
     UpdateSettlementTime { settlement_time: Option<Uint64> },
+    CancelCommitment { lp: Addr },
 }
 
 #[cw_serde]

@@ -236,6 +236,39 @@ The UpdateSettlementTime message is sent by the GP, and it allows them to change
 }
 ```
 
+#### [CancelCommitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L29)
+The CancelCommitment message can only be sent by either the GP or the LP of the commitment. This message will completely remove the LP's commitment and refund them as long as they have not settled yet.
+
+##### Request Parameters
+- `lp`: The address of the LP to cancel the commitment from
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `cancel_commitment`.
+- `sender`: The address of the message sender.
+- `canceled_lp`: The address of the LP with the canceled commitment.
+
+##### Request Sample
+```
+{
+    "cancel_commitment": {
+        "lp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d"
+    }
+}
+```
+
+### Query Routes
+This contract exposes five different query routes which allow users to view the state of the contract, investors, and the investor's commitments. A more detailed view of these messages can be seen in the [json](schema/query_msg.json).
+
+#### [Query Version](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L46-L47)
+This route can be used to obtain the contract's version.
+
+##### Request Sample
+```
+{
+    "query_version": {}
+}
+```
+
 ### Query Routes
 This contract exposes five different query routes which allow users to view the state of the contract, investors, and the investor's commitments. A more detailed view of these messages can be seen in the [json](schema/query_msg.json).
 

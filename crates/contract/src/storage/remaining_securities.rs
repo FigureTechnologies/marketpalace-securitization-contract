@@ -63,11 +63,36 @@ pub fn subtract(
     Ok(can_subtract)
 }
 
+pub fn add(
+    storage: &mut dyn Storage,
+    security_name: String,
+    amount: u128,
+) -> Result<bool, ContractError> {
+    let mut can_add = true;
+
+    if !REMAINING_SECURITIES.has(storage, security_name.clone()) {
+        return Ok(false);
+    }
+
+    let mut security_amount =
+        Uint128::new(REMAINING_SECURITIES.load(storage, security_name.clone())?);
+
+    match security_amount.checked_add(Uint128::new(amount)) {
+        Ok(new_value) => {
+            security_amount = new_value;
+            REMAINING_SECURITIES.save(storage, security_name, &security_amount.u128())?;
+        }
+        Err(_) => can_add = false,
+    };
+
+    Ok(can_add)
+}
+
 #[cfg(test)]
 mod tests {
     use provwasm_mocks::mock_dependencies;
 
-    use crate::storage::remaining_securities::{set, subtract};
+    use crate::storage::remaining_securities::{add, set, subtract};
 
     use super::get;
 
@@ -94,9 +119,8 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
-        set(deps.as_mut().storage, security_name.clone(), amount).unwrap();
 
-        let res = subtract(deps.as_mut().storage, security_name.clone(), 200).unwrap();
+        let res = subtract(deps.as_mut().storage, security_name.clone(), amount).unwrap();
         assert_eq!(false, res);
     }
 
@@ -124,5 +148,28 @@ mod tests {
         assert_eq!(true, res);
         let obtained = get(deps.as_mut().storage, security_name).unwrap();
         assert_eq!(0, obtained);
+    }
+
+    #[test]
+    fn test_add_on_missing_entry() {
+        let mut deps = mock_dependencies(&[]);
+        let security_name = "Security1".to_string();
+        let amount = 100 as u128;
+
+        let res = add(deps.as_mut().storage, security_name.clone(), amount).unwrap();
+        assert_eq!(false, res);
+    }
+
+    #[test]
+    fn test_add_success() {
+        let mut deps = mock_dependencies(&[]);
+        let security_name = "Security1".to_string();
+        let amount = 100 as u128;
+        set(deps.as_mut().storage, security_name.clone(), amount).unwrap();
+
+        let res = add(deps.as_mut().storage, security_name.clone(), 200).unwrap();
+        assert_eq!(true, res);
+        let obtained = get(deps.as_mut().storage, security_name).unwrap();
+        assert_eq!(300, obtained);
     }
 }

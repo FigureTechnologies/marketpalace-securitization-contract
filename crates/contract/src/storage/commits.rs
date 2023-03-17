@@ -16,6 +16,10 @@ pub fn set(storage: &mut dyn Storage, commitment: &Commitment) -> Result<(), Con
     Ok(COMMITS.save(storage, commitment.lp.clone(), commitment)?)
 }
 
+pub fn remove(storage: &mut dyn Storage, commitment_lp: Addr) {
+    COMMITS.remove(storage, commitment_lp);
+}
+
 pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
     COMMITS.has(storage, lp)
 }
@@ -52,8 +56,8 @@ mod tests {
 
     use crate::{
         execute::settlement::commitment::Commitment,
-        storage::commits::set,
         storage::commits::{exists, get},
+        storage::commits::{remove, set},
     };
 
     use super::set_settlement_time;
@@ -63,6 +67,16 @@ mod tests {
         let deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("bad address");
         get(&deps.storage, lp).unwrap_err();
+    }
+
+    #[test]
+    fn test_remove() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let commitment = Commitment::new(lp.clone(), vec![]);
+        set(deps.as_mut().storage, &commitment).unwrap();
+        remove(deps.as_mut().storage, lp.clone());
+        assert_eq!(false, exists(deps.as_mut().storage, lp));
     }
 
     #[test]

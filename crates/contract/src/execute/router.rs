@@ -11,7 +11,7 @@ use crate::execute::{
     settlement::{accept_commitments, deposit_commitment},
 };
 
-use super::settlement::{update_settlement_time, withdraw_all_commitments};
+use super::settlement::{cancel_commitment, update_settlement_time, withdraw_all_commitments};
 
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -32,6 +32,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         }
         ExecuteMsg::UpdateSettlementTime { settlement_time } => {
             update_settlement_time::handle(deps, info.sender, settlement_time)
+        }
+        ExecuteMsg::CancelCommitment { lp } => {
+            cancel_commitment::handle(deps, env, info.sender, lp)
         }
     }
 }
@@ -86,7 +89,7 @@ mod tests {
             &test_security_commitments(),
         )
         .unwrap();
-        util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp").unwrap();
+        util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp", "lp").unwrap();
     }
 
     #[test]
@@ -122,7 +125,15 @@ mod tests {
             &test_security_commitments(),
         )
         .unwrap();
-        util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp").unwrap();
+        util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp", "lp").unwrap();
         util::testing::update_settlement_time_test(deps.as_mut(), mock_env(), "gp").unwrap();
+    }
+
+    #[test]
+    fn test_cancel_commitment() {
+        let mut deps = mock_dependencies(&[]);
+        util::testing::instantiate_contract(deps.as_mut()).unwrap();
+        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
+        util::testing::cancel_test(deps.as_mut(), mock_env(), "lp", "lp").unwrap();
     }
 }

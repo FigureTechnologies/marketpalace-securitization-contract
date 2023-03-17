@@ -15,6 +15,14 @@ pub fn get(storage: &dyn Storage, lp: Addr) -> Vec<SecurityCommitment> {
     }
 }
 
+pub fn remove(storage: &mut dyn Storage, lp: Addr) {
+    PAID_IN_CAPITAL.remove(storage, lp);
+}
+
+pub fn has_lp(storage: &dyn Storage, lp: Addr) -> bool {
+    PAID_IN_CAPITAL.has(storage, lp)
+}
+
 pub fn set(
     storage: &mut dyn Storage,
     lp: Addr,
@@ -70,7 +78,8 @@ mod tests {
 
     use crate::{
         core::security::SecurityCommitment,
-        storage::paid_in_capital::{add_security_commitment, get, set},
+        execute::settlement::commitment::Commitment,
+        storage::paid_in_capital::{add_security_commitment, get, remove, set, PAID_IN_CAPITAL},
         util::testing::SettlementTester,
     };
 
@@ -85,6 +94,26 @@ mod tests {
 
         add_security_commitment(&new_commitment, &mut commitments);
         assert_eq!(0, commitments.len());
+    }
+
+    #[test]
+    fn test_remove() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let commitment = Commitment::new(lp.clone(), vec![]);
+        set(deps.as_mut().storage, commitment.lp.clone(), &vec![]).unwrap();
+        remove(deps.as_mut().storage, lp.clone());
+        assert_eq!(false, PAID_IN_CAPITAL.has(&deps.storage, lp));
+    }
+
+    #[test]
+    fn test_has() {
+        let mut deps = mock_dependencies(&[]);
+        let lp = Addr::unchecked("lp");
+        let commitment = Commitment::new(lp.clone(), vec![]);
+        assert_eq!(false, super::has_lp(&deps.storage, lp.clone()));
+        set(deps.as_mut().storage, commitment.lp.clone(), &vec![]).unwrap();
+        assert_eq!(true, super::has_lp(&deps.storage, lp));
     }
 
     #[test]

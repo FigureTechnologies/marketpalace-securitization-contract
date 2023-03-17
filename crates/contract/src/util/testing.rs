@@ -138,6 +138,18 @@ pub fn test_accept_message(lps: &[&str]) -> ExecuteMsg {
     }
 }
 
+pub fn test_cancel_message(lp: &str) -> ExecuteMsg {
+    ExecuteMsg::CancelCommitment {
+        lp: Addr::unchecked(lp),
+    }
+}
+
+pub fn cancel_test(deps: ProvDepsMut, env: Env, sender: &str, lp: &str) -> ProvTxResponse {
+    let info = mock_info(sender, &[]);
+    let msg = test_cancel_message(lp);
+    execute(deps, env, info, msg)
+}
+
 pub fn accept_test_commitment(
     deps: ProvDepsMut,
     env: Env,
@@ -171,15 +183,15 @@ pub fn deposit_test(
     execute(deps, env, info, msg)
 }
 
-pub fn withdraw_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
+pub fn withdraw_test(deps: ProvDepsMut, env: Env, sender: &str, lp: &str) -> ProvTxResponse {
     let info = mock_info(sender, &[]);
-    let msg = test_withdraw_message();
+    let msg = test_withdraw_message(lp);
     execute(deps, env, info, msg)
 }
 
-pub fn test_withdraw_message() -> ExecuteMsg {
+pub fn test_withdraw_message(lp: &str) -> ExecuteMsg {
     ExecuteMsg::WithdrawCommitment {
-        lp: Addr::unchecked("lp"),
+        lp: Addr::unchecked(lp),
     }
 }
 
@@ -224,10 +236,16 @@ pub fn create_testing_commitments(deps: &mut MockDeps) {
     propose_test_commitment(deps.as_mut(), mock_env(), "lp4").expect("should be able to propose");
     propose_test_commitment(deps.as_mut(), mock_env(), "lp5").expect("should be able to propose");
     propose_test_commitment(deps.as_mut(), mock_env(), "lp6").expect("should be able to propose");
+    propose_test_commitment(deps.as_mut(), mock_env(), "lp7").expect("should be able to propose");
 
     // Accept 1,2,3
-    accept_test_commitment(deps.as_mut(), mock_env(), "gp", &vec!["lp1", "lp2", "lp3"])
-        .expect("should be able to accept defined lps");
+    accept_test_commitment(
+        deps.as_mut(),
+        mock_env(),
+        "gp",
+        &vec!["lp1", "lp2", "lp3", "lp7"],
+    )
+    .expect("should be able to accept defined lps");
 
     // Deposit 1 completely, and partial 2
     deposit_test(
@@ -245,4 +263,15 @@ pub fn create_testing_commitments(deps: &mut MockDeps) {
 
     deposit_test(deps.as_mut(), mock_env(), "lp2", &partial_commitments)
         .expect("should be able to deposit partial amount");
+
+    deposit_test(
+        deps.as_mut(),
+        mock_env(),
+        "lp7",
+        &test_security_commitments(),
+    )
+    .expect("should be able to deposit partial amount");
+
+    withdraw_test(deps.as_mut(), mock_env(), "gp", "lp7")
+        .expect("should be able to withdraw full commitment");
 }
