@@ -32,18 +32,13 @@ When a contract is instantiated it first validates the message and ensures the f
 
 After validation has succeed, the contract routes the message to the correct handler and begins updating state. The contract version is updated, and the stores are updated with the request params. Lastly, a marker is created for each security. If a fee is provided, then a `MsgFees` message will be added to the response.
 
-#### Investment Vehicle Rules
-In order to make this contract as generic as possible we have included a `rules` attribute. This allows the user to specify one or more investment vehicle rules that they want to be applied to the contract. At the moment there is a limited number of rules.
-
-##### SettlementTime
-This rule can only be supplied once, and only the first instance of it will be taken into consideration. This is the time in `seconds since epoch` that the contract will settle at.
-
 #### Request Parameters
 - `gp`: The address of the General Partner. They will be the one to accept commitments and withdraw capital.
 - `securities`: The list of securities that Limited Partners can commit to. A security can either be a `Tranche`, `Primary`, or `Fund`.
 - `capital_denom`: The denomination of the collected capital.
 - `rules`: A list of investment vehicle rules.
-- `fee`: An optional additional fee that can be added to the instantiation. 
+- `fee`: An optional additional fee that can be added to the instantiation.
+- `settlement_time`: An optional time in seconds since epoch, and a value of null will disable the settlement time. A contract with no settlement time will act is if there is unlimited time to settle.
 
 #### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `init`.
@@ -81,11 +76,7 @@ This rule can only be supplied once, and only the first instance of it will be t
         }
     ],
     "capital_denom": "nhash",
-    "rules": [
-        {
-            "settlement_time": "1678975183"
-        }
-    ],
+    "settlement_time": "1678975183"
     "fee": {
         "recipient": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
         "amount": {
@@ -188,6 +179,9 @@ The WithdrawCommitment message is sent by the GP, and it allows them to take cap
 
 This contract will emit an event for the settled LP.
 
+##### Request Parameters
+- `lp`: The addresses of the LP to settle with.
+
 ##### Emitted Events
 - `settled`: An event representing the settled LP.
   - `lp`: The address of the settled LP.
@@ -226,7 +220,10 @@ This contract will emit an event each settled LP.
 ```
 
 #### [Update Settlement Time](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L29)
-The UpdateSettlementTime message is sent by the GP, and it allows them to change the settlement time. The settlement_time is in seconds since epoch, and a value of null will disable the settlement time. A contract with no settlement time will act is if there is unlimited time to settle.
+The UpdateSettlementTime message is sent by the GP, and it allows them to change the settlement time.
+
+##### Request Parameters
+- `settlement_time`: An optional time in seconds since epoch, and a value of null will disable the settlement time. A contract with no settlement time will act is if there is unlimited time to settle.
 
 ##### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `update_settlement_time`.
