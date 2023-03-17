@@ -38,7 +38,7 @@ fn refund_lp(deps: ProvDepsMut, commitment_lp: Addr) -> Result<Vec<ProvMsg>, Con
 
     let paid_in_capital = paid_in_capital::get(deps.storage, commitment_lp.clone());
     paid_in_capital::remove(deps.storage, commitment_lp.clone());
-    if paid_in_capital.len() > 0 {
+    if !paid_in_capital.is_empty() {
         // This is what we end up sending back to the lp
         let removed_capital =
             available_capital::remove_capital(deps.storage, commitment_lp.clone())?;

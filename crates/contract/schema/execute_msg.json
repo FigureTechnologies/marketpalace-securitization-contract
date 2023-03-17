@@ -132,6 +132,27 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "cancel_commitment"
+      ],
+      "properties": {
+        "cancel_commitment": {
+          "type": "object",
+          "required": [
+            "lp"
+          ],
+          "properties": {
+            "lp": {
+              "$ref": "#/definitions/Addr"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
