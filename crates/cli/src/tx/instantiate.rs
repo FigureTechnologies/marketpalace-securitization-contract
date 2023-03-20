@@ -11,7 +11,7 @@ pub fn create(gp: &str, denom: String) {
         capital_denom: denom,
         settlement_time: Some(Uint64::new(1678975183)),
         fee: Some(Fee {
-            recipient: Addr::unchecked("receiver"),
+            recipient: Some(Addr::unchecked("receiver")),
             amount: Coin::new(100, "nhash"),
         }),
     };

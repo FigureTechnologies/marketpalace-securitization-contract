@@ -12,6 +12,7 @@ use super::commitment::CommitmentState;
 
 pub fn handle(deps: ProvDepsMut, _env: Env, sender: Addr, commitment_lp: Addr) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
+    let mut response = Response::default();
     if sender != state.gp && sender != commitment_lp {
         return Err(ContractError::Unauthorized {});
     }
@@ -23,9 +24,11 @@ pub fn handle(deps: ProvDepsMut, _env: Env, sender: Addr, commitment_lp: Addr) -
     }
 
     let refund_messages = refund_lp(deps, commitment_lp.clone())?;
+    if !refund_messages.is_empty() {
+        response = response.add_messages(refund_messages);
+    }
 
-    Ok(Response::default()
-        .add_messages(refund_messages)
+    Ok(response
         .add_attribute("action", "cancel_commitment")
         .add_attribute("sender", sender)
         .add_attribute("canceled_lp", commitment_lp))
@@ -38,14 +41,18 @@ fn refund_lp(deps: ProvDepsMut, commitment_lp: Addr) -> Result<Vec<ProvMsg>, Con
 
     let paid_in_capital = paid_in_capital::get(deps.storage, commitment_lp.clone());
     paid_in_capital::remove(deps.storage, commitment_lp.clone());
-    if !paid_in_capital.is_empty() {
+    if !paid_in_capital.is_empty() && available_capital::has_lp(deps.storage, commitment_lp.clone())
+    {
         // This is what we end up sending back to the lp
         let removed_capital =
             available_capital::remove_capital(deps.storage, commitment_lp.clone())?;
-        messages.push(ProvMsg::Bank(BankMsg::Send {
-            to_address: commitment_lp.to_string(),
-            amount: vec![removed_capital],
-        }));
+
+        if !removed_capital.amount.is_zero() {
+            messages.push(ProvMsg::Bank(BankMsg::Send {
+                to_address: commitment_lp.to_string(),
+                amount: vec![removed_capital],
+            }));
+        }
     }
 
     for security in paid_in_capital {
@@ -197,5 +204,37 @@ mod tests {
             })],
             refund_messages
         );
+    }
+
+    #[test]
+    fn test_refund_should_handle_accepted_commit_with_no_deposit() {
+        let commitment_lp = Addr::unchecked("lp3");
+        let mut deps = mock_dependencies(&[]);
+
+        instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
+        create_testing_commitments(&mut deps);
+
+        let refund_messages = super::refund_lp(deps.as_mut(), commitment_lp.clone()).unwrap();
+        assert_eq!(
+            false,
+            commits::exists(deps.as_ref().storage, commitment_lp.clone())
+        );
+        assert_eq!(
+            false,
+            available_capital::has_lp(deps.as_ref().storage, commitment_lp.clone())
+        );
+        assert_eq!(
+            false,
+            paid_in_capital::has_lp(deps.as_ref().storage, commitment_lp.clone())
+        );
+        assert_eq!(
+            600,
+            remaining_securities::get(&deps.storage, "Security1".to_string()).unwrap()
+        );
+        assert_eq!(
+            600,
+            remaining_securities::get(&deps.storage, "Security2".to_string()).unwrap()
+        );
+        assert_eq!(0, refund_messages.len());
     }
 }

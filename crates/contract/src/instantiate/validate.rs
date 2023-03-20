@@ -108,7 +108,7 @@ mod tests {
             capital_denom: "denom".to_string(),
             settlement_time: None,
             fee: Some(Fee {
-                recipient: Addr::unchecked("receiver"),
+                recipient: Some(Addr::unchecked("receiver")),
                 amount: Coin::new(100, "nhash"),
             }),
         };

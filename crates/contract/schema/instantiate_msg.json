@@ -65,15 +65,21 @@
     "Fee": {
       "type": "object",
       "required": [
-        "amount",
-        "recipient"
+        "amount"
       ],
       "properties": {
         "amount": {
           "$ref": "#/definitions/Coin"
         },
         "recipient": {
-          "$ref": "#/definitions/Addr"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
