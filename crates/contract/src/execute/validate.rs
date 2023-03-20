@@ -30,7 +30,7 @@ impl Validate for ExecuteMsg {
                 }
                 if securities
                     .iter()
-                    .any(|commitment| commitment.amount.is_zero())
+                    .all(|commitment| commitment.amount.is_zero())
                 {
                     return Err(ContractError::InvalidSecurityCommitmentAmount {});
                 }
@@ -139,12 +139,18 @@ mod tests {
     }
 
     #[test]
-    fn test_valid_deposit() {
+    fn test_valid_deposit_with_at_least_one_not_zero() {
         let msg = ExecuteMsg::DepositCommitment {
-            securities: vec![SecurityCommitment {
-                name: "test".to_string(),
-                amount: Uint128::new(5),
-            }],
+            securities: vec![
+                SecurityCommitment {
+                    name: "test".to_string(),
+                    amount: Uint128::new(5),
+                },
+                SecurityCommitment {
+                    name: "test2".to_string(),
+                    amount: Uint128::new(0),
+                },
+            ],
         };
         msg.validate().expect("deposit should pass validation");
     }
