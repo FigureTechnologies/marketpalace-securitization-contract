@@ -199,6 +199,45 @@
 <a href="#199" id="199">199</a>
 <a href="#200" id="200">200</a>
 <a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, BankMsg, Env, Response};
 
 <span class="kw">use crate</span>::{
@@ -213,6 +252,7 @@
 
 <span class="kw">pub fn </span>handle(deps: ProvDepsMut, _env: Env, sender: Addr, commitment_lp: Addr) -&gt; ProvTxResponse {
     <span class="kw">let </span>state = state::get(deps.storage)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>response = Response::default();
     <span class="kw">if </span>sender != state.gp &amp;&amp; sender != commitment_lp {
         <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::Unauthorized {});
     }
@@ -224,9 +264,11 @@
     }
 
     <span class="kw">let </span>refund_messages = refund_lp(deps, commitment_lp.clone())<span class="question-mark">?</span>;
+    <span class="kw">if </span>!refund_messages.is_empty() {
+        response = response.add_messages(refund_messages);
+    }
 
-    <span class="prelude-val">Ok</span>(Response::default()
-        .add_messages(refund_messages)
+    <span class="prelude-val">Ok</span>(response
         .add_attribute(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;cancel_commitment&quot;</span>)
         .add_attribute(<span class="string">&quot;sender&quot;</span>, sender)
         .add_attribute(<span class="string">&quot;canceled_lp&quot;</span>, commitment_lp))
@@ -239,14 +281,18 @@
 
     <span class="kw">let </span>paid_in_capital = paid_in_capital::get(deps.storage, commitment_lp.clone());
     paid_in_capital::remove(deps.storage, commitment_lp.clone());
-    <span class="kw">if </span>!paid_in_capital.is_empty() {
+    <span class="kw">if </span>!paid_in_capital.is_empty() &amp;&amp; available_capital::has_lp(deps.storage, commitment_lp.clone())
+    {
         <span class="comment">// This is what we end up sending back to the lp
         </span><span class="kw">let </span>removed_capital =
             available_capital::remove_capital(deps.storage, commitment_lp.clone())<span class="question-mark">?</span>;
-        messages.push(ProvMsg::Bank(BankMsg::Send {
-            to_address: commitment_lp.to_string(),
-            amount: <span class="macro">vec!</span>[removed_capital],
-        }));
+
+        <span class="kw">if </span>!removed_capital.amount.is_zero() {
+            messages.push(ProvMsg::Bank(BankMsg::Send {
+                to_address: commitment_lp.to_string(),
+                amount: <span class="macro">vec!</span>[removed_capital],
+            }));
+        }
     }
 
     <span class="kw">for </span>security <span class="kw">in </span>paid_in_capital {
@@ -398,6 +444,38 @@
             })],
             refund_messages
         );
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_refund_should_handle_accepted_commit_with_no_deposit() {
+        <span class="kw">let </span>commitment_lp = Addr::unchecked(<span class="string">&quot;lp3&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+
+        instantiate_contract(deps.as_mut()).expect(<span class="string">&quot;should be able to instantiate contract&quot;</span>);
+        create_testing_commitments(<span class="kw-2">&amp;mut </span>deps);
+
+        <span class="kw">let </span>refund_messages = <span class="kw">super</span>::refund_lp(deps.as_mut(), commitment_lp.clone()).unwrap();
+        <span class="macro">assert_eq!</span>(
+            <span class="bool-val">false</span>,
+            commits::exists(deps.as_ref().storage, commitment_lp.clone())
+        );
+        <span class="macro">assert_eq!</span>(
+            <span class="bool-val">false</span>,
+            available_capital::has_lp(deps.as_ref().storage, commitment_lp.clone())
+        );
+        <span class="macro">assert_eq!</span>(
+            <span class="bool-val">false</span>,
+            paid_in_capital::has_lp(deps.as_ref().storage, commitment_lp.clone())
+        );
+        <span class="macro">assert_eq!</span>(
+            <span class="number">600</span>,
+            remaining_securities::get(<span class="kw-2">&amp;</span>deps.storage, <span class="string">&quot;Security1&quot;</span>.to_string()).unwrap()
+        );
+        <span class="macro">assert_eq!</span>(
+            <span class="number">600</span>,
+            remaining_securities::get(<span class="kw-2">&amp;</span>deps.storage, <span class="string">&quot;Security2&quot;</span>.to_string()).unwrap()
+        );
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, refund_messages.len());
     }
 }
 </code></pre></div>
