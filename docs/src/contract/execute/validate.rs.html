@@ -219,6 +219,12 @@
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::Coin;
 
 <span class="kw">use crate</span>::{
@@ -251,7 +257,7 @@
                 }
                 <span class="kw">if </span>securities
                     .iter()
-                    .any(|commitment| commitment.amount.is_zero())
+                    .all(|commitment| commitment.amount.is_zero())
                 {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::InvalidSecurityCommitmentAmount {});
                 }
@@ -360,12 +366,18 @@
     }
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_valid_deposit() {
+    </span><span class="kw">fn </span>test_valid_deposit_with_at_least_one_not_zero() {
         <span class="kw">let </span>msg = ExecuteMsg::DepositCommitment {
-            securities: <span class="macro">vec!</span>[SecurityCommitment {
-                name: <span class="string">&quot;test&quot;</span>.to_string(),
-                amount: Uint128::new(<span class="number">5</span>),
-            }],
+            securities: <span class="macro">vec!</span>[
+                SecurityCommitment {
+                    name: <span class="string">&quot;test&quot;</span>.to_string(),
+                    amount: Uint128::new(<span class="number">5</span>),
+                },
+                SecurityCommitment {
+                    name: <span class="string">&quot;test2&quot;</span>.to_string(),
+                    amount: Uint128::new(<span class="number">0</span>),
+                },
+            ],
         };
         msg.validate().expect(<span class="string">&quot;deposit should pass validation&quot;</span>);
     }
