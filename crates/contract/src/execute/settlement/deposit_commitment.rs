@@ -688,6 +688,121 @@ mod tests {
     }
 
     #[test]
+    fn test_handle_should_work_with_zero_on_a_security() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
+        settlement_tester.create_security_commitments(2);
+        settlement_tester.security_commitments[1].amount = Uint128::new(0);
+
+        let mut deposit = settlement_tester.security_commitments.clone();
+        deposit[1].amount = Uint128::new(0);
+        let funds = vec![Coin::new(
+            deposit[0].amount.u128() + deposit[1].amount.u128(),
+            "denom".to_string(),
+        )];
+
+        let mut commitment = Commitment::new(
+            sender.clone(),
+            settlement_tester.security_commitments.clone(),
+        );
+        commitment.state = CommitmentState::ACCEPTED;
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: settlement_tester.security_commitments[0].name.clone(),
+                amount: Uint128::new(1000),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(1, "denom".to_string()),
+            },
+        )
+        .unwrap();
+
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: settlement_tester.security_commitments[1].name.clone(),
+                amount: Uint128::new(1000),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: Uint128::new(0),
+                price_per_unit: Coin::new(1, "denom".to_string()),
+            },
+        )
+        .unwrap();
+
+        let response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
+            .expect("Should not throw error");
+        assert_eq!(0, response.messages.len());
+        assert_eq!(2, response.attributes.len());
+        assert_eq!(
+            Attribute::new("action", "deposit_commitment"),
+            response.attributes[0]
+        );
+        assert_eq!(Attribute::new("lp", sender), response.attributes[1]);
+    }
+
+    #[test]
+    fn test_handle_should_work_with_multiple() {
+        let mut deps = mock_dependencies(&[]);
+        let sender = Addr::unchecked("lp");
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.setup_test_state(deps.as_mut().storage);
+        settlement_tester.create_security_commitments(2);
+        settlement_tester.security_commitments[1].amount = Uint128::new(0);
+
+        let deposit = settlement_tester.security_commitments.clone();
+        let funds = vec![Coin::new(
+            deposit[0].amount.u128() + deposit[1].amount.u128(),
+            "denom".to_string(),
+        )];
+
+        let mut commitment = Commitment::new(
+            sender.clone(),
+            settlement_tester.security_commitments.clone(),
+        );
+        commitment.state = CommitmentState::ACCEPTED;
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: settlement_tester.security_commitments[0].name.clone(),
+                amount: Uint128::new(1000),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(1, "denom".to_string()),
+            },
+        )
+        .unwrap();
+
+        securities::set(
+            deps.as_mut().storage,
+            &Security {
+                name: settlement_tester.security_commitments[1].name.clone(),
+                amount: Uint128::new(1000),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: Uint128::new(0),
+                price_per_unit: Coin::new(1, "denom".to_string()),
+            },
+        )
+        .unwrap();
+
+        let response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
+            .expect("Should not throw error");
+        assert_eq!(0, response.messages.len());
+        assert_eq!(2, response.attributes.len());
+        assert_eq!(
+            Attribute::new("action", "deposit_commitment"),
+            response.attributes[0]
+        );
+        assert_eq!(Attribute::new("lp", sender), response.attributes[1]);
+    }
+
+    #[test]
     fn test_deposit_exceeds_commitment_throws_error_on_invalid_lp() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("bad address");
