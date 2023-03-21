@@ -30,7 +30,7 @@ impl Validate for ExecuteMsg {
                 }
                 if securities
                     .iter()
-                    .all(|commitment| commitment.amount.is_zero())
+                    .any(|commitment| commitment.amount.is_zero())
                 {
                     return Err(ContractError::InvalidSecurityCommitmentAmount {});
                 }
@@ -78,10 +78,16 @@ mod tests {
     #[test]
     fn test_propose_has_valid_security_amounts() {
         let propose = ExecuteMsg::ProposeCommitment {
-            securities: vec![SecurityCommitment {
-                name: "test".to_string(),
-                amount: Uint128::new(0),
-            }],
+            securities: vec![
+                SecurityCommitment {
+                    name: "test".to_string(),
+                    amount: Uint128::new(0),
+                },
+                SecurityCommitment {
+                    name: "test2".to_string(),
+                    amount: Uint128::new(0),
+                },
+            ],
         };
         let output = propose.validate().unwrap_err();
         let expected = ContractError::InvalidSecurityCommitmentAmount {}.to_string();
@@ -97,6 +103,25 @@ mod tests {
             }],
         };
         propose.validate().expect("propose should pass validation");
+    }
+
+    #[test]
+    fn test_invalid_propose_when_at_least_one_has_zero() {
+        let propose = ExecuteMsg::ProposeCommitment {
+            securities: vec![
+                SecurityCommitment {
+                    name: "test".to_string(),
+                    amount: Uint128::new(5),
+                },
+                SecurityCommitment {
+                    name: "test2".to_string(),
+                    amount: Uint128::new(0),
+                },
+            ],
+        };
+        let output = propose.validate().unwrap_err();
+        let expected = ContractError::InvalidSecurityCommitmentAmount {}.to_string();
+        assert_eq!(expected, output.to_string());
     }
 
     #[test]
@@ -139,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_valid_deposit_with_at_least_one_not_zero() {
+    fn test_invalid_deposit_with_at_least_one_zero() {
         let msg = ExecuteMsg::DepositCommitment {
             securities: vec![
                 SecurityCommitment {
@@ -152,7 +177,9 @@ mod tests {
                 },
             ],
         };
-        msg.validate().expect("deposit should pass validation");
+        let output = msg.validate().unwrap_err();
+        let expected = ContractError::InvalidSecurityCommitmentAmount {}.to_string();
+        assert_eq!(expected, output.to_string());
     }
 
     #[test]

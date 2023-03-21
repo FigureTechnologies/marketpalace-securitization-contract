@@ -36,7 +36,7 @@ pub fn handle(
         return Err(crate::core::error::ContractError::InvalidCommitmentState {});
     }
 
-    if !securities_match(&deps, &deposit) {
+    if !securities_match(&deps, &deposit, sender.clone())? {
         return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
@@ -111,21 +111,20 @@ fn update_depositer_capital(
 // Check that the length is the same between the initial drawdown and our instatiation
 // We check to make sure that every security commitment in the drawdown was specified at instantiation
 // We also make sure our initial drawdown has the minimum for each of these security commitments
-fn securities_match(deps: &ProvDepsMut, commitment: &Vec<SecurityCommitment>) -> bool {
-    let security_types = securities::get_security_types(deps.storage);
+fn securities_match(
+    deps: &ProvDepsMut,
+    deposit_securities: &Vec<SecurityCommitment>,
+    lp: Addr,
+) -> Result<bool, ContractError> {
+    let commitment_securities: Vec<String> = commits::get(deps.storage, lp)?
+        .commitments
+        .iter()
+        .map(|security| security.name.clone())
+        .collect();
 
-    if security_types.len() != commitment.len() {
-        return false;
-    }
-
-    for security in commitment {
-        let security = securities::get(deps.storage, security.name.clone());
-        if security.is_err() {
-            return false;
-        }
-    }
-
-    true
+    Ok(deposit_securities
+        .iter()
+        .all(|deposit_security| commitment_securities.contains(&deposit_security.name)))
 }
 
 fn funds_match_deposit(
@@ -142,12 +141,12 @@ fn funds_match_deposit(
 // We are strict that all capital must be in the same denom
 fn calculate_funds(
     deps: &ProvDepsMut,
-    initial_drawdown: &[SecurityCommitment],
+    deposit: &[SecurityCommitment],
     capital_denom: &String,
 ) -> Result<Vec<Coin>, ContractError> {
     let mut sum = Coin::new(0, capital_denom);
 
-    for security_commitment in initial_drawdown {
+    for security_commitment in deposit {
         let security = securities::get(deps.storage, security_commitment.name.clone())?;
 
         let cost = security_commitment.amount * security.price_per_unit.amount;
@@ -362,48 +361,89 @@ mod tests {
     fn test_securities_match_can_handle_empty() {
         let mut deps = mock_dependencies(&[]);
         let initial_drawdown = vec![];
-        let res = securities_match(&deps.as_mut(), &initial_drawdown);
+        let lp = Addr::unchecked("lp");
+        commits::set(
+            deps.as_mut().storage,
+            &Commitment {
+                lp: lp.clone(),
+                commitments: vec![SecurityCommitment {
+                    name: "Security1".to_string(),
+                    amount: Uint128::new(5),
+                }],
+                state: CommitmentState::ACCEPTED,
+                settlment_date: None,
+            },
+        )
+        .unwrap();
+        let res = securities_match(&deps.as_mut(), &initial_drawdown, lp).unwrap();
         assert_eq!(true, res);
     }
 
     #[test]
     fn test_drawdown_security_length_doesnt_match() {
         let mut deps = mock_dependencies(&[]);
-        let commitment = vec![];
-        securities::set(
+        let commitment = vec![SecurityCommitment {
+            name: "Security1".to_string(),
+            amount: Uint128::new(5),
+        }];
+        let lp = Addr::unchecked("lp");
+        commits::set(
             deps.as_mut().storage,
-            &Security {
-                name: "Security1".to_string(),
-                amount: Uint128::new(5),
-                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(10, "denom".to_string()),
+            &Commitment {
+                lp: lp.clone(),
+                commitments: vec![
+                    SecurityCommitment {
+                        name: "Security1".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    SecurityCommitment {
+                        name: "Security2".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                ],
+                state: CommitmentState::ACCEPTED,
+                settlment_date: None,
             },
         )
         .unwrap();
-        let res = securities_match(&deps.as_mut(), &commitment);
-        assert_eq!(false, res);
+        let res = securities_match(&deps.as_mut(), &commitment, lp).unwrap();
+        assert_eq!(true, res);
     }
 
     #[test]
     fn test_drawdown_invalid_security() {
         let mut deps = mock_dependencies(&[]);
-        let commitment = vec![SecurityCommitment {
-            name: "Security2".to_string(),
-            amount: Uint128::new(5),
-        }];
-        securities::set(
-            deps.as_mut().storage,
-            &Security {
+        let commitment = vec![
+            SecurityCommitment {
+                name: "Security3".to_string(),
+                amount: Uint128::new(5),
+            },
+            SecurityCommitment {
                 name: "Security1".to_string(),
                 amount: Uint128::new(5),
-                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(10, "denom".to_string()),
+            },
+        ];
+        let lp = Addr::unchecked("lp");
+        commits::set(
+            deps.as_mut().storage,
+            &Commitment {
+                lp: lp.clone(),
+                commitments: vec![
+                    SecurityCommitment {
+                        name: "Security1".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                    SecurityCommitment {
+                        name: "Security2".to_string(),
+                        amount: Uint128::new(5),
+                    },
+                ],
+                state: CommitmentState::ACCEPTED,
+                settlment_date: None,
             },
         )
         .unwrap();
-        let res = securities_match(&deps.as_mut(), &commitment);
+        let res = securities_match(&deps.as_mut(), &commitment, lp).unwrap();
         assert_eq!(false, res);
     }
 
@@ -412,20 +452,23 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let commitment = vec![SecurityCommitment {
             name: "Security1".to_string(),
-            amount: Uint128::new(1),
+            amount: Uint128::new(5),
         }];
-        securities::set(
+        let lp = Addr::unchecked("lp");
+        commits::set(
             deps.as_mut().storage,
-            &Security {
-                name: "Security1".to_string(),
-                amount: Uint128::new(5),
-                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(10, "denom".to_string()),
+            &Commitment {
+                lp: lp.clone(),
+                commitments: vec![SecurityCommitment {
+                    name: "Security1".to_string(),
+                    amount: Uint128::new(5),
+                }],
+                state: CommitmentState::ACCEPTED,
+                settlment_date: None,
             },
         )
         .unwrap();
-        let res = securities_match(&deps.as_mut(), &commitment);
+        let res = securities_match(&deps.as_mut(), &commitment, lp).unwrap();
         assert_eq!(true, res);
     }
 
