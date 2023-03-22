@@ -43,8 +43,7 @@ pub fn instantiate(
 /// * `deps` A dependencies object provided by the cosmwasm framework.  Allows access to useful
 /// resources like contract internal storage and a querier to retrieve blockchain objects.
 /// * `env` An environment object provided by the cosmwasm framework.  Describes the contract's
-/// details, as well as blockchain information at the time of the transaction.  Unused by this
-/// function, but required by cosmwasm for successful query entrypoint.
+/// details, as well as blockchain information at the time of the transaction.
 /// * `msg` A custom query message enum defined by this contract to allow multiple different results
 /// to be determined for this route.
 #[entry_point]
@@ -85,8 +84,7 @@ pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) 
 /// * `deps` A dependencies object provided by the cosmwasm framework.  Allows access to useful
 /// resources like contract internal storage and a querier to retrieve blockchain objects.
 /// * `env` An environment object provided by the cosmwasm framework.  Describes the contract's
-/// details, as well as blockchain information at the time of the transaction.  Unused by this
-/// function, but required by cosmwasm for successful migration entrypoint.
+/// details, as well as blockchain information at the time of the transaction.
 /// * msg` A custom migrate message enum defined by this contract to allow multiple different
 /// results of invoking the migrate endpoint.
 #[entry_point]
