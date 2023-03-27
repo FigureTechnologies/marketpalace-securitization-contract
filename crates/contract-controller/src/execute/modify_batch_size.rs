@@ -25,7 +25,6 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute};
 
     use crate::{
-        core::error::ContractError,
         execute::modify_batch_size,
         storage,
         util::testing::{create_admin_deps, instantiate_contract},

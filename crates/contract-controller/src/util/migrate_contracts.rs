@@ -63,7 +63,7 @@ mod tests {
             new_code_id: 2,
             msg: to_binary(&ContractMigrateMsg {}).unwrap(),
         };
-        let expected = SubMsg::reply_always(msg, 0);
+        let expected = SubMsg::reply_always(msg, 1);
 
         assert_eq!(1, migrate_results.len());
         assert_eq!(expected, migrate_results[0]);

@@ -1,7 +1,10 @@
 use cosmwasm_std::{Addr, Order, Storage};
 use cw_storage_plus::Map;
 
-use crate::core::{constants::REPLIES_KEY, error::ContractError};
+use crate::core::{
+    constants::{self, REPLIES_KEY},
+    error::ContractError,
+};
 
 // We store our securities that we configured on initialization
 pub const REPLIES_MAP: Map<u64, Addr> = Map::new(REPLIES_KEY);
@@ -27,7 +30,7 @@ fn get_next_index(storage: &dyn Storage) -> Result<u64, ContractError> {
         .keys(storage, None, None, Order::Descending)
         .next();
     match index {
-        None => Ok(0),
+        None => Ok(constants::REPLY_STARTING_ID),
         Some(item) => Ok(item? + 1),
     }
 }
@@ -48,12 +51,12 @@ mod tests {
         let contract2 = Addr::unchecked("address2");
 
         let id = add(deps.as_mut().storage, &contract1).unwrap();
-        assert_eq!(0, id);
+        assert_eq!(1, id);
         let stored = REPLIES_MAP.load(&deps.storage, id).unwrap();
         assert_eq!(stored, contract1);
 
         let id = add(deps.as_mut().storage, &contract2).unwrap();
-        assert_eq!(1, id);
+        assert_eq!(2, id);
         let stored = REPLIES_MAP.load(&deps.storage, id).unwrap();
         assert_eq!(stored, contract2);
     }
@@ -100,7 +103,7 @@ mod tests {
     #[test]
     fn test_get_next_index_first() {
         let deps = mock_dependencies(&[]);
-        assert_eq!(0, get_next_index(&deps.storage).unwrap());
+        assert_eq!(1, get_next_index(&deps.storage).unwrap());
     }
 
     #[test]
@@ -109,6 +112,6 @@ mod tests {
         let contract1 = Addr::unchecked("address1");
 
         add(deps.as_mut().storage, &contract1).unwrap();
-        assert_eq!(1, get_next_index(&deps.storage).unwrap());
+        assert_eq!(2, get_next_index(&deps.storage).unwrap());
     }
 }

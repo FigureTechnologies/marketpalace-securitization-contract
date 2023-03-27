@@ -39,7 +39,6 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint128};
 
     use crate::{
-        core::error::ContractError,
         execute::{add_contracts, migrate_all_contracts},
         storage,
         util::testing::{create_admin_deps, instantiate_contract, migrate_message},
@@ -117,8 +116,8 @@ mod tests {
         assert_eq!(0, res.events.len());
         assert_eq!(
             vec![
-                migrate_message(contracts[0].clone(), Uint128::new(2), 0),
-                migrate_message(contracts[1].clone(), Uint128::new(2), 1)
+                migrate_message(contracts[0].clone(), Uint128::new(2), 1),
+                migrate_message(contracts[1].clone(), Uint128::new(2), 2)
             ],
             res.messages
         );
@@ -137,7 +136,7 @@ mod tests {
         );
         assert_eq!(0, res.events.len());
         assert_eq!(
-            vec![migrate_message(contracts[2].clone(), Uint128::new(2), 2)],
+            vec![migrate_message(contracts[2].clone(), Uint128::new(2), 3)],
             res.messages
         );
 

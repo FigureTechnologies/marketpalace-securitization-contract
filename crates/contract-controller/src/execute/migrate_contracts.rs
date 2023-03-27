@@ -130,8 +130,8 @@ mod tests {
         );
         assert_eq!(
             vec![
-                migrate_message(contracts[0].clone(), Uint128::new(2), 0),
-                migrate_message(contracts[1].clone(), Uint128::new(2), 1)
+                migrate_message(contracts[0].clone(), Uint128::new(2), 1),
+                migrate_message(contracts[1].clone(), Uint128::new(2), 2)
             ],
             res.messages
         )

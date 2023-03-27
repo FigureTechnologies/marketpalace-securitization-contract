@@ -1,7 +1,7 @@
 use cosmwasm_std::{
     testing::{mock_info, MockApi, MockStorage},
     to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
-    SubMsg, SystemError, SystemResult, Uint128, WasmMsg, WasmQuery,
+    SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
 };
 use provwasm_mocks::{mock_dependencies, ProvenanceMockQuerier};
 use provwasm_std::ProvenanceQuery;
@@ -12,6 +12,7 @@ use crate::{
         aliases::{ProvDepsMut, ProvSubMsg, ProvTxResponse},
         error::ContractError,
         msg::{ContractMigrateMsg, ExecuteMsg, InstantiateMsg, QueryMsg},
+        security,
     },
 };
 
@@ -38,6 +39,23 @@ pub fn test_add_contracts_message() -> ExecuteMsg {
             Addr::unchecked("contract2"),
             Addr::unchecked("contract3"),
         ],
+    }
+}
+
+pub fn test_create_contract_message() -> ExecuteMsg {
+    ExecuteMsg::CreateContract {
+        contract: (test_create_contract_init_message()),
+        code_id: Uint64::new(123),
+    }
+}
+
+pub fn test_create_contract_init_message() -> security::InstantiateMsg {
+    security::InstantiateMsg {
+        gp: Addr::unchecked("gp"),
+        securities: vec![],
+        capital_denom: "denom".to_string(),
+        settlement_time: None,
+        fee: None,
     }
 }
 
@@ -78,6 +96,17 @@ pub fn migrate_message(contract: Addr, contract_id: Uint128, message_id: u64) ->
         msg: to_binary(&ContractMigrateMsg {}).unwrap(),
     };
     SubMsg::reply_always(msg, message_id)
+}
+
+pub fn instantiate_contract_message(owner: Addr, code_id: Uint64) -> ProvSubMsg {
+    let msg = WasmMsg::Instantiate {
+        admin: Some(owner.to_string()),
+        code_id: code_id.u64(),
+        msg: to_binary(&test_create_contract_init_message()).unwrap(),
+        funds: vec![],
+        label: format!("securitization"),
+    };
+    SubMsg::reply_on_success(msg, 0)
 }
 
 pub fn instantiate_contract(deps: ProvDepsMut, env: Env) -> ProvTxResponse {

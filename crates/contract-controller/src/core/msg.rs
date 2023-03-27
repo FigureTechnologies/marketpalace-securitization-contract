@@ -1,6 +1,8 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Uint128, Uint64};
 use cw2::ContractVersion;
+
+use super::security;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -24,6 +26,10 @@ pub enum ExecuteMsg {
     },
     ModifyBatchSize {
         batch_size: Uint128,
+    },
+    CreateContract {
+        contract: security::InstantiateMsg,
+        code_id: Uint64,
     },
 }
 

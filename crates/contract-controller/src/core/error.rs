@@ -40,6 +40,9 @@ pub enum ContractError {
 
     #[error("Semver parsing error: {0}")]
     SemVer(String),
+
+    #[error("Reply parsing error: {0}")]
+    ParseReply(String),
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {
@@ -49,5 +52,11 @@ pub fn contract_error(err: &str) -> ProvTxResponse {
 impl From<semver::Error> for ContractError {
     fn from(err: semver::Error) -> Self {
         Self::SemVer(err.to_string())
+    }
+}
+
+impl From<cw_utils::ParseReplyError> for ContractError {
+    fn from(err: cw_utils::ParseReplyError) -> Self {
+        Self::ParseReply(err.to_string())
     }
 }

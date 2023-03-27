@@ -6,7 +6,8 @@ use crate::core::{
 };
 
 use super::{
-    add_contracts, migrate_all_contracts, migrate_contracts, modify_batch_size, remove_contracts,
+    add_contracts, create_contract, migrate_all_contracts, migrate_contracts, modify_batch_size,
+    remove_contracts,
 };
 
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
@@ -27,6 +28,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ExecuteMsg::ModifyBatchSize { batch_size } => {
             modify_batch_size::handle(deps, env, info.sender, batch_size.u128())
         }
+        ExecuteMsg::CreateContract { contract, code_id } => {
+            create_contract::handle(deps, env, info.sender, contract, code_id)
+        }
     }
 }
 
@@ -41,8 +45,9 @@ mod tests {
         execute,
         util::testing::{
             add_contracts, create_admin_deps, instantiate_contract, test_add_contracts_message,
-            test_migrate_all_contracts_message, test_migrate_contracts_message,
-            test_modify_batch_size_message, test_remove_contracts_message,
+            test_create_contract_message, test_migrate_all_contracts_message,
+            test_migrate_contracts_message, test_modify_batch_size_message,
+            test_remove_contracts_message,
         },
     };
 
@@ -57,6 +62,22 @@ mod tests {
         let res = execute::router::route(deps.as_mut(), env, info, message).unwrap();
 
         assert_eq!(Attribute::new("action", "add_contracts"), res.attributes[0]);
+    }
+
+    #[test]
+    fn test_execute_create_contract_has_correct_response() {
+        let mut deps = create_admin_deps(&[]);
+        let env = mock_env();
+        let message = test_create_contract_message();
+        let info = mock_info("admin", &[]);
+
+        instantiate_contract(deps.as_mut(), env.clone()).unwrap();
+        let res = execute::router::route(deps.as_mut(), env, info, message).unwrap();
+
+        assert_eq!(
+            Attribute::new("action", "create_contract"),
+            res.attributes[0]
+        );
     }
 
     #[test]
