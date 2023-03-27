@@ -28,7 +28,7 @@ pub enum ExecuteMsg {
         batch_size: Uint128,
     },
     CreateContract {
-        contract: security::InstantiateMsg,
+        init_msg: security::InstantiateMsg,
         code_id: Uint64,
     },
 }

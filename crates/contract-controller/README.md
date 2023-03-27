@@ -66,6 +66,63 @@ The contracts list cannot be empty. Additionally, this message must be ran by th
 }
 ```
 
+#### [Create Contract](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L12-L14)
+The `CreateContract` message initializes one instance of the Securitization contract and adds it to the Contract Controller.
+
+This message must be ran by the admin, and the contract cannot be in the `migrating` state.
+
+##### Request Parameters
+- `init_msg`: The securitization contract's [initialization message](https://github.com/FigureTechnologies/marketpalace-securitization-contract/tree/main/crates/contract#instantiation).
+- `code_id`: The stored contract id to initialize.
+
+##### Emitted Attributes
+- `action`: The action that was executed. The value of this will always be `create_contract`.
+
+##### Request Sample
+```
+{
+    "init_msg": {
+        "gp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+        "securities": [
+            {
+                "name": "Security1",
+                "amount": "1000",
+                "security_type": {
+                    "tranche": {}
+                },
+                "minimum_amount": "10",
+                "price_per_unit": {
+                    "denom": "nhash",
+                    "amount": "1000000000"
+                }
+            },
+            {
+                "name": "Security2",
+                "amount": "5000",
+                "security_type": {
+                    "tranche": {}
+                },
+                "minimum_amount": "100",
+                "price_per_unit": {
+                    "denom": "nhash",
+                    "amount": "1000000000"
+                }
+            }
+        ],
+        "capital_denom": "nhash",
+        "settlement_time": "1678975183",
+        "fee": {
+            "recipient": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+            "amount": {
+                "denom": "nhash",
+                "amount": "1000000000"
+            }
+        }
+    },
+    "code_id": "4"
+}
+```
+
 #### [Remove Contracts](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/bf2df77d56cc82495131d6942f5e6e94618eefaf/crates/contract-controller/src/core/msg.rs#L15-L17)
 The `RemoveContracts` message removes one or more contracts from the instance of the Contract Controller.
 

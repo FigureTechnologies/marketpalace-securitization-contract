@@ -44,7 +44,7 @@ pub fn test_add_contracts_message() -> ExecuteMsg {
 
 pub fn test_create_contract_message() -> ExecuteMsg {
     ExecuteMsg::CreateContract {
-        contract: (test_create_contract_init_message()),
+        init_msg: (test_create_contract_init_message()),
         code_id: Uint64::new(123),
     }
 }

@@ -15,7 +15,7 @@ pub fn handle(
     deps: ProvDepsMut,
     env: Env,
     sender: Addr,
-    message: security::InstantiateMsg,
+    init_msg: security::InstantiateMsg,
     code_id: Uint64,
 ) -> ProvTxResponse {
     if !is_contract_admin(&deps, &env, sender)? {
@@ -29,9 +29,9 @@ pub fn handle(
     let msg = WasmMsg::Instantiate {
         admin: Some(env.contract.address.to_string()),
         code_id: code_id.u64(),
-        msg: to_binary(&message)?,
+        msg: to_binary(&init_msg)?,
         funds: vec![],
-        label: format!("securitization"),
+        label: "securitization".to_string(),
     };
     let msg = SubMsg::reply_on_success(msg, 0);
 
