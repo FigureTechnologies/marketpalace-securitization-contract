@@ -126,6 +126,27 @@
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Env, MessageInfo};
 
 <span class="kw">use </span><span class="kw">crate</span>::core::{
@@ -134,7 +155,8 @@
 };
 
 <span class="kw">use super</span>::{
-    add_contracts, migrate_all_contracts, migrate_contracts, modify_batch_size, remove_contracts,
+    add_contracts, create_contract, migrate_all_contracts, migrate_contracts, modify_batch_size,
+    remove_contracts,
 };
 
 <span class="kw">pub fn </span>route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -&gt; ProvTxResponse {
@@ -155,6 +177,9 @@
         ExecuteMsg::ModifyBatchSize { batch_size } =&gt; {
             modify_batch_size::handle(deps, env, info.sender, batch_size.u128())
         }
+        ExecuteMsg::CreateContract { init_msg, code_id } =&gt; {
+            create_contract::handle(deps, env, info.sender, init_msg, code_id)
+        }
     }
 }
 
@@ -169,8 +194,9 @@
         execute,
         util::testing::{
             add_contracts, create_admin_deps, instantiate_contract, test_add_contracts_message,
-            test_migrate_all_contracts_message, test_migrate_contracts_message,
-            test_modify_batch_size_message, test_remove_contracts_message,
+            test_create_contract_message, test_migrate_all_contracts_message,
+            test_migrate_contracts_message, test_modify_batch_size_message,
+            test_remove_contracts_message,
         },
     };
 
@@ -185,6 +211,22 @@
         <span class="kw">let </span>res = execute::router::route(deps.as_mut(), env, info, message).unwrap();
 
         <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;add_contracts&quot;</span>), res.attributes[<span class="number">0</span>]);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_execute_create_contract_has_correct_response() {
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = create_admin_deps(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>env = mock_env();
+        <span class="kw">let </span>message = test_create_contract_message();
+        <span class="kw">let </span>info = mock_info(<span class="string">&quot;admin&quot;</span>, <span class="kw-2">&amp;</span>[]);
+
+        instantiate_contract(deps.as_mut(), env.clone()).unwrap();
+        <span class="kw">let </span>res = execute::router::route(deps.as_mut(), env, info, message).unwrap();
+
+        <span class="macro">assert_eq!</span>(
+            Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;create_contract&quot;</span>),
+            res.attributes[<span class="number">0</span>]
+        );
     }
 
     <span class="attr">#[test]

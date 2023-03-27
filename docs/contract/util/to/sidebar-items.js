@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["security_to_investment_name",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["security_to_investment_name","Creates an investment token name for the supplied security name."]]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["CONTRACT_KEY",""],["CONTRACT_NAME",""],["CONTRACT_VERSION",""],["REPLIES_KEY",""],["STATE_KEY",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["CONTRACT_KEY",""],["CONTRACT_NAME",""],["CONTRACT_VERSION",""],["REPLIES_KEY",""],["REPLY_INIT_ID",""],["REPLY_STARTING_ID",""],["STATE_KEY",""]]};

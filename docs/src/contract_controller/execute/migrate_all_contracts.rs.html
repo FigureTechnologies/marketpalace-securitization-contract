@@ -156,7 +156,6 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Env, Response, Uint128};
 
 <span class="kw">use crate</span>::{
@@ -198,7 +197,6 @@
     <span class="kw">use </span>cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint128};
 
     <span class="kw">use crate</span>::{
-        core::error::ContractError,
         execute::{add_contracts, migrate_all_contracts},
         storage,
         util::testing::{create_admin_deps, instantiate_contract, migrate_message},
@@ -276,8 +274,8 @@
         <span class="macro">assert_eq!</span>(<span class="number">0</span>, res.events.len());
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[
-                migrate_message(contracts[<span class="number">0</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">0</span>),
-                migrate_message(contracts[<span class="number">1</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">1</span>)
+                migrate_message(contracts[<span class="number">0</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">1</span>),
+                migrate_message(contracts[<span class="number">1</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">2</span>)
             ],
             res.messages
         );
@@ -296,7 +294,7 @@
         );
         <span class="macro">assert_eq!</span>(<span class="number">0</span>, res.events.len());
         <span class="macro">assert_eq!</span>(
-            <span class="macro">vec!</span>[migrate_message(contracts[<span class="number">2</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">2</span>)],
+            <span class="macro">vec!</span>[migrate_message(contracts[<span class="number">2</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">3</span>)],
             res.messages
         );
 

@@ -158,6 +158,77 @@
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Env, Storage, Timestamp};
 
 <span class="kw">use crate</span>::{
@@ -166,14 +237,59 @@
     storage::{<span class="self">self</span>, paid_in_capital},
 };
 
-<span class="kw">pub fn </span>is_expired(env: <span class="kw-2">&amp;</span>Env, commitment: <span class="kw-2">&amp;</span>Commitment) -&gt; bool {
+<span class="doccomment">/// Checks if the defined settlment_date within the commitment has expired. A settlement_date
+/// of None will never expire.
+///
+/// # Parameters
+///
+/// * `env` A reference to an environment object provided by the cosmwasm framework.  Describes the contract&#39;s
+/// details, as well as blockchain information at the time of the transaction.
+/// * `commitment` A reference to the commitment to check the settlement_date on.
+///
+/// # Examples
+/// ```
+/// use contract::util::settlement::is_expired;
+/// use contract::execute::settlement::commitment::Commitment;
+///
+/// let mut commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
+/// commitment.settlment_date = Some(Uint::zero());
+/// let is_expired = is_expired(&amp;env, &amp;commitment);
+/// assert_eq!(true, is_expired);
+///
+/// let commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
+/// let is_expired = is_expired(&amp;env, &amp;commitment);
+/// assert_eq!(false, is_expired);
+/// ```
+</span><span class="kw">pub fn </span>is_expired(env: <span class="kw-2">&amp;</span>Env, commitment: <span class="kw-2">&amp;</span>Commitment) -&gt; bool {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(settlement_time) = commitment.settlment_date {
         <span class="kw">return </span>env.block.time.seconds() &gt; settlement_time.u64();
     }
     <span class="bool-val">false
 </span>}
 
-<span class="kw">pub fn </span>timestamp_is_expired(
+<span class="doccomment">/// Checks if the timestamp is expired.
+///
+/// # Parameters
+///
+/// * `storage` A reference to the storage object in the dependencies provided by the cosmwasm framework.
+/// * `time` A reference to the timestamp that will be checked for expiration.
+///
+/// # Examples
+/// ```
+/// use contract::util::settlement::timestamp_is_expired;
+/// use contract::storage::state;
+///
+/// let state = state::State::new(Addr::unchecked(&quot;gp&quot;), &quot;denom&quot;.to_string(), None);
+/// state::set(&amp;deps.storage, &amp;state);
+/// let is_expired = timestamp_is_expired(&amp;deps.storage, &amp;env.block.time);
+/// assert_eq!(false, is_expired);
+///
+/// let state = state::State::new(Addr::unchecked(&quot;gp&quot;), &quot;denom&quot;.to_string(), &amp;env.block.time.plus_seconds(1));
+/// state::set(&amp;deps.storage, &amp;state);
+/// let is_expired = timestamp_is_expired(&amp;deps.storage, &amp;env.block.time);
+/// assert_eq!(true, is_expired);
+/// ```
+</span><span class="kw">pub fn </span>timestamp_is_expired(
     storage: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Storage,
     time: <span class="kw-2">&amp;</span>Timestamp,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, ContractError&gt; {
@@ -183,7 +299,33 @@
     <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
 }
 
-<span class="kw">pub fn </span>is_settling(storage: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Storage, commitment: <span class="kw-2">&amp;</span>Commitment) -&gt; bool {
+<span class="doccomment">/// Checks if the commitment can settle. A settled commitment is one that has been accepted, and the paid_in_capital
+/// matches the commitment.
+///
+/// # Parameters
+///
+/// * `storage` A reference to the storage object in the dependencies provided by the cosmwasm framework.
+/// * `commitment` A reference to the commitment to check.
+///
+/// # Examples
+/// ```
+/// use contract::util::settlement::is_settling;
+/// use contract::storage::paid_in_capital;
+/// use contract::execute::settlement::commitment::Commitment;
+///
+/// let commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
+/// paid_in_capital::set(storage, commitment.clone());
+/// let settling = is_settling(&amp;deps.storage, &amp;commitment);
+/// assert_eq!(false, settling);
+///
+/// let mut commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
+/// commitment.state = CommitmentState::ACCEPTED;
+/// paid_in_capital::set(storage, commitment.clone());
+/// let settling = is_settling(&amp;deps.storage, &amp;commitment);
+/// assert_eq!(true, settling);
+///
+/// ```
+</span><span class="kw">pub fn </span>is_settling(storage: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Storage, commitment: <span class="kw-2">&amp;</span>Commitment) -&gt; bool {
     <span class="kw">let </span>paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone());
     paid_in_capital == commitment.commitments &amp;&amp; commitment.state == CommitmentState::ACCEPTED
 }

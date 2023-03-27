@@ -112,10 +112,16 @@
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Order, Storage};
 <span class="kw">use </span>cw_storage_plus::Map;
 
-<span class="kw">use </span><span class="kw">crate</span>::core::{constants::REPLIES_KEY, error::ContractError};
+<span class="kw">use </span><span class="kw">crate</span>::core::{
+    constants::{<span class="self">self</span>, REPLIES_KEY},
+    error::ContractError,
+};
 
 <span class="comment">// We store our securities that we configured on initialization
 </span><span class="kw">pub const </span>REPLIES_MAP: Map&lt;u64, Addr&gt; = Map::new(REPLIES_KEY);
@@ -141,7 +147,7 @@
         .keys(storage, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, Order::Descending)
         .next();
     <span class="kw">match </span>index {
-        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="number">0</span>),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(constants::REPLY_STARTING_ID),
         <span class="prelude-val">Some</span>(item) =&gt; <span class="prelude-val">Ok</span>(item<span class="question-mark">? </span>+ <span class="number">1</span>),
     }
 }
@@ -162,12 +168,12 @@
         <span class="kw">let </span>contract2 = Addr::unchecked(<span class="string">&quot;address2&quot;</span>);
 
         <span class="kw">let </span>id = add(deps.as_mut().storage, <span class="kw-2">&amp;</span>contract1).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, id);
+        <span class="macro">assert_eq!</span>(<span class="number">1</span>, id);
         <span class="kw">let </span>stored = REPLIES_MAP.load(<span class="kw-2">&amp;</span>deps.storage, id).unwrap();
         <span class="macro">assert_eq!</span>(stored, contract1);
 
         <span class="kw">let </span>id = add(deps.as_mut().storage, <span class="kw-2">&amp;</span>contract2).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="number">1</span>, id);
+        <span class="macro">assert_eq!</span>(<span class="number">2</span>, id);
         <span class="kw">let </span>stored = REPLIES_MAP.load(<span class="kw-2">&amp;</span>deps.storage, id).unwrap();
         <span class="macro">assert_eq!</span>(stored, contract2);
     }
@@ -214,7 +220,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_get_next_index_first() {
         <span class="kw">let </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, get_next_index(<span class="kw-2">&amp;</span>deps.storage).unwrap());
+        <span class="macro">assert_eq!</span>(<span class="number">1</span>, get_next_index(<span class="kw-2">&amp;</span>deps.storage).unwrap());
     }
 
     <span class="attr">#[test]
@@ -223,7 +229,7 @@
         <span class="kw">let </span>contract1 = Addr::unchecked(<span class="string">&quot;address1&quot;</span>);
 
         add(deps.as_mut().storage, <span class="kw-2">&amp;</span>contract1).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="number">1</span>, get_next_index(<span class="kw-2">&amp;</span>deps.storage).unwrap());
+        <span class="macro">assert_eq!</span>(<span class="number">2</span>, get_next_index(<span class="kw-2">&amp;</span>deps.storage).unwrap());
     }
 }
 </code></pre></div>
