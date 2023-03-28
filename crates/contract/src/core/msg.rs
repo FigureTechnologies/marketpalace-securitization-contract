@@ -2,7 +2,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint64};
 use cw2::ContractVersion;
 
-use crate::execute::settlement::commitment::Commitment;
+use crate::execute::settlement::commitment::{Commitment, CommitmentState};
 
 use super::{
     fee::Fee,
@@ -35,8 +35,8 @@ pub enum QueryMsg {
     #[returns(QueryInvestorResponse)]
     QueryInvestor { investor: Addr },
 
-    #[returns(QueryPendingCommitmentsResponse)]
-    QueryPendingCommitments {},
+    #[returns(QueryCommitmentsResponse)]
+    QueryCommitments { commitment_state: CommitmentState },
 
     #[returns(QuerySecuritizationsResponse)]
     QuerySecuritizations { securities: Vec<String> },
@@ -55,7 +55,7 @@ pub struct QueryInvestorResponse {
 }
 
 #[cw_serde]
-pub struct QueryPendingCommitmentsResponse {
+pub struct QueryCommitmentsResponse {
     pub commitments: Vec<Commitment>,
 }
 

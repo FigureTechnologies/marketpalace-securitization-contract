@@ -5,14 +5,14 @@ use crate::core::{
     msg::QueryMsg,
 };
 
-use super::{
-    query_investor, query_pending_commitments, query_securitizations, query_state, query_version,
-};
+use super::{query_commitments, query_investor, query_securitizations, query_state, query_version};
 
 pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
     match msg {
         QueryMsg::QueryInvestor { investor } => query_investor::handle(deps.storage, investor),
-        QueryMsg::QueryPendingCommitments {} => query_pending_commitments::handle(deps.storage),
+        QueryMsg::QueryCommitments { commitment_state } => {
+            query_commitments::handle(deps.storage, commitment_state)
+        }
         QueryMsg::QuerySecuritizations { securities } => {
             query_securitizations::handle(deps.storage, securities)
         }
@@ -28,7 +28,7 @@ mod tests {
 
     use crate::{
         core::msg::{
-            QueryInvestorResponse, QueryPendingCommitmentsResponse, QuerySecuritizationsResponse,
+            QueryCommitmentsResponse, QueryInvestorResponse, QuerySecuritizationsResponse,
             QueryStateResponse, QueryVersionResponse,
         },
         util,
@@ -51,11 +51,13 @@ mod tests {
     #[test]
     fn tests_query_pending_commits_has_correct_response() {
         let mut deps = mock_dependencies(&[]);
-        let msg = crate::core::msg::QueryMsg::QueryPendingCommitments {};
+        let msg = crate::core::msg::QueryMsg::QueryCommitments {
+            commitment_state: crate::execute::settlement::commitment::CommitmentState::PENDING,
+        };
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
-        let _: QueryPendingCommitmentsResponse = from_binary(&bin).unwrap();
+        let _: QueryCommitmentsResponse = from_binary(&bin).unwrap();
     }
 
     #[test]

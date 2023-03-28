@@ -113,7 +113,7 @@ fn update_depositer_capital(
 // We also make sure our initial drawdown has the minimum for each of these security commitments
 fn securities_match(
     deps: &ProvDepsMut,
-    deposit_securities: &Vec<SecurityCommitment>,
+    deposit_securities: &[SecurityCommitment],
     lp: Addr,
 ) -> Result<bool, ContractError> {
     let commitment_securities: Vec<String> = commits::get(deps.storage, lp)?

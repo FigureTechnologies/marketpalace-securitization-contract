@@ -1,6 +1,6 @@
 [package]
 name = "contract"
-version = "1.0.7"
+version = "1.0.8"
 authors = ["Matthew Witkowski <mwitkowski@provenance.io>"]
 edition = "2021"
 
