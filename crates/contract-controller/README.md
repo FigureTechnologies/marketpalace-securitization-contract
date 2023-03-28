@@ -81,45 +81,47 @@ This message must be ran by the admin, and the contract cannot be in the `migrat
 ##### Request Sample
 ```
 {
-    "init_msg": {
-        "gp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
-        "securities": [
-            {
-                "name": "Security1",
-                "amount": "1000",
-                "security_type": {
-                    "tranche": {}
+    "create_contract": {
+        "init_msg": {
+            "gp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+            "securities": [
+                {
+                    "name": "Security1",
+                    "amount": "1000",
+                    "security_type": {
+                        "tranche": {}
+                    },
+                    "minimum_amount": "10",
+                    "price_per_unit": {
+                        "denom": "nhash",
+                        "amount": "1000000000"
+                    }
                 },
-                "minimum_amount": "10",
-                "price_per_unit": {
-                    "denom": "nhash",
-                    "amount": "1000000000"
+                {
+                    "name": "Security2",
+                    "amount": "5000",
+                    "security_type": {
+                        "tranche": {}
+                    },
+                    "minimum_amount": "100",
+                    "price_per_unit": {
+                        "denom": "nhash",
+                        "amount": "1000000000"
+                    }
                 }
-            },
-            {
-                "name": "Security2",
-                "amount": "5000",
-                "security_type": {
-                    "tranche": {}
-                },
-                "minimum_amount": "100",
-                "price_per_unit": {
+            ],
+            "capital_denom": "nhash",
+            "settlement_time": "1678975183",
+            "fee": {
+                "recipient": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+                "amount": {
                     "denom": "nhash",
                     "amount": "1000000000"
                 }
             }
-        ],
-        "capital_denom": "nhash",
-        "settlement_time": "1678975183",
-        "fee": {
-            "recipient": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
-            "amount": {
-                "denom": "nhash",
-                "amount": "1000000000"
-            }
-        }
-    },
-    "code_id": "4"
+        },
+        "code_id": "4"
+    }
 }
 ```
 
