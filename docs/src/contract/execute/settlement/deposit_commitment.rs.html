@@ -1074,7 +1074,7 @@
 // We also make sure our initial drawdown has the minimum for each of these security commitments
 </span><span class="kw">fn </span>securities_match(
     deps: <span class="kw-2">&amp;</span>ProvDepsMut,
-    deposit_securities: <span class="kw-2">&amp;</span>Vec&lt;SecurityCommitment&gt;,
+    deposit_securities: <span class="kw-2">&amp;</span>[SecurityCommitment],
     lp: Addr,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, ContractError&gt; {
     <span class="kw">let </span>commitment_securities: Vec&lt;String&gt; = commits::get(deps.storage, lp)<span class="question-mark">?

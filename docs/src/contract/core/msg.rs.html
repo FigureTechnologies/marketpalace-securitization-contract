@@ -83,7 +83,7 @@
 <span class="kw">use </span>cosmwasm_std::{Addr, Uint64};
 <span class="kw">use </span>cw2::ContractVersion;
 
-<span class="kw">use </span><span class="kw">crate</span>::execute::settlement::commitment::Commitment;
+<span class="kw">use </span><span class="kw">crate</span>::execute::settlement::commitment::{Commitment, CommitmentState};
 
 <span class="kw">use super</span>::{
     fee::Fee,
@@ -116,8 +116,8 @@
     <span class="attr">#[returns(QueryInvestorResponse)]
     </span>QueryInvestor { investor: Addr },
 
-    <span class="attr">#[returns(QueryPendingCommitmentsResponse)]
-    </span>QueryPendingCommitments {},
+    <span class="attr">#[returns(QueryCommitmentsResponse)]
+    </span>QueryCommitments { commitment_state: CommitmentState },
 
     <span class="attr">#[returns(QuerySecuritizationsResponse)]
     </span>QuerySecuritizations { securities: Vec&lt;String&gt; },
@@ -136,7 +136,7 @@
 }
 
 <span class="attr">#[cw_serde]
-</span><span class="kw">pub struct </span>QueryPendingCommitmentsResponse {
+</span><span class="kw">pub struct </span>QueryCommitmentsResponse {
     <span class="kw">pub </span>commitments: Vec&lt;Commitment&gt;,
 }
 
