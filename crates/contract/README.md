@@ -282,6 +282,18 @@ This route can be used to obtain the contract's version.
 }
 ```
 
+##### Response Sample
+```
+{
+  "data": {
+    "contract_version": {
+      "contract": "contract",
+      "version": "1.0.7"
+    }
+  }
+}
+```
+
 #### [Query State](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L43-L44)
 This route can be used to obtain gp, securities, capital denom, and rules that were setup during instatiation.
 
@@ -289,6 +301,21 @@ This route can be used to obtain gp, securities, capital denom, and rules that w
 ```
 {
     "query_state":{}
+}
+```
+
+##### Response Sample
+```
+{
+  "data": {
+    "gp": "tp1ykdj7kdtv8t2lqvflmmp7y4j596q3nf3cxjw7s",
+    "securities": [
+      "Security1",
+      "Security2"
+    ],
+    "capital_denom": "nhash",
+    "settlement_time": null
+  }
 }
 ```
 
@@ -304,13 +331,67 @@ This route can be used to obtain the commitment made by an investor, and how muc
 }
 ```
 
-#### [Query Pending Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L37-L38)
-This route can be used to obtain a list of all the commitments in the `PENDING` state.
+##### Response Sample
+```
+{
+  "data": {
+    "commitment": {
+      "lp": "tp1ykdj7kdtv8t2lqvflmmp7y4j596q3nf3cxjw7s",
+      "commitments": [
+        {
+          "name": "Security1",
+          "amount": "5"
+        }
+      ],
+      "state": "p_e_n_d_i_n_g",
+      "settlment_date": null
+    },
+    "paid_in_capital": []
+  }
+}
+```
+
+#### [Query Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L37-L38)
+This route can be used to obtain a list of all the commitments in the specified state. The state can either be "p_e_n_d_i_n_g", "a_c_c_e_p_t_e_d", or "s_e_t_t_l_e_d".
 
 ##### Request Sample
 ```
 {
-    "query_pending_commitments": {}
+    "query_commitments": {
+        "commitment_state": "p_e_n_d_i_n_g"
+    }
+}
+```
+
+##### Response Sample
+```
+{
+    "data": {
+        "commitments": [
+            {
+                "lp": "tp19v8dpxddfacfj78u5d2kducghudh6llsn7ff2k",
+                "commitments": [
+                    {
+                        "name": "Security1",
+                        "amount": "5"
+                    }
+                ],
+                "state": "p_e_n_d_i_n_g",
+                "settlment_date": null
+            },
+            {
+                "lp": "tp1ykdj7kdtv8t2lqvflmmp7y4j596q3nf3cxjw7s",
+                "commitments": [
+                    {
+                        "name": "Security1",
+                        "amount": "5"
+                    }
+                ],
+                "state": "p_e_n_d_i_n_g",
+                "settlment_date": null
+            }
+        ]
+    }
 }
 ```
 
@@ -325,6 +406,28 @@ This route can be used to obtain initialization information about one or more se
             "Security1"
         ]
     }
+}
+```
+
+##### Response Sample
+```
+{
+  "data": {
+    "securities": [
+      {
+        "name": "Security1",
+        "amount": "10",
+        "security_type": {
+          "tranche": {}
+        },
+        "minimum_amount": "1",
+        "price_per_unit": {
+          "denom": "nhash",
+          "amount": "10"
+        }
+      }
+    ]
+  }
 }
 ```
 ## Local Deployment
