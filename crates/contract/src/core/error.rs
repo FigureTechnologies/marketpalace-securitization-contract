@@ -41,6 +41,9 @@ pub enum ContractError {
     #[error("This action cannot be performed on a settled commitment")]
     AlreadySettled {},
 
+    #[error("This action cannot be performed on a accepted commitment")]
+    AlreadyAccepted {},
+
     #[error("Missing required funds")]
     MissingFunds {},
 
@@ -64,6 +67,9 @@ pub enum ContractError {
 
     #[error("A commitment by this lp already exists")]
     CommitmentAlreadyExists {},
+
+    #[error("A commitment by this lp has already been accepted")]
+    CommitmentAlreadyAccepted {},
 
     #[error("Mismatch in the migrating contract name")]
     ContractNameMismatch {},
