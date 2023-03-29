@@ -28,9 +28,11 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ExecuteMsg::ModifyBatchSize { batch_size } => {
             modify_batch_size::handle(deps, env, info.sender, batch_size.u128())
         }
-        ExecuteMsg::CreateContract { init_msg, code_id } => {
-            create_contract::handle(deps, env, info.sender, init_msg, code_id)
-        }
+        ExecuteMsg::CreateContract {
+            init_msg,
+            code_id,
+            uuid,
+        } => create_contract::handle(deps, env, info.sender, init_msg, code_id, uuid),
     }
 }
 

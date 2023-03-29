@@ -4,12 +4,18 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
+        msg::Contract,
     },
     storage,
     util::is_contract_admin::is_contract_admin,
 };
 
-pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec<Addr>) -> ProvTxResponse {
+pub fn handle(
+    deps: ProvDepsMut,
+    env: Env,
+    sender: Addr,
+    contracts: Vec<Contract>,
+) -> ProvTxResponse {
     let mut response = Response::default();
     if !is_contract_admin(&deps, &env, sender)? {
         return Err(ContractError::Unauthorized {});
@@ -20,9 +26,10 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec<Addr>) -
     }
 
     for contract in &contracts {
-        storage::contract::add(deps.storage, contract)?;
-        response =
-            response.add_event(Event::new("contract_added").add_attribute("address", contract));
+        storage::uuid::add(deps.storage, &contract.uuid, &contract.address)?;
+        storage::contract::add(deps.storage, &contract.address)?;
+        response = response
+            .add_event(Event::new("contract_added").add_attribute("address", contract.address));
     }
     Ok(response.add_attribute("action", "add_contracts"))
 }

@@ -46,6 +46,7 @@ pub fn test_create_contract_message() -> ExecuteMsg {
     ExecuteMsg::CreateContract {
         init_msg: (test_create_contract_init_message()),
         code_id: Uint64::new(123),
+        uuid: "uuid".to_string(),
     }
 }
 

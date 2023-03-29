@@ -4,12 +4,18 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
+        msg::Contract,
     },
     storage,
     util::is_contract_admin::is_contract_admin,
 };
 
-pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec<Addr>) -> ProvTxResponse {
+pub fn handle(
+    deps: ProvDepsMut,
+    env: Env,
+    sender: Addr,
+    contracts: Vec<Contract>,
+) -> ProvTxResponse {
     let mut response = Response::default();
     if !is_contract_admin(&deps, &env, sender)? {
         return Err(ContractError::Unauthorized {});
@@ -20,13 +26,14 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec<Addr>) -
     }
 
     for contract in &contracts {
-        if !storage::contract::has(deps.storage, contract) {
+        if !storage::contract::has(deps.storage, &contract.address) {
             return Err(ContractError::UnmanageContract {});
         }
 
-        storage::contract::remove(deps.storage, contract);
-        response =
-            response.add_event(Event::new("contract_removed").add_attribute("address", contract));
+        storage::contract::remove(deps.storage, &contract.address);
+        storage::uuid::remove(deps.storage, &contract.uuid);
+        response = response
+            .add_event(Event::new("contract_removed").add_attribute("address", &contract.address));
     }
     Ok(response.add_attribute("action", "remove_contracts"))
 }

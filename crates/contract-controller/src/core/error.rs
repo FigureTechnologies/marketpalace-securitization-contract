@@ -38,6 +38,12 @@ pub enum ContractError {
     #[error("Unrecognized reply id")]
     UnrecognizedReplyId {},
 
+    #[error("UUID already exists: {0}")]
+    UuidAlreadyExists(String),
+
+    #[error("UUID does not exist: {0}")]
+    UuidDoesNotExist(String),
+
     #[error("Semver parsing error: {0}")]
     SemVer(String),
 

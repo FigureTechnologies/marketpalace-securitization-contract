@@ -10,13 +10,13 @@ use crate::{
     util::is_contract_admin::is_contract_admin,
 };
 
-// We may need to do batching on this because of the large amount of securities
 pub fn handle(
     deps: ProvDepsMut,
     env: Env,
     sender: Addr,
     init_msg: security::InstantiateMsg,
     code_id: Uint64,
+    uuid: String,
 ) -> ProvTxResponse {
     if !is_contract_admin(&deps, &env, sender)? {
         return Err(ContractError::Unauthorized {});
@@ -25,6 +25,12 @@ pub fn handle(
     if storage::state::is_migrating(deps.storage)? {
         return Err(ContractError::MigrationInProcess {});
     }
+
+    if storage::uuid::has(deps.storage, &uuid) {
+        return Err(ContractError::UuidAlreadyExists(uuid));
+    }
+
+    storage::uuid::set_last_uuid(deps.storage, &uuid)?;
 
     let msg = WasmMsg::Instantiate {
         admin: Some(env.contract.address.to_string()),
@@ -78,14 +84,15 @@ mod tests {
         let sender = Addr::unchecked("admin");
         let message = test_create_contract_init_message();
         let contract_id = Uint64::new(2);
+        let uuid = "uuid".to_string();
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let mut state = storage::state::get(&deps.storage).unwrap();
         state.migrating = true;
         storage::state::set(deps.as_mut().storage, &state).unwrap();
 
-        let res =
-            create_contract::handle(deps.as_mut(), env, sender, message, contract_id).unwrap_err();
+        let res = create_contract::handle(deps.as_mut(), env, sender, message, contract_id, uuid)
+            .unwrap_err();
         assert_eq!(
             ContractError::MigrationInProcess {}.to_string(),
             res.to_string()
@@ -99,14 +106,22 @@ mod tests {
         let sender = Addr::unchecked("admin");
         let message = test_create_contract_init_message();
         let contract_id = Uint64::new(2);
+        let uuid = "uuid".to_string();
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let mut state = storage::state::get(&deps.storage).unwrap();
         state.migrating = false;
         storage::state::set(deps.as_mut().storage, &state).unwrap();
 
-        let res = create_contract::handle(deps.as_mut(), env.clone(), sender, message, contract_id)
-            .unwrap();
+        let res = create_contract::handle(
+            deps.as_mut(),
+            env.clone(),
+            sender,
+            message,
+            contract_id,
+            uuid.clone(),
+        )
+        .unwrap();
         assert_eq!(0, res.events.len());
         assert_eq!(
             vec![Attribute::new("action", "create_contract")],
@@ -118,6 +133,7 @@ mod tests {
                 contract_id
             )],
             res.messages
-        )
+        );
+        assert_eq!(uuid, storage::uuid::get_last_uuid(&deps.storage).unwrap())
     }
 }

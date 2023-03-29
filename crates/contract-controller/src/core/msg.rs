@@ -12,10 +12,10 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     AddContracts {
-        contracts: Vec<Addr>,
+        contracts: Vec<Contract>,
     },
     RemoveContracts {
-        contracts: Vec<Addr>,
+        contracts: Vec<Contract>,
     },
     MigrateContracts {
         contracts: Vec<Addr>,
@@ -30,6 +30,7 @@ pub enum ExecuteMsg {
     CreateContract {
         init_msg: security::InstantiateMsg,
         code_id: Uint64,
+        uuid: String,
     },
 }
 
@@ -67,3 +68,9 @@ pub struct MigrateMsg {}
 
 #[cw_serde]
 pub struct ContractMigrateMsg {}
+
+#[cw_serde]
+pub struct Contract {
+    pub address: Addr,
+    pub uuid: String,
+}

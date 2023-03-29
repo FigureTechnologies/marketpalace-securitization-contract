@@ -21,6 +21,8 @@ pub fn on_init_reply(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxRespon
     let response = cw_utils::parse_reply_instantiate_data(reply)?;
     let contract_address = deps.api.addr_validate(&response.contract_address)?;
     storage::contract::add(deps.storage, &contract_address)?;
+    let uuid = storage::uuid::get_last_uuid(deps.storage)?;
+    storage::uuid::add(deps.storage, uuid.as_str(), &contract_address)?;
     Ok(Response::default())
 }
 
@@ -88,6 +90,7 @@ mod tests {
     fn test_valid_init_reply() {
         let mut deps = mock_dependencies(&[]);
         let env = mock_env();
+        let uuid = "uuid";
 
         let instantiate_reply = MsgInstantiateContractResponse {
             contract_address: env.contract.address.to_string(),
@@ -110,13 +113,15 @@ mod tests {
         };
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
+        storage::uuid::set_last_uuid(deps.as_mut().storage, &uuid.to_string()).unwrap();
         let res = reply::handler::handle(deps.as_mut(), env, reply).unwrap();
         assert_eq!(0, res.events.len());
         assert_eq!(0, res.attributes.len());
         assert_eq!(
             true,
             storage::contract::has(&deps.storage, &Addr::unchecked("cosmos2contract"))
-        )
+        );
+        assert_eq!(true, storage::uuid::has(&deps.storage, uuid));
     }
 
     #[test]
