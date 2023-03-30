@@ -6,7 +6,7 @@ use crate::execute::settlement::commitment::{Commitment, CommitmentState};
 
 use super::{
     fee::Fee,
-    security::{Security, SecurityCommitment},
+    security::{AcceptedCommitment, Security, SecurityCommitment},
 };
 
 #[cw_serde]
@@ -20,13 +20,25 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    ProposeCommitment { securities: Vec<SecurityCommitment> },
-    AcceptCommitment { commitments: Vec<Addr> },
-    DepositCommitment { securities: Vec<SecurityCommitment> },
-    WithdrawCommitment { lp: Addr },
+    ProposeCommitment {
+        securities: Vec<SecurityCommitment>,
+    },
+    AcceptCommitment {
+        commitments: Vec<AcceptedCommitment>,
+    },
+    DepositCommitment {
+        securities: Vec<SecurityCommitment>,
+    },
+    WithdrawCommitment {
+        lp: Addr,
+    },
     WithdrawAllCommitments {},
-    UpdateSettlementTime { settlement_time: Option<Uint64> },
-    CancelCommitment { lp: Addr },
+    UpdateSettlementTime {
+        settlement_time: Option<Uint64>,
+    },
+    CancelCommitment {
+        lp: Addr,
+    },
 }
 
 #[cw_serde]

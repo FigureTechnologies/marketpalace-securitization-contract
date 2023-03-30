@@ -63,7 +63,11 @@ mod tests {
     use cosmwasm_std::{Addr, Coin, Uint128};
 
     use crate::{
-        core::{error::ContractError, msg::ExecuteMsg, security::SecurityCommitment},
+        core::{
+            error::ContractError,
+            msg::ExecuteMsg,
+            security::{AcceptedCommitment, SecurityCommitment},
+        },
         util::validate::Validate,
     };
 
@@ -137,7 +141,10 @@ mod tests {
     #[test]
     fn test_valid_accept() {
         let msg = ExecuteMsg::AcceptCommitment {
-            commitments: vec![Addr::unchecked("address")],
+            commitments: vec![AcceptedCommitment {
+                lp: Addr::unchecked("address"),
+                securities: vec![],
+            }],
         };
         msg.validate().expect("accept should pass validation");
     }

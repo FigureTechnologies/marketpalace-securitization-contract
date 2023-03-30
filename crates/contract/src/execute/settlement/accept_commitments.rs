@@ -4,6 +4,7 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
+        security::{AcceptedCommitment, SecurityCommitment},
     },
     storage::{
         commits::{self},
@@ -16,7 +17,12 @@ use crate::{
 
 use super::commitment::{Commitment, CommitmentState};
 
-pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, commitments: Vec<Addr>) -> ProvTxResponse {
+pub fn handle(
+    deps: ProvDepsMut,
+    env: Env,
+    sender: Addr,
+    commitments: Vec<AcceptedCommitment>,
+) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
         return Err(crate::core::error::ContractError::Unauthorized {});
@@ -29,19 +35,27 @@ pub fn handle(deps: ProvDepsMut, env: Env, sender: Addr, commitments: Vec<Addr>)
     let mut response = Response::new()
         .add_attribute("action", "accept_commitments")
         .add_attribute("gp", state.gp);
-    for lp in commitments {
-        accept_commitment(deps.storage, lp.clone())?;
-        response = response.add_event(Event::new("accepted").add_attribute("lp", lp));
+    for commitment in commitments {
+        accept_commitment(deps.storage, commitment.clone())?;
+        response = response.add_event(Event::new("accepted").add_attribute("lp", commitment.lp));
     }
 
     Ok(response)
 }
 
-fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), ContractError> {
-    let mut commitment = commits::get(storage, lp)?;
+fn accept_commitment(
+    storage: &mut dyn Storage,
+    accepted_commitment: AcceptedCommitment,
+) -> Result<(), ContractError> {
+    let mut commitment = commits::get(storage, accepted_commitment.lp)?;
 
     if commitment.state != CommitmentState::PENDING {
         return Err(ContractError::InvalidCommitmentState {});
+    }
+
+    // Do the check here to verify the securities are same
+    if !securities_match(&commitment.commitments, &accepted_commitment.securities) {
+        return Err(ContractError::AcceptedAndProposalMismatch {});
     }
 
     // Remove from remaining
@@ -65,6 +79,18 @@ fn accept_commitment(storage: &mut dyn Storage, lp: Addr) -> Result<(), Contract
     Ok(())
 }
 
+fn securities_match(expected: &[SecurityCommitment], actual: &[SecurityCommitment]) -> bool {
+    if expected.len() != actual.len() {
+        return false;
+    }
+
+    expected.iter().all(|security| {
+        actual
+            .iter()
+            .any(|other| security.name == other.name && security.amount == other.amount)
+    })
+}
+
 fn track_paid_capital(
     storage: &mut dyn Storage,
     mut commitment: Commitment,
@@ -75,28 +101,94 @@ fn track_paid_capital(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
-        core::error::ContractError,
-        execute::settlement::commitment::{Commitment, CommitmentState},
+        core::{error::ContractError, security::AcceptedCommitment},
+        execute::settlement::{
+            accept_commitments::securities_match,
+            commitment::{Commitment, CommitmentState},
+        },
         storage::{
             commits::{self},
             paid_in_capital::{self},
             remaining_securities,
             state::{self, State},
         },
-        util::testing::{create_test_state, SettlementTester},
+        util::testing::{
+            create_test_state, test_create_accepted_commitments, test_security_commitments,
+            SettlementTester,
+        },
     };
 
     use super::{accept_commitment, handle, track_paid_capital};
 
     #[test]
+    fn test_securities_match_returns_false_on_length_mismatch() {
+        let securities1 = test_security_commitments();
+        let mut securities2 = test_security_commitments();
+        securities2.remove(0);
+        assert_eq!(false, securities_match(&securities1, &securities2));
+    }
+
+    #[test]
+    fn test_securities_match_returns_false_on_name_mismatch() {
+        let securities1 = test_security_commitments();
+        let mut securities2 = test_security_commitments();
+        securities2[0].name = "Invalid".to_string();
+        assert_eq!(false, securities_match(&securities1, &securities2));
+    }
+
+    #[test]
+    fn test_securities_match_returns_false_on_amount_mismatch() {
+        let securities1 = test_security_commitments();
+        let mut securities2 = test_security_commitments();
+        securities2[0].amount = Uint128::zero();
+        assert_eq!(false, securities_match(&securities1, &securities2));
+    }
+
+    #[test]
+    fn test_securities_match_returns_true_on_success() {
+        let securities1 = test_security_commitments();
+        let securities2 = test_security_commitments();
+        assert_eq!(true, securities_match(&securities1, &securities2));
+    }
+
+    #[test]
+    fn test_accepted_commit_must_match_securities() {
+        let lp = Addr::unchecked("address");
+        let mut deps = mock_dependencies(&[]);
+        let mut settlement_tester = SettlementTester::new();
+        create_test_state(&mut deps, &mock_env(), false);
+        settlement_tester.create_security_commitments(1);
+        let commitment =
+            Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
+        commits::set(deps.as_mut().storage, &commitment).unwrap();
+        remaining_securities::set(
+            deps.as_mut().storage,
+            settlement_tester.security_commitments[0].name.clone(),
+            settlement_tester.security_commitments[0].amount.u128(),
+        )
+        .unwrap();
+        let mut accepted_commitment = AcceptedCommitment {
+            lp: lp.clone(),
+            securities: settlement_tester.security_commitments.clone(),
+        };
+        accepted_commitment.securities[0].amount = Uint128::zero();
+        let err = accept_commitment(deps.as_mut().storage, accepted_commitment).unwrap_err();
+        assert_eq!(
+            ContractError::AcceptedAndProposalMismatch {}.to_string(),
+            err.to_string()
+        )
+    }
+
+    #[test]
     fn test_accepted_commit_must_exist() {
         let mut deps = mock_dependencies(&[]);
         let lp = Addr::unchecked("bad address");
-        let res = accept_commitment(deps.as_mut().storage, lp);
+        let accepted_commitments = test_create_accepted_commitments(&[lp.as_str()]);
+        let res = accept_commitment(deps.as_mut().storage, accepted_commitments[0].clone());
         res.expect_err("should have error for invalid commit");
     }
 
@@ -110,7 +202,9 @@ mod tests {
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
         commits::set(deps.as_mut().storage, &commitment).unwrap();
-        let error = accept_commitment(deps.as_mut().storage, lp).unwrap_err();
+        let accepted_commitments = test_create_accepted_commitments(&[lp.as_str()]);
+        let error =
+            accept_commitment(deps.as_mut().storage, accepted_commitments[0].clone()).unwrap_err();
         assert_eq!(
             ContractError::InvalidCommitmentState {}.to_string(),
             error.to_string()
@@ -132,7 +226,12 @@ mod tests {
             settlement_tester.security_commitments[0].amount.u128() - 1,
         )
         .unwrap();
-        let error = accept_commitment(deps.as_mut().storage, lp.clone()).unwrap_err();
+        let accepted_commitment = AcceptedCommitment {
+            lp: lp.clone(),
+            securities: settlement_tester.security_commitments.clone(),
+        };
+
+        let error = accept_commitment(deps.as_mut().storage, accepted_commitment).unwrap_err();
 
         assert_eq!(
             ContractError::CommitmentExceedsRemainingSecurityAmount {}.to_string(),
@@ -171,7 +270,12 @@ mod tests {
             settlement_tester.security_commitments[0].amount.u128(),
         )
         .unwrap();
-        accept_commitment(deps.as_mut().storage, lp.clone()).unwrap();
+
+        let accepted_commitment = AcceptedCommitment {
+            lp: lp.clone(),
+            securities: settlement_tester.security_commitments.clone(),
+        };
+        accept_commitment(deps.as_mut().storage, accepted_commitment).unwrap();
 
         // We need to check the state
         let added_commitment = commits::get(&deps.storage, lp).unwrap();
@@ -202,7 +306,11 @@ mod tests {
             settlement_tester.security_commitments[0].amount.u128(),
         )
         .unwrap();
-        accept_commitment(deps.as_mut().storage, lp.clone()).unwrap();
+        let accepted_commitment = AcceptedCommitment {
+            lp: lp.clone(),
+            securities: settlement_tester.security_commitments.clone(),
+        };
+        accept_commitment(deps.as_mut().storage, accepted_commitment).unwrap();
 
         // We need to check the state
         let added_commitment = commits::get(&deps.storage, lp).unwrap();
@@ -253,7 +361,17 @@ mod tests {
         )
         .unwrap();
 
-        let res = handle(deps.as_mut(), env, gp.clone(), vec![lp1, lp2]).unwrap();
+        let accepted_commitments = vec![
+            AcceptedCommitment {
+                lp: lp1.clone(),
+                securities: vec![settlement_tester.security_commitments[0].clone()],
+            },
+            AcceptedCommitment {
+                lp: lp2.clone(),
+                securities: vec![settlement_tester.security_commitments[1].clone()],
+            },
+        ];
+        let res = handle(deps.as_mut(), env, gp.clone(), accepted_commitments).unwrap();
         assert_eq!(res.attributes.len(), 2);
         assert_eq!(
             Attribute::new("action", "accept_commitments"),

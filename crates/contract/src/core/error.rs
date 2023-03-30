@@ -29,6 +29,9 @@ pub enum ContractError {
     #[error("Empty accepted commitment list")]
     EmptyAcceptedCommitmentList {},
 
+    #[error("The accepted commitment does not match the proposed commitment")]
+    AcceptedAndProposalMismatch {},
+
     #[error("One or more commitments are in an invalid state")]
     InvalidCommitmentState {},
 

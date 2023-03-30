@@ -10,7 +10,7 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         msg::{ExecuteMsg, InstantiateMsg},
-        security::{FundSecurity, Security, SecurityCommitment},
+        security::{AcceptedCommitment, FundSecurity, Security, SecurityCommitment},
     },
     storage::{
         self,
@@ -132,9 +132,18 @@ pub fn propose_test_commitment(deps: ProvDepsMut, env: Env, sender: &str) -> Pro
     execute(deps, env, info, msg)
 }
 
+pub fn test_create_accepted_commitments(lps: &[&str]) -> Vec<AcceptedCommitment> {
+    lps.iter()
+        .map(|lp| AcceptedCommitment {
+            lp: Addr::unchecked(lp.to_owned()),
+            securities: test_security_commitments(),
+        })
+        .collect()
+}
+
 pub fn test_accept_message(lps: &[&str]) -> ExecuteMsg {
     ExecuteMsg::AcceptCommitment {
-        commitments: lps.iter().map(|lp| Addr::unchecked(lp.clone())).collect(),
+        commitments: test_create_accepted_commitments(lps),
     }
 }
 

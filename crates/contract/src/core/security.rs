@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Coin, Uint128};
+use cosmwasm_std::{Addr, Coin, Uint128};
 
 #[cw_serde]
 #[derive(Eq)]
@@ -35,4 +35,10 @@ pub enum SecurityType {
 pub struct SecurityCommitment {
     pub name: String,
     pub amount: Uint128,
+}
+
+#[cw_serde]
+pub struct AcceptedCommitment {
+    pub lp: Addr,
+    pub securities: Vec<SecurityCommitment>,
 }

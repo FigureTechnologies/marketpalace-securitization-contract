@@ -119,11 +119,13 @@ This message must contain a non-empty list of existing securities. Additionally,
 }
 ```
 
-#### [Accept Commitments](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L25)
-The AcceptCommitments message is sent by the General Partner. They will submit this message with a list containing the addresses of the LPs that they would like to receive commitments from. This list must be non-empty, and each supplied commitment must be in the `PENDING` state. The number of shares/units these commitments have cannot be greater than the remaining amount of their respective security. Lastly, this transaction will fail if the blocktime is greater than the settlement time.
+#### [Accept Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L25)
+The AcceptCommitment message is sent by the General Partner. They will submit this message with a list containing the addresses of the accepted LPs and their security commitment amounts. This list must be non-empty, and each supplied commitment must be in the `PENDING` state. The number of shares/units these commitments have cannot be greater than the remaining amount of their respective security. The securities that are listed for a LP must match what the LP proposed. Lastly, this transaction will fail if the blocktime is greater than the settlement time.
 
 ##### Request Parameters
-- `commitments`: The addresses of the LPs that the GP wishes to approve.
+- `commitments`: A list of proposed commitments that the GP wishes to approve. Each commitment contains the lp and their proposed securities.
+  - `lp`: The address of the LP.
+  - `securities`: A list of security names and amounts. This must match what the LP proposed.
 
 ##### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `accept_commitments`.
@@ -138,8 +140,32 @@ The AcceptCommitments message is sent by the General Partner. They will submit t
 {
     "accept_commitment": {
         "commitments": [
-            "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
-            "tp1n2zvcfsvqwe9dwal7kleq0qv0a676kvm4alekx"
+            {
+                "lp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d",
+                "securities": [
+                    {
+                        "name": "Security1",
+                        "amount": "100"
+                    },
+                    {
+                        "name": "Security2",
+                        "amount": "200"
+                    }
+                ]
+            },
+            {
+                "lp": "tp1n2zvcfsvqwe9dwal7kleq0qv0a676kvm4alekx",
+                "securities": [
+                    {
+                        "name": "Security1",
+                        "amount": "100"
+                    },
+                    {
+                        "name": "Security2",
+                        "amount": "200"
+                    }
+                ]
+            }
         ]
     }
 }
