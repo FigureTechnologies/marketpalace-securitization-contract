@@ -90,7 +90,7 @@ After validation has succeed, the contract routes the message to the correct han
 This contract contains four different types of execution messages. Every message is first validated and then handed off to the execute router. The router will then forward the message to the correct handler to be ran. A more detailed view of these messages can be seen in the [json](schema/execute_msg.json).
 
 #### [Propose Commitment](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/2255001f4f10fda9c1bf73b79be6efb953336b30/crates/contract/src/core/msg.rs#L24)
-The ProposeCommitment message is sent by a Limited Partner. When they are interested in funding a GP they will make an offer containing how many of each security they are interested in purchasing. Multiple proposals by the same LP will be additive and update the current proposal.
+The ProposeCommitment message is sent by a Limited Partner when they are interested in funding a GP. They will make an offer containing how many of each security they are interested in purchasing. Multiple proposals by the same LP will be additive and update the current proposal.
 
 This message must contain a non-empty list of existing securities. Additionally, the commitment's security amounts must be greater than or equal to the minimum otherwise the transaction will be rejected. The transaction will also be rejected if the blocktime is greater than the settlement time. Any duplicate proposal commitment must contain a list of new securities that were not already proposed by the LP. This modified proposal must also not have been accepted yet.
 
@@ -253,19 +253,6 @@ The CancelCommitment message can only be sent by either the GP or the LP of the 
     "cancel_commitment": {
         "lp": "tp1d0a2la87mxxefduquqyjppkrg72msa6nhwek3d"
     }
-}
-```
-
-### Query Routes
-This contract exposes five different query routes which allow users to view the state of the contract, investors, and the investor's commitments. A more detailed view of these messages can be seen in the [json](schema/query_msg.json).
-
-#### [Query Version](https://github.com/FigureTechnologies/marketpalace-securitization-contract/blob/04283f029387ac9df543a936bc661a32ca2130a2/crates/contract/src/core/msg.rs#L46-L47)
-This route can be used to obtain the contract's version.
-
-##### Request Sample
-```
-{
-    "query_version": {}
 }
 ```
 

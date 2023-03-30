@@ -262,6 +262,18 @@ This route can be used to obtain the contract's version.
 }
 ```
 
+##### Response Sample
+```
+{
+  "data": {
+    "contract_version": {
+      "contract": "contract",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
 #### Query State
 This route can be used to obtain the `batch_size`, and if the contract is in the `migrating` state.
 
@@ -272,6 +284,16 @@ This route can be used to obtain the `batch_size`, and if the contract is in the
 }
 ```
 
+##### Response Sample
+```
+{
+  "data": {
+    "batch_size": "10",
+    "migrating": false
+  }
+}
+```
+
 #### Query Contracts
 This route can be used to obtain all contracts managed by the Contract Controller.
 
@@ -279,6 +301,40 @@ This route can be used to obtain all contracts managed by the Contract Controlle
 ```
 {
     "query_contracts": {}
+}
+```
+
+##### Response Sample
+```
+{
+  "data": {
+    "contracts": [
+      "pb1aakfpghcanxtc45gpqlx8j3rq0zcpyf49qmhm9mdjrfx036h4z5sn5lzw2",
+      "pb1hulx7cgvpfcvg83wk5h96sedqgn72n026w6nl47uht554xhvj9nsejjkx9",
+      "pb1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrqf06p2p"
+    ]
+  }
+}
+```
+
+#### Query Contract Address
+This route can be used to obtain the address of a contract by supplying a uuid.
+
+##### Request Sample
+```
+{
+    "query_contract_address": {
+        "uuid": "123-456"
+    }
+}
+```
+
+##### Response Sample
+```
+{
+  "data": {
+    "contract": "pb1aakfpghcanxtc45gpqlx8j3rq0zcpyf49qmhm9mdjrfx036h4z5sn5lzw2"
+  }
 }
 ```
 ## Local Deployment

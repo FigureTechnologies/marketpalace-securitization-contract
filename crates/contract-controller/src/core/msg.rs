@@ -45,6 +45,9 @@ pub enum QueryMsg {
 
     #[returns(QueryContractsResponse)]
     QueryContracts {},
+
+    #[returns(QueryContractAddressResponse)]
+    QueryContractAddress { uuid: String },
 }
 
 #[cw_serde]
@@ -61,6 +64,11 @@ pub struct QueryStateResponse {
 #[cw_serde]
 pub struct QueryContractsResponse {
     pub contracts: Vec<Addr>,
+}
+
+#[cw_serde]
+pub struct QueryContractAddressResponse {
+    pub contract: Addr,
 }
 
 #[cw_serde]
