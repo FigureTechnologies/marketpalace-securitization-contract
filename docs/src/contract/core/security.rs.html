@@ -36,8 +36,14 @@
 <a href="#36" id="36">36</a>
 <a href="#37" id="37">37</a>
 <a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
+<a href="#44" id="44">44</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_schema::cw_serde;
-<span class="kw">use </span>cosmwasm_std::{Coin, Uint128};
+<span class="kw">use </span>cosmwasm_std::{Addr, Coin, Uint128};
 
 <span class="attr">#[cw_serde]
 #[derive(Eq)]
@@ -74,5 +80,11 @@
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>amount: Uint128,
 }
+
+<span class="attr">#[cw_serde]
+</span><span class="kw">pub struct </span>AcceptedCommitment {
+    <span class="kw">pub </span>lp: Addr,
+    <span class="kw">pub </span>securities: Vec&lt;SecurityCommitment&gt;,
+}
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

@@ -137,6 +137,21 @@
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Env, Response, Uint128};
 
 <span class="kw">use crate</span>::{
@@ -184,6 +199,7 @@
 
     <span class="kw">use crate</span>::{
         core::error::ContractError,
+        core::msg::Contract,
         execute::{add_contracts, migrate_contracts},
         storage,
         util::testing::{create_admin_deps, instantiate_contract, migrate_message},
@@ -248,7 +264,16 @@
         <span class="kw">let </span><span class="kw-2">mut </span>deps = create_admin_deps(<span class="kw-2">&amp;</span>[]);
         <span class="kw">let </span>env = mock_env();
         <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;admin&quot;</span>);
-        <span class="kw">let </span>contracts = <span class="macro">vec!</span>[Addr::unchecked(<span class="string">&quot;contract1&quot;</span>), Addr::unchecked(<span class="string">&quot;contract2&quot;</span>)];
+        <span class="kw">let </span>contracts = <span class="macro">vec!</span>[
+            Contract {
+                address: Addr::unchecked(<span class="string">&quot;contract1&quot;</span>),
+                uuid: <span class="string">&quot;uuid1&quot;</span>.to_string(),
+            },
+            Contract {
+                address: Addr::unchecked(<span class="string">&quot;contract2&quot;</span>),
+                uuid: <span class="string">&quot;uuid2&quot;</span>.to_string(),
+            },
+        ];
         <span class="kw">let </span>contract_id = Uint128::new(<span class="number">2</span>);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -260,21 +285,26 @@
         )
         .unwrap();
 
-        <span class="kw">let </span>res =
-            migrate_contracts::handle(deps.as_mut(), env, sender, contracts.clone(), contract_id)
-                .unwrap();
+        <span class="kw">let </span>res = migrate_contracts::handle(
+            deps.as_mut(),
+            env,
+            sender,
+            <span class="macro">vec!</span>[contracts[<span class="number">0</span>].address.clone(), contracts[<span class="number">1</span>].address.clone()],
+            contract_id,
+        )
+        .unwrap();
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;migrate_contracts&quot;</span>)],
             res.attributes
         );
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[
-                migrate_message(contracts[<span class="number">0</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">1</span>),
-                migrate_message(contracts[<span class="number">1</span>].clone(), Uint128::new(<span class="number">2</span>), <span class="number">2</span>)
+                migrate_message(contracts[<span class="number">0</span>].address.clone(), Uint128::new(<span class="number">2</span>), <span class="number">1</span>),
+                migrate_message(contracts[<span class="number">1</span>].address.clone(), Uint128::new(<span class="number">2</span>), <span class="number">2</span>)
             ],
             res.messages
         )
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

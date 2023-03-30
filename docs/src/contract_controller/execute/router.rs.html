@@ -147,6 +147,8 @@
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Env, MessageInfo};
 
 <span class="kw">use </span><span class="kw">crate</span>::core::{
@@ -177,9 +179,11 @@
         ExecuteMsg::ModifyBatchSize { batch_size } =&gt; {
             modify_batch_size::handle(deps, env, info.sender, batch_size.u128())
         }
-        ExecuteMsg::CreateContract { init_msg, code_id } =&gt; {
-            create_contract::handle(deps, env, info.sender, init_msg, code_id)
-        }
+        ExecuteMsg::CreateContract {
+            init_msg,
+            code_id,
+            uuid,
+        } =&gt; create_contract::handle(deps, env, info.sender, init_msg, code_id, uuid),
     }
 }
 
@@ -297,4 +301,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

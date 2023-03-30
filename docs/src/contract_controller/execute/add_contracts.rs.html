@@ -91,18 +91,58 @@
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Env, Event, Response};
 
 <span class="kw">use crate</span>::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
+        msg::Contract,
     },
     storage,
     util::is_contract_admin::is_contract_admin,
 };
 
-<span class="kw">pub fn </span>handle(deps: ProvDepsMut, env: Env, sender: Addr, contracts: Vec&lt;Addr&gt;) -&gt; ProvTxResponse {
+<span class="kw">pub fn </span>handle(
+    deps: ProvDepsMut,
+    env: Env,
+    sender: Addr,
+    contracts: Vec&lt;Contract&gt;,
+) -&gt; ProvTxResponse {
     <span class="kw">let </span><span class="kw-2">mut </span>response = Response::default();
     <span class="kw">if </span>!is_contract_admin(<span class="kw-2">&amp;</span>deps, <span class="kw-2">&amp;</span>env, sender)<span class="question-mark">? </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::Unauthorized {});
@@ -113,9 +153,10 @@
     }
 
     <span class="kw">for </span>contract <span class="kw">in </span><span class="kw-2">&amp;</span>contracts {
-        storage::contract::add(deps.storage, contract)<span class="question-mark">?</span>;
-        response =
-            response.add_event(Event::new(<span class="string">&quot;contract_added&quot;</span>).add_attribute(<span class="string">&quot;address&quot;</span>, contract));
+        storage::uuid::add(deps.storage, <span class="kw-2">&amp;</span>contract.uuid, <span class="kw-2">&amp;</span>contract.address)<span class="question-mark">?</span>;
+        storage::contract::add(deps.storage, <span class="kw-2">&amp;</span>contract.address)<span class="question-mark">?</span>;
+        response = response
+            .add_event(Event::new(<span class="string">&quot;contract_added&quot;</span>).add_attribute(<span class="string">&quot;address&quot;</span>, <span class="kw-2">&amp;</span>contract.address));
     }
     <span class="prelude-val">Ok</span>(response.add_attribute(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;add_contracts&quot;</span>))
 }
@@ -125,7 +166,7 @@
     <span class="kw">use </span>cosmwasm_std::{testing::mock_env, Addr, Attribute, Event};
 
     <span class="kw">use crate</span>::{
-        core::error::ContractError,
+        core::{error::ContractError, msg::Contract},
         execute::add_contracts::handle,
         storage,
         util::testing::{create_admin_deps, instantiate_contract},
@@ -147,7 +188,16 @@
         <span class="kw">let </span><span class="kw-2">mut </span>deps = create_admin_deps(<span class="kw-2">&amp;</span>[]);
         <span class="kw">let </span>env = mock_env();
         <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;admin&quot;</span>);
-        <span class="kw">let </span>contracts = <span class="macro">vec!</span>[Addr::unchecked(<span class="string">&quot;contract1&quot;</span>), Addr::unchecked(<span class="string">&quot;contract2&quot;</span>)];
+        <span class="kw">let </span>contracts = <span class="macro">vec!</span>[
+            Contract {
+                address: Addr::unchecked(<span class="string">&quot;contract1&quot;</span>),
+                uuid: <span class="string">&quot;uuid1&quot;</span>.to_string(),
+            },
+            Contract {
+                address: Addr::unchecked(<span class="string">&quot;contract2&quot;</span>),
+                uuid: <span class="string">&quot;uuid2&quot;</span>.to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = storage::state::get(<span class="kw-2">&amp;</span>deps.storage).unwrap();
@@ -166,11 +216,20 @@
         <span class="kw">let </span><span class="kw-2">mut </span>deps = create_admin_deps(<span class="kw-2">&amp;</span>[]);
         <span class="kw">let </span>env = mock_env();
         <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;admin&quot;</span>);
-        <span class="kw">let </span>contracts = <span class="macro">vec!</span>[Addr::unchecked(<span class="string">&quot;contract1&quot;</span>), Addr::unchecked(<span class="string">&quot;contract2&quot;</span>)];
+        <span class="kw">let </span>contracts = <span class="macro">vec!</span>[
+            Contract {
+                address: Addr::unchecked(<span class="string">&quot;contract1&quot;</span>),
+                uuid: <span class="string">&quot;uuid1&quot;</span>.to_string(),
+            },
+            Contract {
+                address: Addr::unchecked(<span class="string">&quot;contract2&quot;</span>),
+                uuid: <span class="string">&quot;uuid2&quot;</span>.to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
 
-        <span class="kw">let </span>res = handle(deps.as_mut(), env, sender, contracts).unwrap();
+        <span class="kw">let </span>res = handle(deps.as_mut(), env, sender, contracts.clone()).unwrap();
         <span class="macro">assert_eq!</span>(
             <span class="macro">vec!</span>[Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;add_contracts&quot;</span>)],
             res.attributes
@@ -182,7 +241,16 @@
             ],
             res.events
         );
-    }
+        <span class="macro">assert_eq!</span>(
+            contracts[<span class="number">0</span>].address.clone(),
+            storage::uuid::get(<span class="kw-2">&amp;</span>deps.storage, contracts[<span class="number">0</span>].uuid.as_str()).unwrap()
+        );
+        <span class="macro">assert_eq!</span>(
+            contracts[<span class="number">1</span>].address.clone(),
+            storage::uuid::get(<span class="kw-2">&amp;</span>deps.storage, contracts[<span class="number">1</span>].uuid.as_str()).unwrap()
+        );
+        <span class="comment">// This is where we want to check the store
+    </span>}
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

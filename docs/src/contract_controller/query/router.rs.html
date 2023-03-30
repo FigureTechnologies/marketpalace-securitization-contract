@@ -56,6 +56,25 @@
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::Env;
 
 <span class="kw">use </span><span class="kw">crate</span>::core::{
@@ -63,13 +82,16 @@
     msg::QueryMsg,
 };
 
-<span class="kw">use super</span>::{query_contracts, query_state, query_version};
+<span class="kw">use super</span>::{query_contract_address, query_contracts, query_state, query_version};
 
 <span class="kw">pub fn </span>route(deps: ProvDeps, _env: Env, msg: QueryMsg) -&gt; ProvQueryResponse {
     <span class="kw">match </span>msg {
         QueryMsg::QueryVersion {} =&gt; query_version::handle(deps.storage),
         QueryMsg::QueryState {} =&gt; query_state::handle(deps.storage),
         QueryMsg::QueryContracts {} =&gt; query_contracts::handle(deps.storage),
+        QueryMsg::QueryContractAddress { uuid } =&gt; {
+            query_contract_address::handle(deps.storage, uuid)
+        }
     }
 }
 
@@ -79,9 +101,12 @@
     <span class="kw">use </span>provwasm_mocks::mock_dependencies;
 
     <span class="kw">use crate</span>::{
-        core::msg::{QueryContractsResponse, QueryMsg, QueryStateResponse, QueryVersionResponse},
+        core::msg::{
+            QueryContractAddressResponse, QueryContractsResponse, QueryMsg, QueryStateResponse,
+            QueryVersionResponse,
+        },
         query,
-        util::testing::instantiate_contract,
+        util::testing::{add_contracts, create_admin_deps, instantiate_contract},
     };
 
     <span class="attr">#[test]
@@ -113,6 +138,19 @@
         <span class="kw">let </span>res = query::router::route(deps.as_ref(), env, message).unwrap();
         <span class="kw">let _</span>: QueryContractsResponse = from_binary(<span class="kw-2">&amp;</span>res).unwrap();
     }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_query_contract_address_has_correct_response() {
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = create_admin_deps(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>env = mock_env();
+        <span class="kw">let </span>message = QueryMsg::QueryContractAddress {
+            uuid: <span class="string">&quot;uuid1&quot;</span>.to_string(),
+        };
+        instantiate_contract(deps.as_mut(), env.clone()).unwrap();
+        add_contracts(deps.as_mut(), env.clone()).unwrap();
+        <span class="kw">let </span>res = query::router::route(deps.as_ref(), env, message).unwrap();
+        <span class="kw">let _</span>: QueryContractAddressResponse = from_binary(<span class="kw-2">&amp;</span>res).unwrap();
+    }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

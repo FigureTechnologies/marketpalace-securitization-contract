@@ -555,10 +555,10 @@
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>new_commitment = Commitment::new(lp.clone(), securities);
-    <span class="kw">if </span>commitment.is_ok() {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>commitment) = commitment {
         new_commitment
             .commitments
-            .append(<span class="kw-2">&amp;mut </span>commitment.unwrap().commitments)
+            .append(<span class="kw-2">&amp;mut </span>commitment.commitments)
     }
     commits::set(deps.storage, <span class="kw-2">&amp;</span>new_commitment)<span class="question-mark">?</span>;
 
@@ -1003,4 +1003,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

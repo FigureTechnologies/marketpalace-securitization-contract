@@ -90,6 +90,9 @@
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::StdError;
 <span class="kw">use </span>thiserror::Error;
 
@@ -120,6 +123,9 @@
 
     <span class="attr">#[error(<span class="string">&quot;Empty accepted commitment list&quot;</span>)]
     </span>EmptyAcceptedCommitmentList {},
+
+    <span class="attr">#[error(<span class="string">&quot;The accepted commitment does not match the proposed commitment&quot;</span>)]
+    </span>AcceptedAndProposalMismatch {},
 
     <span class="attr">#[error(<span class="string">&quot;One or more commitments are in an invalid state&quot;</span>)]
     </span>InvalidCommitmentState {},
@@ -183,4 +189,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

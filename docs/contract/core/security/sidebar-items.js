@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["SecurityType",""]],"struct":[["FundSecurity",""],["PrimarySecurity",""],["Security",""],["SecurityCommitment",""],["TrancheSecurity",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["SecurityType",""]],"struct":[["AcceptedCommitment",""],["FundSecurity",""],["PrimarySecurity",""],["Security",""],["SecurityCommitment",""],["TrancheSecurity",""]]};

@@ -60,6 +60,12 @@
 <a href="#60" id="60">60</a>
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
 </pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::StdError;
 <span class="kw">use </span>thiserror::Error;
 
@@ -100,6 +106,12 @@
     <span class="attr">#[error(<span class="string">&quot;Unrecognized reply id&quot;</span>)]
     </span>UnrecognizedReplyId {},
 
+    <span class="attr">#[error(<span class="string">&quot;UUID already exists: {0}&quot;</span>)]
+    </span>UuidAlreadyExists(String),
+
+    <span class="attr">#[error(<span class="string">&quot;UUID does not exist: {0}&quot;</span>)]
+    </span>UuidDoesNotExist(String),
+
     <span class="attr">#[error(<span class="string">&quot;Semver parsing error: {0}&quot;</span>)]
     </span>SemVer(String),
 
@@ -123,4 +135,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract_controller" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

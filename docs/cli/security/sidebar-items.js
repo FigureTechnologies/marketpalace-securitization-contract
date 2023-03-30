@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["create_commitment_from_input",""],["create_from_input",""]]};
