@@ -1,12 +1,7 @@
 .PHONY: all
-all: clean contracts cli
-	@cargo build -p cli
+all: clean contracts
 
-.PHONY: cli
-cli:
-	@cargo build -p cli
-
-.PHONY: contract
+.PHONY: contracts
 contracts:
 	make optimize -f crates/contract/Makefile
 	rm -rf target
