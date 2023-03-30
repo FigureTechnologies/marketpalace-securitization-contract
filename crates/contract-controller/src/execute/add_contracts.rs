@@ -29,7 +29,7 @@ pub fn handle(
         storage::uuid::add(deps.storage, &contract.uuid, &contract.address)?;
         storage::contract::add(deps.storage, &contract.address)?;
         response = response
-            .add_event(Event::new("contract_added").add_attribute("address", contract.address));
+            .add_event(Event::new("contract_added").add_attribute("address", &contract.address));
     }
     Ok(response.add_attribute("action", "add_contracts"))
 }
@@ -39,7 +39,7 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Event};
 
     use crate::{
-        core::error::ContractError,
+        core::{error::ContractError, msg::Contract},
         execute::add_contracts::handle,
         storage,
         util::testing::{create_admin_deps, instantiate_contract},
@@ -61,7 +61,16 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let sender = Addr::unchecked("admin");
-        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let contracts = vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let mut state = storage::state::get(&deps.storage).unwrap();
@@ -80,11 +89,20 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let sender = Addr::unchecked("admin");
-        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let contracts = vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
 
-        let res = handle(deps.as_mut(), env, sender, contracts).unwrap();
+        let res = handle(deps.as_mut(), env, sender, contracts.clone()).unwrap();
         assert_eq!(
             vec![Attribute::new("action", "add_contracts")],
             res.attributes
@@ -96,5 +114,14 @@ mod tests {
             ],
             res.events
         );
+        assert_eq!(
+            contracts[0].address.clone(),
+            storage::uuid::get(&deps.storage, contracts[0].uuid.as_str()).unwrap()
+        );
+        assert_eq!(
+            contracts[1].address.clone(),
+            storage::uuid::get(&deps.storage, contracts[1].uuid.as_str()).unwrap()
+        );
+        // This is where we want to check the store
     }
 }

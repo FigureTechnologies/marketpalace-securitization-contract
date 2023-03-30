@@ -45,6 +45,7 @@ mod tests {
 
     use crate::{
         core::error::ContractError,
+        core::msg::Contract,
         execute::{add_contracts, migrate_contracts},
         storage,
         util::testing::{create_admin_deps, instantiate_contract, migrate_message},
@@ -109,7 +110,16 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let sender = Addr::unchecked("admin");
-        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let contracts = vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+        ];
         let contract_id = Uint128::new(2);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -121,17 +131,22 @@ mod tests {
         )
         .unwrap();
 
-        let res =
-            migrate_contracts::handle(deps.as_mut(), env, sender, contracts.clone(), contract_id)
-                .unwrap();
+        let res = migrate_contracts::handle(
+            deps.as_mut(),
+            env,
+            sender,
+            vec![contracts[0].address.clone(), contracts[1].address.clone()],
+            contract_id,
+        )
+        .unwrap();
         assert_eq!(
             vec![Attribute::new("action", "migrate_contracts")],
             res.attributes
         );
         assert_eq!(
             vec![
-                migrate_message(contracts[0].clone(), Uint128::new(2), 1),
-                migrate_message(contracts[1].clone(), Uint128::new(2), 2)
+                migrate_message(contracts[0].address.clone(), Uint128::new(2), 1),
+                migrate_message(contracts[1].address.clone(), Uint128::new(2), 2)
             ],
             res.messages
         )

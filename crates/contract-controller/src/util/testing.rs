@@ -11,7 +11,7 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvSubMsg, ProvTxResponse},
         error::ContractError,
-        msg::{ContractMigrateMsg, ExecuteMsg, InstantiateMsg, QueryMsg},
+        msg::{Contract, ContractMigrateMsg, ExecuteMsg, InstantiateMsg, QueryMsg},
         security,
     },
 };
@@ -28,16 +28,34 @@ pub fn test_remove_contracts_empty_message() -> ExecuteMsg {
 
 pub fn test_remove_contracts_message() -> ExecuteMsg {
     ExecuteMsg::RemoveContracts {
-        contracts: vec![Addr::unchecked("contract1"), Addr::unchecked("contract3")],
+        contracts: vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract3"),
+                uuid: "uuid3".to_string(),
+            },
+        ],
     }
 }
 
 pub fn test_add_contracts_message() -> ExecuteMsg {
     ExecuteMsg::AddContracts {
         contracts: vec![
-            Addr::unchecked("contract1"),
-            Addr::unchecked("contract2"),
-            Addr::unchecked("contract3"),
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract3"),
+                uuid: "uuid3".to_string(),
+            },
         ],
     }
 }

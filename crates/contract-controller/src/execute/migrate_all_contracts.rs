@@ -39,6 +39,7 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint128};
 
     use crate::{
+        core::msg::Contract,
         execute::{add_contracts, migrate_all_contracts},
         storage,
         util::testing::{create_admin_deps, instantiate_contract, migrate_message},
@@ -86,9 +87,18 @@ mod tests {
         let sender = Addr::unchecked("admin");
         let contract_id = Uint128::new(2);
         let contracts = vec![
-            Addr::unchecked("contract1"),
-            Addr::unchecked("contract2"),
-            Addr::unchecked("contract3"),
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract3"),
+                uuid: "uuid3".to_string(),
+            },
         ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -116,8 +126,8 @@ mod tests {
         assert_eq!(0, res.events.len());
         assert_eq!(
             vec![
-                migrate_message(contracts[0].clone(), Uint128::new(2), 1),
-                migrate_message(contracts[1].clone(), Uint128::new(2), 2)
+                migrate_message(contracts[0].address.clone(), Uint128::new(2), 1),
+                migrate_message(contracts[1].address.clone(), Uint128::new(2), 2)
             ],
             res.messages
         );
@@ -136,7 +146,11 @@ mod tests {
         );
         assert_eq!(0, res.events.len());
         assert_eq!(
-            vec![migrate_message(contracts[2].clone(), Uint128::new(2), 3)],
+            vec![migrate_message(
+                contracts[2].address.clone(),
+                Uint128::new(2),
+                3
+            )],
             res.messages
         );
 

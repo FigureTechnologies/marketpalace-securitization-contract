@@ -43,7 +43,7 @@ mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Event};
 
     use crate::{
-        core::error::ContractError,
+        core::{error::ContractError, msg::Contract},
         execute::{
             add_contracts::{self},
             remove_contracts::{self},
@@ -68,7 +68,16 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let sender = Addr::unchecked("admin");
-        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let contracts = vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let mut state = storage::state::get(&deps.storage).unwrap();
@@ -87,7 +96,16 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let sender = Addr::unchecked("admin");
-        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let contracts = vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
 
@@ -103,7 +121,16 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let sender = Addr::unchecked("admin");
-        let contracts = vec![Addr::unchecked("contract1"), Addr::unchecked("contract2")];
+        let contracts = vec![
+            Contract {
+                address: Addr::unchecked("contract1"),
+                uuid: "uuid1".to_string(),
+            },
+            Contract {
+                address: Addr::unchecked("contract2"),
+                uuid: "uuid2".to_string(),
+            },
+        ];
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         add_contracts::handle(
@@ -113,7 +140,7 @@ mod tests {
             contracts.clone(),
         )
         .unwrap();
-        let res = remove_contracts::handle(deps.as_mut(), env, sender, contracts).unwrap();
+        let res = remove_contracts::handle(deps.as_mut(), env, sender, contracts.clone()).unwrap();
         assert_eq!(
             vec![Attribute::new("action", "remove_contracts")],
             res.attributes
@@ -124,6 +151,14 @@ mod tests {
                 Event::new("contract_removed").add_attribute("address", "contract2")
             ],
             res.events
+        );
+        assert_eq!(
+            false,
+            storage::uuid::has(&deps.storage, contracts[0].uuid.as_str())
+        );
+        assert_eq!(
+            false,
+            storage::uuid::has(&deps.storage, contracts[1].uuid.as_str())
         );
     }
 }
