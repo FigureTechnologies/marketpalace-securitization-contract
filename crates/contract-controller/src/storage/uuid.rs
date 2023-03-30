@@ -27,7 +27,7 @@ pub fn get(storage: &dyn Storage, uuid: &str) -> Result<Addr, ContractError> {
 }
 
 pub fn set_last_uuid(storage: &mut dyn Storage, uuid: &String) -> Result<(), ContractError> {
-    Ok(UUID_CACHE.save(storage, &uuid)?)
+    Ok(UUID_CACHE.save(storage, uuid)?)
 }
 
 pub fn get_last_uuid(storage: &dyn Storage) -> Result<String, ContractError> {

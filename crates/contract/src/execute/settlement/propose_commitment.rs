@@ -53,10 +53,10 @@ pub fn handle(
     }
 
     let mut new_commitment = Commitment::new(lp.clone(), securities);
-    if commitment.is_ok() {
+    if let Ok(mut commitment) = commitment {
         new_commitment
             .commitments
-            .append(&mut commitment.unwrap().commitments)
+            .append(&mut commitment.commitments)
     }
     commits::set(deps.storage, &new_commitment)?;
 

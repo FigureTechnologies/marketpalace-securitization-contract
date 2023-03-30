@@ -17,7 +17,7 @@
             "contracts": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Addr"
+                "$ref": "#/definitions/Contract"
               }
             }
           },
@@ -41,7 +41,7 @@
             "contracts": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Addr"
+                "$ref": "#/definitions/Contract"
               }
             }
           },
@@ -130,7 +130,8 @@
           "type": "object",
           "required": [
             "code_id",
-            "init_msg"
+            "init_msg",
+            "uuid"
           ],
           "properties": {
             "code_id": {
@@ -138,6 +139,9 @@
             },
             "init_msg": {
               "$ref": "#/definitions/InstantiateMsg"
+            },
+            "uuid": {
+              "type": "string"
             }
           },
           "additionalProperties": false
@@ -165,6 +169,22 @@
           "type": "string"
         }
       }
+    },
+    "Contract": {
+      "type": "object",
+      "required": [
+        "address",
+        "uuid"
+      ],
+      "properties": {
+        "address": {
+          "$ref": "#/definitions/Addr"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     },
     "Fee": {
       "type": "object",

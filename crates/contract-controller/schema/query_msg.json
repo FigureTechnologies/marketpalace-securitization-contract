@@ -40,6 +40,27 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "query_contract_address"
+      ],
+      "properties": {
+        "query_contract_address": {
+          "type": "object",
+          "required": [
+            "uuid"
+          ],
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ]
 }
