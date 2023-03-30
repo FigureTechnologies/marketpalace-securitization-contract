@@ -45,7 +45,9 @@ The `AddContracts` message adds one or more contracts to the instance of the Con
 The contracts list cannot be empty. Additionally, this message must be ran by the admin, and the contract cannot be in the `migrating` state.
 
 ##### Request Parameters
-- `contracts`: A list containing the addresses of the contracts to start managing.
+- `contracts`: A list containing the contracts to add. Every contract object has an address and uuid.
+  - `address`: The address of the contract to add.
+  - `uuid`: A unique identifier for the securitization.
 
 ##### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `add_contracts`.
@@ -59,8 +61,14 @@ The contracts list cannot be empty. Additionally, this message must be ran by th
 {
     "add_contracts": {
         "contracts": [
-            "pb1nxwgs92ug3cd93kz094rr60ja7g80y0ncjnd22",
-            "pb1lfua3p52y96qtje75zp9djrwh6q82textfsv3n",
+            {
+                "address": "pb1nxwgs92ug3cd93kz094rr60ja7g80y0ncjnd22",
+                "uuid": "123-456",
+            },
+            {
+                "address": "pb1lfua3p52y96qtje75zp9djrwh6q82textfsv3n",
+                "uuid": "456-789",
+            }
         ]
     }
 }
@@ -74,6 +82,7 @@ This message must be ran by the admin, and the contract cannot be in the `migrat
 ##### Request Parameters
 - `init_msg`: The securitization contract's [initialization message](https://github.com/FigureTechnologies/marketpalace-securitization-contract/tree/main/crates/contract#instantiation).
 - `code_id`: The stored contract id to initialize.
+- `uuid`: A unique identifier for the securitization.
 
 ##### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `create_contract`.
@@ -120,7 +129,8 @@ This message must be ran by the admin, and the contract cannot be in the `migrat
                 }
             }
         },
-        "code_id": "4"
+        "code_id": "4",
+        "uuid": "123-456",
     }
 }
 ```
@@ -131,22 +141,30 @@ The `RemoveContracts` message removes one or more contracts from the instance of
 The contracts list cannot be empty, and each listed contract must be managed by the Contract Controller. Additionally, this message must be ran by the admin, and the contract cannot be in the `migrating` state.
 
 ##### Request Parameters
-- `contracts`: A list containing the addresses of the contracts to stop managing.
+- `contracts`: A list containing the contracts to stop managing. Every contract object has an address and uuid.
+  - `address`: The address of the contract to remove.
+  - `uuid`: The uuid of the contract to remove.
 
 ##### Emitted Attributes
 - `action`: The action that was executed. The value of this will always be `remove_contracts`.
 
 ##### Emitted Events
 - `contract_removed`: One or more of these events will be emitted for each contract removed.
-  - `contract_address`: The address of the contract added.
+  - `contract_address`: The address of the contract removed.
 
 ##### Request Sample
 ```
 {
     "remove_contracts": {
         "contracts": [
-            "pb1nxwgs92ug3cd93kz094rr60ja7g80y0ncjnd22",
-            "pb1lfua3p52y96qtje75zp9djrwh6q82textfsv3n",
+            {
+                "address": "pb1nxwgs92ug3cd93kz094rr60ja7g80y0ncjnd22",
+                "uuid": "123-456",
+            },
+            {
+                "address": "pb1lfua3p52y96qtje75zp9djrwh6q82textfsv3n",
+                "uuid": "456-789",
+            }
         ]
     }
 }
