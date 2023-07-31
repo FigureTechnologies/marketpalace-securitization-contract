@@ -36,6 +36,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ExecuteMsg::CancelCommitment { lp } => {
             cancel_commitment::handle(deps, env, info.sender, lp)
         }
+        ExecuteMsg::ContributeLoanPool { loanPools } => {
+            add_loanpool::handle(deps, env, info.sender, loanPools)
+        }
     }
 }
 

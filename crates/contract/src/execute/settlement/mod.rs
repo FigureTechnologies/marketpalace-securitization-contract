@@ -6,3 +6,5 @@ pub mod propose_commitment;
 pub mod update_settlement_time;
 pub mod withdraw_all_commitments;
 pub mod withdraw_commitment;
+pub mod add_loanpool;
+pub mod collateral;

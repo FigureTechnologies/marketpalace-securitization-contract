@@ -42,3 +42,9 @@ pub struct AcceptedCommitment {
     pub lp: Addr,
     pub securities: Vec<SecurityCommitment>,
 }
+
+#[cw_serde]
+pub struct ContributeLoanPools {
+    pub originalOwner: Addr, // who owns this set of loan pools, this assumes a homogenous loan pools, i.e one owner owns all loan pools in the markers field
+    pub markers: Vec<Addr>, // marker address for loan pools being contributed, usually will be only a set of 1
+}
