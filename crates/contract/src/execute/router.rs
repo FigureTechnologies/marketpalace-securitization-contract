@@ -11,6 +11,7 @@ use crate::execute::{
     settlement::{accept_commitments, deposit_commitment},
 };
 use crate::execute::settlement::add_loanpool;
+use crate::execute::settlement::whitelist_loanpool_contributors;
 
 use super::settlement::{cancel_commitment, update_settlement_time, withdraw_all_commitments};
 
@@ -37,11 +38,11 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ExecuteMsg::CancelCommitment { lp } => {
             cancel_commitment::handle(deps, env, info.sender, lp)
         }
-        ExecuteMsg::ContributeLoanPool { loanPools } => {
-            add_loanpool::handle(deps, env, info.sender, loanPools)
+        ExecuteMsg::ContributeLoanPool { loan_pools } => {
+            add_loanpool::handle(deps, env, info.sender, loan_pools)
         }
-        ExecuteMsg::Whi { loanPools } => {
-            add_loanpool::handle(deps, env, info.sender, loanPools)
+        ExecuteMsg::WhiteListLoanPoolContributors { loan_pool_contributors } => {
+            whitelist_loanpool_contributors::handle(deps, env, info.sender, loan_pool_contributors)
         }
     }
 }
@@ -80,7 +81,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-        .unwrap();
+            .unwrap();
     }
 
     #[test]
@@ -95,7 +96,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-        .unwrap();
+            .unwrap();
         util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp", "lp").unwrap();
     }
 
@@ -113,7 +114,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-        .unwrap();
+            .unwrap();
         util::testing::withdraw_all_commitments_test(deps.as_mut(), mock_env(), "gp").unwrap();
     }
 
@@ -131,7 +132,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-        .unwrap();
+            .unwrap();
         util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp", "lp").unwrap();
         util::testing::update_settlement_time_test(deps.as_mut(), mock_env(), "gp").unwrap();
     }

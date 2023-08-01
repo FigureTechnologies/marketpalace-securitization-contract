@@ -21,7 +21,7 @@ pub fn handle(
     deps: ProvDepsMut,
     env: Env,
     sender: Addr,
-    loanPools: ContributeLoanPools,
+    loan_pools: ContributeLoanPools,
 ) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
@@ -35,7 +35,7 @@ pub fn handle(
     let mut response = Response::new()
         .add_attribute("action", "accept_commitments")
         .add_attribute("gp", state.gp);
-    for pool in loanPools.markers {
+    for pool in loan_pools.markers {
         // accept_commitment(deps.storage, commitment.clone())?;
         // add the marker, change owner, escrow the account
         response = response.add_event(Event::new("loanpool_added").add_attribute("marker_address", pool.to_string()));

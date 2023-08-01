@@ -44,7 +44,7 @@ pub enum ExecuteMsg {
         loan_pools: ContributeLoanPools,
     },
     WhiteListLoanPoolContributors {
-        loan_pool_contributors: LoanPoolContributors
+        loan_pool_contributors: Vec<Addr>
     },
 
 }

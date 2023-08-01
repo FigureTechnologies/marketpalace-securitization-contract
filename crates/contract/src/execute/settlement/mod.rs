@@ -8,4 +8,4 @@ pub mod withdraw_all_commitments;
 pub mod withdraw_commitment;
 pub mod add_loanpool;
 pub mod collateral;
-pub mod add_loanpool;
+pub mod whitelist_loanpool_contributors;
