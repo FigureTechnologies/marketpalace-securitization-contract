@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub struct MarkerTradeAskCollateral {
+pub struct LoanPoolMarkerCollateral {
     pub marker_address: Addr,
     pub marker_denom: String,
     pub share_count: Uint128,
     pub removed_permissions: Vec<AccessGrant>,
 }
-impl MarkerTradeAskCollateral {
+impl LoanPoolMarkerCollateral {
     fn new<S: Into<String>>(
         marker_address: Addr,
         marker_denom: S,

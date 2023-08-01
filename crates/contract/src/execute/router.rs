@@ -10,6 +10,7 @@ use crate::execute::{
     settlement::withdraw_commitment,
     settlement::{accept_commitments, deposit_commitment},
 };
+use crate::execute::settlement::add_loanpool;
 
 use super::settlement::{cancel_commitment, update_settlement_time, withdraw_all_commitments};
 
@@ -37,6 +38,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
             cancel_commitment::handle(deps, env, info.sender, lp)
         }
         ExecuteMsg::ContributeLoanPool { loanPools } => {
+            add_loanpool::handle(deps, env, info.sender, loanPools)
+        }
+        ExecuteMsg::Whi { loanPools } => {
             add_loanpool::handle(deps, env, info.sender, loanPools)
         }
     }

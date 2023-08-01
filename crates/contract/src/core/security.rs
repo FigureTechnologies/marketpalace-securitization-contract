@@ -45,6 +45,13 @@ pub struct AcceptedCommitment {
 
 #[cw_serde]
 pub struct ContributeLoanPools {
-    pub originalOwner: Addr, // who owns this set of loan pools, this assumes a homogenous loan pools, i.e one owner owns all loan pools in the markers field
+    pub original_owner: Addr,
+    // who owns this set of loan pools, this assumes a homogenous loan pools, i.e one owner owns all loan pools in the markers field
     pub markers: Vec<Addr>, // marker address for loan pools being contributed, usually will be only a set of 1
+}
+
+
+#[cw_serde]
+pub struct LoanPoolContributors {
+    pub address: Vec<Addr>, // white list of addresses allowed to contribute loan pols to the securitization
 }
