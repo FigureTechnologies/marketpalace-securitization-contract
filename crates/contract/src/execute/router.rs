@@ -42,7 +42,10 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
             add_loanpool::handle(deps, env, info.sender, loan_pools)
         }
         ExecuteMsg::WhiteListLoanPoolContributors { loan_pool_contributors } => {
-            whitelist_loanpool_contributors::handle(deps, env, info.sender, loan_pool_contributors)
+            whitelist_loanpool_contributors::handle(deps, env, info.sender, loan_pool_contributors.addresses)
+        }
+        ExecuteMsg::RemoveWhiteListLoanPoolContributors { remove_loan_pool_contributors } => {
+            whitelist_loanpool_contributors::handle(deps, env, info.sender, remove_loan_pool_contributors.addresses)
         }
     }
 }

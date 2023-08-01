@@ -9,3 +9,4 @@ pub mod withdraw_commitment;
 pub mod add_loanpool;
 pub mod collateral;
 pub mod whitelist_loanpool_contributors;
+pub mod remove_whitelist_loanpool_contributors;
