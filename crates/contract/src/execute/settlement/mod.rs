@@ -7,6 +7,7 @@ pub mod update_settlement_time;
 pub mod withdraw_all_commitments;
 pub mod withdraw_commitment;
 pub mod add_loanpool;
-pub mod collateral;
 pub mod whitelist_loanpool_contributors;
 pub mod remove_whitelist_loanpool_contributors;
+pub mod marker_loan_pool_validation;
+pub mod extensions;

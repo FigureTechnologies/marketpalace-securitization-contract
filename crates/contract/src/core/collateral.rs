@@ -12,7 +12,7 @@ pub struct LoanPoolMarkerCollateral {
     pub removed_permissions: Vec<AccessGrant>,
 }
 impl LoanPoolMarkerCollateral {
-    fn new<S: Into<String>>(
+    pub(crate) fn new<S: Into<String>>(
         marker_address: Addr,
         marker_denom: S,
         share_count: u128,
@@ -24,5 +24,17 @@ impl LoanPoolMarkerCollateral {
             share_count: Uint128::new(share_count),
             removed_permissions: removed_permissions.to_owned(),
         }
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct LoanPoolMarkers {
+    pub collaterals: Vec<LoanPoolMarkerCollateral>,
+}
+
+impl LoanPoolMarkers {
+    fn new(collaterals: Vec<LoanPoolMarkerCollateral>) -> Self {
+        Self { collaterals }
     }
 }

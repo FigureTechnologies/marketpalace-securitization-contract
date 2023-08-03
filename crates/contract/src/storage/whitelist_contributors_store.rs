@@ -94,6 +94,30 @@ pub fn remove_contributors(
     Ok(())
 }
 
+/// Gets all the whitelist participants.
+///
+/// # Arguments
+///
+/// * `storage` - A reference to the contract's storage.
+///
+/// # Returns
+///
+/// * A `Result` which is:
+///     - `Ok(Vec<Addr>)` containing all the whitelist contributors on success.
+///     - `Err(ContractError)` on failure, where `ContractError` is an enum defined within the contract to handle possible error cases.
+///
+/// # Example
+///
+/// ```ignore
+/// let whitelist = get_whitelist_contributors(deps.storage);
+/// ```
+pub fn get_whitelist_contributors(storage: &dyn Storage) -> Result<Vec<Addr>, ContractError> {
+    // Load current contributors from the storage
+    let contributors = WHITELIST.load(storage).unwrap_or_else(|_| vec![]);
+
+    Ok(contributors)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -158,4 +182,24 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_get_whitelist_contributors() -> StdResult<()> {
+        let mut storage = MockStorage::new();
+        let addr1 = Addr::unchecked("addr1");
+        let addr2 = Addr::unchecked("addr2");
+
+        // Test getting contributors when there are none
+        let empty_contributors = get_whitelist_contributors(&storage).unwrap();
+        assert!(empty_contributors.is_empty());
+
+        // Test getting contributors when there are some
+        let contributors = vec![addr1.clone(), addr2.clone()];
+        save_contributors(&mut storage, contributors.clone()).unwrap();
+        let stored_contributors = get_whitelist_contributors(&storage).unwrap();
+        assert_eq!(stored_contributors, contributors);
+
+        Ok(())
+    }
+
 }

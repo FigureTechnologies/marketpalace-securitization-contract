@@ -82,6 +82,12 @@ pub enum ContractError {
 
     #[error("Semver parsing error: {0}")]
     SemVer(String),
+
+    #[error("Loan pool contributor not in whitelist")]
+    NotInWhitelist {},
+
+    #[error("Invalid marker: {message}")]
+    InvalidMarker { message: String },
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {

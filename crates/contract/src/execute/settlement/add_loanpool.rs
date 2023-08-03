@@ -1,4 +1,5 @@
-use cosmwasm_std::{Addr, Env, Event, Response, Storage};
+use cosmwasm_std::{Addr, DepsMut, Env, Event, MessageInfo, Response, Storage};
+use provwasm_std::{AccessGrant, ProvenanceQuery};
 
 use crate::{
     core::{
@@ -14,6 +15,8 @@ use crate::{
     },
     util::settlement::timestamp_is_expired,
 };
+use crate::core::collateral::LoanPoolMarkerCollateral;
+use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
 
 use super::commitment::{Commitment, CommitmentState};
 
@@ -24,12 +27,13 @@ pub fn handle(
     loan_pools: ContributeLoanPools,
 ) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
-    if sender != state.gp {
-        return Err(crate::core::error::ContractError::Unauthorized {});
-    }
 
-    if timestamp_is_expired(deps.storage, &env.block.time)? {
-        return Err(crate::core::error::ContractError::SettlmentExpired {});
+    // Load whitelist contributors from storage
+    let whitelist_contributors = get_whitelist_contributors(deps.storage)?;
+
+    // Check if sender is in the whitelist
+    if !whitelist_contributors.contains(&sender) {
+        return Err(ContractError::NotInWhitelist {});
     }
 
     let mut response = Response::new()
@@ -51,4 +55,20 @@ fn accept_loan_pool(
     Ok(())
 }
 
+
+fn create_marker_pool_collateral(
+    deps: &DepsMut<ProvenanceQuery>,
+    info: &MessageInfo,
+    env: &Env,
+    marker_denom: String,
+) -> Result<LoanPoolMarkerCollateral, ContractError> {
+// Define some dummy data for removed_permissions
+    let empty_permissions: Vec<AccessGrant> = Vec::new();
+
+    // Create a LoanPoolMarkerCollateral instance with some dummy values
+    let collateral = LoanPoolMarkerCollateral::new(info.sender.clone(), marker_denom, 10, &empty_permissions);
+
+    // Return the instance wrapped in a Result
+    Ok(collateral)
+}
 
