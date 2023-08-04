@@ -1,5 +1,5 @@
-use cosmwasm_std::{Addr, Coin, Uint128};
-use provwasm_std::AccessGrant;
+use cosmwasm_std::{Addr, Coin, CosmosMsg, Uint128};
+use provwasm_std::{AccessGrant, ProvenanceMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +16,7 @@ impl LoanPoolMarkerCollateral {
         marker_address: Addr,
         marker_denom: S,
         share_count: u128,
-        removed_permissions: &[AccessGrant],
+        removed_permissions: Vec<AccessGrant>,
     ) -> Self {
         Self {
             marker_address,
@@ -37,4 +37,13 @@ impl LoanPoolMarkers {
     fn new(collaterals: Vec<LoanPoolMarkerCollateral>) -> Self {
         Self { collaterals }
     }
+}
+
+
+/// Holds information about a loan pool addition.
+pub struct LoanPoolAdditionData {
+    /// The collateral being added to the loan.
+    pub collateral: LoanPoolMarkerCollateral,
+    /// The Provenance messages associated with the loan.
+    pub messages: Vec<CosmosMsg<ProvenanceMsg>>,
 }

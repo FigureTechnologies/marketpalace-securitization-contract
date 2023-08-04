@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Env, Response, Storage};
+use cosmwasm_std::{Addr, Env, MessageInfo, Response, Storage};
 
 use crate::{
     core::{

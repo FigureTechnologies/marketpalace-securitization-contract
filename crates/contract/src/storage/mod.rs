@@ -5,3 +5,4 @@ pub mod remaining_securities;
 pub mod securities;
 pub mod state;
 pub mod whitelist_contributors_store;
+pub mod loan_pool_collateral;

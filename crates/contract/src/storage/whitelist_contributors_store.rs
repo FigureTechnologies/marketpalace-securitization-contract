@@ -1,11 +1,11 @@
 use cosmwasm_std::{Addr, Storage};
 use cw_storage_plus::{Item};
+use crate::core::constants::WHITELIST_CONTRIBUTORS;
 use crate::core::error::ContractError;
 use crate::core::security::LoanPoolContributors;
 
 
-const KEY: &'static str = "whitelist_contributors";
-pub const WHITELIST: Item<Vec<Addr>> = Item::new(KEY);
+pub const WHITELIST: Item<Vec<Addr>> = Item::new(WHITELIST_CONTRIBUTORS);
 
 impl LoanPoolContributors {
     pub fn human_whitelist(&self) -> Vec<String> {

@@ -8,3 +8,6 @@ pub const PAID_IN_CAPITAL_KEY: &str = "paid_in_capital";
 pub const SECURITIES_MAP_KEY: &str = "security_types_map";
 pub const REMAINING_SECURITIES_KEY: &str = "remaining_securities_map";
 pub const AVAILABLE_CAPITAL_KEY: &str = "available_capital";
+pub const LOAN_POOL_COLLATERAL: &str = "paid_in_capital";
+pub const WHITELIST_CONTRIBUTORS: &str = "whitelist_contributors";
+
