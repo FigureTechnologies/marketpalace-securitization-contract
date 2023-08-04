@@ -1,5 +1,5 @@
-use cosmwasm_std::{coin, Addr, Coin, CosmosMsg, StdResult, Uint128, Deps, QuerierWrapper, Empty, BankQuery, SupplyResponse};
-use provwasm_std::{grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceMsgParams};
+use cosmwasm_std::{coin, Addr, Coin, CosmosMsg, StdResult, Uint128, Deps, QuerierWrapper, Empty, BankQuery, SupplyResponse, DepsMut};
+use provwasm_std::{grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceMsgParams, ProvenanceQuery};
 use crate::core::error::ContractError;
 use crate::execute::settlement::extensions::ResultExtensions;
 
@@ -122,7 +122,7 @@ pub fn release_marker_from_contract<S: Into<String>>(
 }
 
 
-pub fn query_total_supply(deps: Deps, denom: &str) -> StdResult<Uint128> {
+pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdResult<Uint128> {
     let request = BankQuery::Supply {
         denom: denom.into(),
     }
@@ -134,8 +134,9 @@ pub fn query_total_supply(deps: Deps, denom: &str) -> StdResult<Uint128> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{MOCK_CONTRACT_ADDR, mock_dependencies_with_balances, mock_env, MockStorage};
+    use cosmwasm_std::testing::{MOCK_CONTRACT_ADDR,  mock_env, MockStorage};
     use cosmwasm_std::{coins, BankMsg, from_binary};
+    use provwasm_mocks::mock_dependencies_with_balances;
     use provwasm_std::{assess_custom_fee, MarkerMsgParams, ProvenanceMsgParams};
     use crate::util::mock_marker::MockMarker;
 
@@ -408,7 +409,7 @@ mod tests {
     #[test]
     fn test_query_total_supply() {
         let amount = coin(12345, "denom");
-        let deps = mock_dependencies_with_balances(&[("alice", &[amount.clone()])]);
+        let mut deps = mock_dependencies_with_balances(&[("alice", &[amount.clone()])]);
         // Set up the environment
         let env = mock_env();
         // Let's say you have a method to initialize your contract which sets the total supply
@@ -416,7 +417,7 @@ mod tests {
         let total_supply = 12345u128;
 
         // Now, query the total supply using the function you want to test
-        let result = query_total_supply(deps.as_ref(), "denom").unwrap();
+        let result = query_total_supply(&mut deps.as_mut(), "denom").unwrap();
 
         // Assert that the queried total supply matches the expected value
         assert_eq!(result.u128(), total_supply);
