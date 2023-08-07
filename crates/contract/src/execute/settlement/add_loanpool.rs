@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Storage};
+use cosmwasm_std::{Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Storage, to_binary};
 use provwasm_std::{AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier, ProvenanceQuery, revoke_marker_access};
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     },
     util::settlement::timestamp_is_expired,
 };
-use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral};
+use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
 use crate::execute::settlement::extensions::ResultExtensions;
 use crate::execute::settlement::marker_loan_pool_validation::validate_marker_for_loan_pool_add_remove;
 use crate::storage::loan_pool_collateral::set;
@@ -30,8 +30,6 @@ pub fn handle(
     info: MessageInfo,
     loan_pools: ContributeLoanPools,
 ) -> ProvTxResponse {
-    let state = state::get(deps.storage)?;
-
     // Load whitelist contributors from storage
     let whitelist_contributors = get_whitelist_contributors(deps.storage)?;
 
@@ -40,20 +38,30 @@ pub fn handle(
         return Err(ContractError::NotInWhitelist {});
     }
 
-    let mut response = Response::new()
-        .add_attribute("added_by", info.sender.clone());
+    // create empty response object
+    let mut response = Response::new();
+
+    let mut collaterals = Vec::new();
+
     for pool in loan_pools.markers {
         let LoanPoolAdditionData {
             collateral,
             messages
         } = create_marker_pool_collateral(&deps, &info, &env, pool.clone()).unwrap();
-        //inset the collateral
+        //insert the collateral
         set(deps.storage,&collateral)?;
-
+        collaterals.push(collateral);
         // Add messages and event in a chained manner
         response = response.add_messages(messages)
-            .add_event(Event::new("loanpool_added").add_attribute("marker_address", pool.to_string()));
+            .add_event(Event::new("loan_pool_added").add_attribute("marker_address", pool.to_string()));
     }
+
+    // Add added_by attribute only if loan_pool_added event is added
+    if response.events.iter().any(|event| event.ty == "loan_pool_added") {
+        response = response.add_attribute("added_by", info.sender.clone());
+    }
+    // Set response data to collaterals vector
+    response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
 
     Ok(response)
 }

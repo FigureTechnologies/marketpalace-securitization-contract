@@ -34,7 +34,7 @@ pub struct LoanPoolMarkers {
 }
 
 impl LoanPoolMarkers {
-    fn new(collaterals: Vec<LoanPoolMarkerCollateral>) -> Self {
+    pub(crate) fn new(collaterals: Vec<LoanPoolMarkerCollateral>) -> Self {
         Self { collaterals }
     }
 }
