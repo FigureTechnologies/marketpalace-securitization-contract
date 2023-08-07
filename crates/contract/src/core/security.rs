@@ -46,7 +46,7 @@ pub struct AcceptedCommitment {
 #[cw_serde]
 pub struct ContributeLoanPools {
     // who owns this set of loan pools, this assumes a homogenous loan pools, i.e one owner owns all loan pools in the markers field
-    pub markers: Vec<String>, // marker denoms for loan pools being contributed, usually will be only a set of 1
+    pub markers: Vec<String>, // marker denom's for loan pools being contributed, usually will be only a set of 1
 }
 
 

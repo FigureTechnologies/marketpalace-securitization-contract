@@ -49,7 +49,7 @@ pub fn handle(
             messages
         } = create_marker_pool_collateral(&deps, &info, &env, pool.clone()).unwrap();
         //insert the collateral
-        set(deps.storage,&collateral)?;
+        set(deps.storage, &collateral)?;
         collaterals.push(collateral);
         // Add messages and event in a chained manner
         response = response.add_messages(messages)
@@ -64,13 +64,6 @@ pub fn handle(
     response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
 
     Ok(response)
-}
-
-fn accept_loan_pool(
-    storage: &mut dyn Storage,
-    marker_address: Addr,
-) -> Result<(), ContractError> {
-    Ok(())
 }
 
 
@@ -143,11 +136,20 @@ fn get_marker_permission_revoke_messages(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Empty, Event, Response};
+    use cosmwasm_std::{Addr, Empty, Event, from_binary, Response};
+    use cosmwasm_std::testing::{mock_env, mock_info};
+    use provwasm_mocks::mock_dependencies;
+    use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers};
+    use crate::core::error::ContractError;
+    use crate::core::security::ContributeLoanPools;
+    use crate::execute::settlement::add_loanpool::handle as add_loanpool_handle;
+    use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
+    use crate::util::mock_marker::MockMarker;
+    use crate::util::testing::instantiate_contract;
 
     #[test]
     fn test_coin_trade_with_valid_data() {
-        let mut response: Response<Empty>  = Response::new();
+        let mut response: Response<Empty> = Response::new();
         response = response.add_event(Event::new("loanpool_added").add_attribute("marker_address", "addr1"));
         response = response.add_event(Event::new("loanpool_added").add_attribute("marker_address", "addr2"));
 
@@ -155,4 +157,119 @@ mod tests {
         assert_eq!(response.events.len(), 2);
     }
 
+    #[test]
+    fn test_handle_not_in_whitelist() {
+        let mut deps = mock_dependencies(&[]);
+        instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
+        let marker = MockMarker::new_owned_marker("contributor");
+        let marker_denom = marker.denom.clone();
+        deps.querier
+            .with_markers(vec![marker]);
+        let env = mock_env();
+        let info = mock_info("contributor", &[]);
+        //
+        // Create a loan pool
+        let loan_pools = ContributeLoanPools {
+            markers: vec![marker_denom],
+        };
+        // Call the handle function
+        let result = add_loanpool_handle(deps.as_mut(), env, info, loan_pools);
+        // Assert that the result is an error
+        assert!(result.is_err());
+        //
+        // Assert that the error is a ContractError::NotInWhitelist
+        match result.unwrap_err() {
+            ContractError::NotInWhitelist {} => (),
+            _ => panic!("Unexpected error type"),
+        }
+    }
+
+    #[test]
+    fn test_handle_in_whitelist() {
+        let mut deps = mock_dependencies(&[]);
+        instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
+        let marker = MockMarker::new_owned_marker("contributor");
+        let marker_denom = marker.denom.clone();
+        deps.querier
+            .with_markers(vec![marker.clone()]);
+        let env = mock_env();
+        let env_white_list = env.clone();
+        let env_loan_pool = env.clone();
+        let info = mock_info("contributor", &[]);
+        let info_white_list = mock_info("gp", &[]);
+        let info_loan_pool = mock_info("gp", &[]);
+        let addr_contributor = Addr::unchecked("contributor");
+        let white_list_addr = vec![addr_contributor.clone()];
+        let whitelist_result = whitelist_loanpool_handle(deps.as_mut(), env, info_white_list.sender, white_list_addr);
+        assert!(whitelist_result.is_ok());
+        match whitelist_result {
+            Ok(response) => {
+                let mut found_action = false;
+                let mut found_address = false;
+
+                for attribute in response.attributes.iter() {
+                    if attribute.key == "action" {
+                        assert_eq!(attribute.value, "whitelist_added");
+                        found_action = true;
+                    } else if attribute.key == "address_whitelisted" {
+                        // Verify if the addresses are correct
+                        let whitelisted_addresses: Vec<&str> = attribute.value.split(",").collect();
+                        assert_eq!(whitelisted_addresses, vec!["contributor"]);
+                        found_address = true;
+                    }
+                }
+            }
+            Err(e) => panic!("Error: {:?}", e),
+        }
+        // Create a loan pool
+        let loan_pools = ContributeLoanPools {
+            markers: vec![marker_denom.clone()],
+        };
+
+        let expected_collaterals = vec![LoanPoolMarkerCollateral {
+            marker_address: marker.address.clone(),
+            marker_denom,
+            share_count: marker.total_supply.atomics(),
+            removed_permissions: if let Some(first_permission) = marker.permissions.first() {
+                vec![first_permission.clone()]
+            } else {
+                vec![]
+            },
+        }];
+        // Call the handle function
+        let loan_pool_result = add_loanpool_handle(deps.as_mut(), env_loan_pool, info.clone(), loan_pools);
+        // Assert that the result is an error
+        assert!(loan_pool_result.is_ok());
+        match loan_pool_result {
+            Ok(response) => {
+                // Checking response data
+                let loan_pool_markers: LoanPoolMarkers = from_binary(&response.data.unwrap()).unwrap();
+                assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
+
+                // Checking response attributes and events
+                let mut found_event = false;
+                let mut found_attribute = false;
+
+                for event in response.events.iter() {
+                    if event.ty == "loan_pool_added" {
+                        found_event = true;
+                        // Check event attributes here if needed
+                    }
+                }
+
+                for attribute in response.attributes.iter() {
+                    if attribute.key == "added_by" {
+                        assert_eq!(attribute.value, info.sender.clone());
+                        found_attribute = true;
+                    }
+                }
+
+                assert!(found_event, "Failed to find loan_pool_added event");
+                assert!(found_attribute, "Failed to find added_by attribute");
+            }
+            Err(e) => panic!("Error: {:?}", e),
+        }
+    }
+
+    fn do_valid_marker_add_pool() {}
 }

@@ -53,6 +53,7 @@ impl MockMarker {
 
     pub fn new_owned_mock_marker<S: Into<String>>(owner_address: S) -> Self {
         Self {
+            // permissions: AccessGrant array that always leads with owner permission in test code
             permissions: vec![
                 AccessGrant {
                     address: Addr::unchecked(owner_address),
