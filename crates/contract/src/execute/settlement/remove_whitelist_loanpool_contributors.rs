@@ -12,7 +12,7 @@ use crate::{
 use crate::storage::whitelist_contributors_store::{remove_contributors, save_contributors};
 
 
-pub fn handle(mut deps: ProvDepsMut, env: Env, sender: Addr, contributors: Vec<Addr>) -> ProvTxResponse {
+pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
         // only gp can add whitelisted contributor
@@ -60,7 +60,7 @@ mod tests {
 
 
         // Test adding contributors by gp
-        let response = handle(deps.as_mut(), env.clone(), gp.clone(), contributors.clone()).unwrap();
+        let response = handle(deps.as_mut(),  gp.clone(), contributors.clone()).unwrap();
         assert_eq!(response.messages.len(), 0);
         assert_eq!(response.attributes.len(), 2);
         assert_eq!(response.attributes[0].key, "action");
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(response.attributes[1].value, "addr1,addr2");
 
         // Test adding contributors by someone else
-        let result = handle(deps.as_mut(), env.clone(), other.clone(), contributors.clone());
+        let result = handle(deps.as_mut(), other.clone(), contributors.clone());
         assert!(result.is_err());
         match result {
             Ok(_) => panic!("Expected error"),

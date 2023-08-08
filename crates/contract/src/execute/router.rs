@@ -10,7 +10,7 @@ use crate::execute::{
     settlement::withdraw_commitment,
     settlement::{accept_commitments, deposit_commitment},
 };
-use crate::execute::settlement::add_loanpool;
+use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
 use crate::execute::settlement::whitelist_loanpool_contributors;
 
 use super::settlement::{cancel_commitment, update_settlement_time, withdraw_all_commitments};
@@ -39,13 +39,16 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
             cancel_commitment::handle(deps, env, info.sender, lp)
         }
         ExecuteMsg::ContributeLoanPool { loan_pools } => {
-            add_loanpool::handle(deps, env, info, loan_pools)
+            add_loan_pool::handle(deps, env, info, loan_pools)
+        }
+        ExecuteMsg::WithdrawLoanPool { loan_pools } => {
+            withdraw_loan_pool::handle(deps, env, info, loan_pools)
         }
         ExecuteMsg::WhiteListLoanPoolContributors { loan_pool_contributors } => {
-            whitelist_loanpool_contributors::handle(deps, env, info.sender, loan_pool_contributors.addresses)
+            whitelist_loanpool_contributors::handle(deps,  info.sender, loan_pool_contributors.addresses)
         }
         ExecuteMsg::RemoveWhiteListLoanPoolContributors { remove_loan_pool_contributors } => {
-            whitelist_loanpool_contributors::handle(deps, env, info.sender, remove_loan_pool_contributors.addresses)
+            whitelist_loanpool_contributors::handle(deps, info.sender, remove_loan_pool_contributors.addresses)
         }
     }
 }

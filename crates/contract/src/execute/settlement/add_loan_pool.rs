@@ -5,15 +5,8 @@ use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
-        security::{AcceptedCommitment, SecurityCommitment, ContributeLoanPools},
+        security::{ContributeLoanPools},
     },
-    storage::{
-        commits::{self},
-        paid_in_capital::{self},
-        remaining_securities,
-        state::{self},
-    },
-    util::settlement::timestamp_is_expired,
 };
 use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
 use crate::execute::settlement::extensions::ResultExtensions;
@@ -22,7 +15,6 @@ use crate::storage::loan_pool_collateral::set;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
 use crate::util::provenance_utilities::{get_single_marker_coin_holding, query_total_supply};
 
-use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -142,7 +134,7 @@ mod tests {
     use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers};
     use crate::core::error::ContractError;
     use crate::core::security::ContributeLoanPools;
-    use crate::execute::settlement::add_loanpool::handle as add_loanpool_handle;
+    use crate::execute::settlement::add_loan_pool::handle as add_loanpool_handle;
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
@@ -200,7 +192,7 @@ mod tests {
         let info_loan_pool = mock_info("gp", &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
-        let whitelist_result = whitelist_loanpool_handle(deps.as_mut(), env, info_white_list.sender, white_list_addr);
+        let whitelist_result = whitelist_loanpool_handle(deps.as_mut(),  info_white_list.sender, white_list_addr);
         assert!(whitelist_result.is_ok());
         match whitelist_result {
             Ok(response) => {

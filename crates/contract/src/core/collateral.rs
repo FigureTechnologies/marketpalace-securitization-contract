@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Coin, CosmosMsg, Uint128};
+use cosmwasm_std::{Addr, CosmosMsg, Uint128};
 use provwasm_std::{AccessGrant, ProvenanceMsg};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -43,6 +43,16 @@ impl LoanPoolMarkers {
 /// Holds information about a loan pool addition.
 pub struct LoanPoolAdditionData {
     /// The collateral being added to the loan.
+    pub collateral: LoanPoolMarkerCollateral,
+    /// The Provenance messages associated with the loan.
+    pub messages: Vec<CosmosMsg<ProvenanceMsg>>,
+}
+
+
+
+/// Holds information about a loan pool removal.
+pub struct LoanPoolRemovalData {
+    /// The collateral to be deleted from state
     pub collateral: LoanPoolMarkerCollateral,
     /// The Provenance messages associated with the loan.
     pub messages: Vec<CosmosMsg<ProvenanceMsg>>,

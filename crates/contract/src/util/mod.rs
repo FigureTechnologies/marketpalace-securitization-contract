@@ -6,4 +6,3 @@ pub mod validate;
 pub mod provenance_utilities;
 #[cfg(test)]
 pub mod mock_marker;
-pub mod mock_instantiate;

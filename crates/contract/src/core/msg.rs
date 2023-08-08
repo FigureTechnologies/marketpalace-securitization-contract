@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint64};
 use cw2::ContractVersion;
-use crate::core::security::{ContributeLoanPools, LoanPoolContributors, RemoveLoanPoolContributors};
+use crate::core::security::{ContributeLoanPools, LoanPoolContributors, RemoveLoanPoolContributors, WithdrawLoanPools};
 
 use crate::execute::settlement::commitment::{Commitment, CommitmentState};
 
@@ -42,6 +42,9 @@ pub enum ExecuteMsg {
     },
     ContributeLoanPool {
         loan_pools: ContributeLoanPools,
+    },
+    WithdrawLoanPool {
+        loan_pools: WithdrawLoanPools,
     },
     WhiteListLoanPoolContributors {
         loan_pool_contributors: LoanPoolContributors
