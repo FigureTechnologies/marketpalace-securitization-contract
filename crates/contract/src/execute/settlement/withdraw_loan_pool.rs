@@ -1,28 +1,21 @@
 use cosmwasm_std::{Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Storage, to_binary};
-use provwasm_std::{AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier, ProvenanceQuery, revoke_marker_access};
+use provwasm_std::{AccessGrant, grant_marker_access, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier, ProvenanceQuery, revoke_marker_access};
 
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
-        security::{ContributeLoanPools},
     },
     storage::{
-        commits::{self},
-        paid_in_capital::{self},
-        remaining_securities,
         state::{self},
     },
-    util::settlement::timestamp_is_expired,
 };
 use crate::core::collateral::{LoanPoolRemovalData, LoanPoolMarkerCollateral, LoanPoolMarkers};
 use crate::core::security::WithdrawLoanPools;
 use crate::execute::settlement::extensions::ResultExtensions;
-use crate::execute::settlement::marker_loan_pool_validation::validate_marker_for_loan_pool_add_remove;
-use crate::storage::loan_pool_collateral::set;
-use crate::util::provenance_utilities::{get_single_marker_coin_holding, query_total_supply};
+use crate::storage::loan_pool_collateral::{get, remove};
+use crate::util::provenance_utilities::release_marker_from_contract;
 
-use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -31,6 +24,8 @@ pub fn handle(
     loan_pools: WithdrawLoanPools,
 ) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
+
+    // the gp can only release the pool
     if info.sender != state.gp  {
         return Err(ContractError::Unauthorized {});
     }
@@ -40,22 +35,33 @@ pub fn handle(
 
     let mut collaterals = Vec::new();
 
-    for pool in loan_pools.markers {
-        let LoanPoolRemovalData {
-            collateral,
-            messages
-        } = withdraw_marker_pool_collateral(&deps, &info, &env, pool.clone()).unwrap();
-        //delete the collateral from state
-        set(deps.storage, &collateral)?;
-        // collaterals.push(collateral);
-        // Add messages and event in a chained manner
+    // Validate addresses and fetch removal data
+    let removal_data: Vec<_> = loan_pools.markers.iter()
+        .map(|pool| {
+            let address = deps.api.addr_validate(pool)
+                .map_err(|_| ContractError::InvalidAddress { message: pool.clone() })?;
+            let removal_data = withdraw_marker_pool_collateral(&deps, &info, &env, pool.clone())?;
+            Ok((address, removal_data))
+        })
+        .collect::<Result<_, ContractError>>()?;
+
+    // Modify state
+    for (address, LoanPoolRemovalData { collateral, messages }) in removal_data {
+
+        remove(deps.storage, &collateral)?;
+
+        // store each collateral in collaterals vector
+        collaterals.push(collateral);
+
         response = response.add_messages(messages)
-            .add_event(Event::new("loan_pool_removed").add_attribute("marker_address", pool.to_string()));
+            .add_event(Event::new("loan_pool_withdrawn")
+            .add_attribute("marker_address", address.to_string()));
     }
 
+
     // Add added_by attribute only if loan_pool_added event is added
-    if response.events.iter().any(|event| event.ty == "loan_pool_added") {
-        response = response.add_attribute("added_by", info.sender.clone());
+    if response.events.iter().any(|event| event.ty == "loan_pool_withdrawn") {
+        response = response.add_attribute("removed_by", info.sender.clone());
     }
     // Set response data to collaterals vector
     response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
@@ -67,37 +73,20 @@ fn withdraw_marker_pool_collateral(
     deps: &DepsMut<ProvenanceQuery>,
     info: &MessageInfo,
     env: &Env,
-    marker_denom: String,
+    marker_address: Addr,
 ) -> Result<LoanPoolRemovalData, ContractError> {
-
+    // get marker
+    let marker =
+        ProvenanceQuerier::new(&deps.querier).get_marker_by_address(marker_address.clone())?;
+    let collateral = get(deps.storage, marker_address.clone())?;
+    let messages = release_marker_from_contract(&marker, &env.contract.address, &collateral.removed_permissions)?;
     Ok(LoanPoolRemovalData {
-        collateral: LoanPoolMarkerCollateral {
-            marker_address: Addr::unchecked("INSERT ADDRESS HERE"), // put the real address here
-            marker_denom,
-            share_count: Default::default(),
-            removed_permissions: vec![],
-        },
-        messages: vec![]
+        collateral,
+        messages
     })
 }
 
-fn get_marker_permission_revoke_messages(
-    marker: &Marker,
-    contract_address: &Addr,
-) -> Result<Vec<CosmosMsg<ProvenanceMsg>>, ContractError> {
-    let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = vec![];
-    for permission in marker
-        .permissions
-        .iter()
-        .filter(|perm| &perm.address != contract_address)
-    {
-        messages.push(revoke_marker_access(
-            &marker.denom,
-            permission.address.clone(),
-        )?);
-    }
-    messages.to_ok()
-}
+
 
 #[cfg(test)]
 mod tests {

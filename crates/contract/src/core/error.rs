@@ -88,6 +88,9 @@ pub enum ContractError {
 
     #[error("Invalid marker: {message}")]
     InvalidMarker { message: String },
+
+    #[error("Invalid address: {message}")]
+    InvalidAddress { message: String },
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {

@@ -14,8 +14,8 @@ pub fn set(storage: &mut dyn Storage, collateral: &LoanPoolMarkerCollateral) -> 
     Ok(COLLATERAL.save(storage, collateral.marker_address.clone(), collateral)?)
 }
 
-pub fn remove(storage: &mut dyn Storage, commitment_lp: Addr) {
-    COLLATERAL.remove(storage, commitment_lp);
+pub fn remove(storage: &mut dyn Storage,  collateral: &LoanPoolMarkerCollateral) -> Result<(), ContractError> {
+    Ok(COLLATERAL.remove(storage, collateral.marker_address.clone()  ))
 }
 
 pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
@@ -68,7 +68,7 @@ mod tests {
         assert_eq!(result, collateral);
 
         // Test removing collateral
-        remove(&mut deps.storage, marker_address.clone());
+        remove(&mut deps.storage, &result.clone())?;
         let result = get(&deps.storage, marker_address.clone());
         assert!(result.is_err()); // Expect an error because the collateral has been removed
     }
@@ -89,7 +89,7 @@ mod tests {
         assert!(exists(&deps.storage, marker_address.clone()));
 
         // Test existence after removing
-        remove(&mut deps.storage, marker_address.clone());
+        remove(&mut deps.storage, &collateral.clone())?;
         assert!(!exists(&deps.storage, marker_address.clone()));
     }
 
