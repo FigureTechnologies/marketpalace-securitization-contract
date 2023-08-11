@@ -1,20 +1,20 @@
-use cosmwasm_std::{Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Storage, to_binary};
-use provwasm_std::{AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier, ProvenanceQuery, revoke_marker_access};
-
-use crate::{
-    core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
-        error::ContractError,
-        security::{ContributeLoanPools},
-    },
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response};
+use provwasm_std::{
+    revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier,
+    ProvenanceQuery,
 };
+
 use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
+use crate::core::{
+    aliases::{ProvDepsMut, ProvTxResponse},
+    error::ContractError,
+    security::ContributeLoanPools,
+};
 use crate::execute::settlement::extensions::ResultExtensions;
 use crate::execute::settlement::marker_loan_pool_validation::validate_marker_for_loan_pool_add_remove;
 use crate::storage::loan_pool_collateral::set;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
 use crate::util::provenance_utilities::{get_single_marker_coin_holding, query_total_supply};
-
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -38,18 +38,23 @@ pub fn handle(
     for pool in loan_pools.markers {
         let LoanPoolAdditionData {
             collateral,
-            messages
+            messages,
         } = create_marker_pool_collateral(&deps, &info, &env, pool.clone()).unwrap();
         //insert the collateral
         set(deps.storage, &collateral)?;
         collaterals.push(collateral);
         // Add messages and event in a chained manner
-        response = response.add_messages(messages)
-            .add_event(Event::new("loan_pool_added").add_attribute("marker_address", pool.to_string()));
+        response = response.add_messages(messages).add_event(
+            Event::new("loan_pool_added").add_attribute("marker_address", pool.to_string()),
+        );
     }
 
     // Add added_by attribute only if loan_pool_added event is added
-    if response.events.iter().any(|event| event.ty == "loan_pool_added") {
+    if response
+        .events
+        .iter()
+        .any(|event| event.ty == "loan_pool_added")
+    {
         response = response.add_attribute("added_by", info.sender.clone());
     }
     // Set response data to collaterals vector
@@ -58,21 +63,18 @@ pub fn handle(
     Ok(response)
 }
 
-
 fn create_marker_pool_collateral(
     deps: &DepsMut<ProvenanceQuery>,
     info: &MessageInfo,
     env: &Env,
     marker_denom: String,
 ) -> Result<LoanPoolAdditionData, ContractError> {
-
     // get marker
-    let marker =
-        ProvenanceQuerier::new(&deps.querier).get_marker_by_denom(&marker_denom)?;
+    let marker = ProvenanceQuerier::new(&deps.querier).get_marker_by_denom(&marker_denom)?;
 
     // each marker has a supply
-    let supply = query_total_supply(deps, &*marker_denom)
-        .map_err(|e| ContractError::InvalidMarker {
+    let supply =
+        query_total_supply(deps, &*marker_denom).map_err(|e| ContractError::InvalidMarker {
             message: format!("Error when querying total supply: {}", e),
         })?;
 
@@ -89,7 +91,6 @@ fn create_marker_pool_collateral(
         supply,
     )?;
 
-
     let messages = get_marker_permission_revoke_messages(&marker, &env.contract.address)?;
 
     LoanPoolAdditionData {
@@ -97,16 +98,16 @@ fn create_marker_pool_collateral(
             marker.address.clone(),
             &marker.denom,
             get_single_marker_coin_holding(&marker)?.amount.u128(),
-            marker.permissions
+            marker
+                .permissions
                 .into_iter()
                 .filter(|perm| perm.address != env.contract.address)
                 .collect::<Vec<AccessGrant>>(),
         ),
         messages,
     }
-        .to_ok()
+    .to_ok()
 }
-
 
 fn get_marker_permission_revoke_messages(
     marker: &Marker,
@@ -128,9 +129,6 @@ fn get_marker_permission_revoke_messages(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{Addr, Empty, Event, from_binary, Response};
-    use cosmwasm_std::testing::{mock_env, mock_info};
-    use provwasm_mocks::mock_dependencies;
     use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers};
     use crate::core::error::ContractError;
     use crate::core::security::ContributeLoanPools;
@@ -138,14 +136,19 @@ mod tests {
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
+    use cosmwasm_std::testing::{mock_env, mock_info};
+    use cosmwasm_std::{from_binary, Addr, Empty, Event, Response};
+    use provwasm_mocks::mock_dependencies;
 
     #[test]
     fn test_coin_trade_with_valid_data() {
         let mut response: Response<Empty> = Response::new();
-        response = response.add_event(Event::new("loanpool_added").add_attribute("marker_address", "addr1"));
-        response = response.add_event(Event::new("loanpool_added").add_attribute("marker_address", "addr2"));
+        response = response
+            .add_event(Event::new("loanpool_added").add_attribute("marker_address", "addr1"));
+        response = response
+            .add_event(Event::new("loanpool_added").add_attribute("marker_address", "addr2"));
 
-// Now the response object contains two separate events with the name "loanpool_added."
+        // Now the response object contains two separate events with the name "loanpool_added."
         assert_eq!(response.events.len(), 2);
     }
 
@@ -155,8 +158,7 @@ mod tests {
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
-        deps.querier
-            .with_markers(vec![marker]);
+        deps.querier.with_markers(vec![marker]);
         let env = mock_env();
         let info = mock_info("contributor", &[]);
         //
@@ -182,8 +184,7 @@ mod tests {
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
-        deps.querier
-            .with_markers(vec![marker.clone()]);
+        deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
         let env_white_list = env.clone();
         let env_loan_pool = env.clone();
@@ -192,7 +193,8 @@ mod tests {
         let info_loan_pool = mock_info("gp", &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
-        let whitelist_result = whitelist_loanpool_handle(deps.as_mut(),  info_white_list.sender, white_list_addr);
+        let whitelist_result =
+            whitelist_loanpool_handle(deps.as_mut(), info_white_list.sender, white_list_addr);
         assert!(whitelist_result.is_ok());
         match whitelist_result {
             Ok(response) => {
@@ -229,13 +231,15 @@ mod tests {
             },
         }];
         // Call the handle function
-        let loan_pool_result = add_loanpool_handle(deps.as_mut(), env_loan_pool, info.clone(), loan_pools);
+        let loan_pool_result =
+            add_loanpool_handle(deps.as_mut(), env_loan_pool, info.clone(), loan_pools);
         // Assert that the result is an error
         assert!(loan_pool_result.is_ok());
         match loan_pool_result {
             Ok(response) => {
                 // Checking response data
-                let loan_pool_markers: LoanPoolMarkers = from_binary(&response.data.unwrap()).unwrap();
+                let loan_pool_markers: LoanPoolMarkers =
+                    from_binary(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events

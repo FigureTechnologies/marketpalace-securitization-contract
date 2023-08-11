@@ -1,9 +1,8 @@
-use cosmwasm_std::{Addr, Storage};
-use cw_storage_plus::{Item};
 use crate::core::constants::WHITELIST_CONTRIBUTORS;
 use crate::core::error::ContractError;
 use crate::core::security::LoanPoolContributors;
-
+use cosmwasm_std::{Addr, Storage};
+use cw_storage_plus::Item;
 
 pub const WHITELIST: Item<Vec<Addr>> = Item::new(WHITELIST_CONTRIBUTORS);
 
@@ -42,17 +41,14 @@ pub fn save_contributors(
     new_contributors: Vec<Addr>,
 ) -> Result<(), ContractError> {
     // Load current contributors from the storage
-    let contributors = WHITELIST.load(storage).unwrap_or_else(|_| vec![]);
-    // Clone the contributors list to a new list
-    let mut updated_contributors = contributors.clone();
+    let mut contributors = WHITELIST.load(storage).unwrap_or_else(|_| vec![]);
     // Extend the updated list with the new contributors
-    updated_contributors.extend(new_contributors.iter().cloned());
+    contributors.extend(new_contributors);
     // Save updated contributors back to the storage
-    WHITELIST.save(storage, &updated_contributors)?;
+    WHITELIST.save(storage, &contributors)?;
 
     Ok(())
 }
-
 
 /// Removes a list of contributors from the whitelist.
 ///
@@ -118,14 +114,13 @@ pub fn get_whitelist_contributors(storage: &dyn Storage) -> Result<Vec<Addr>, Co
     Ok(contributors)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::util::testing::create_test_state;
     use cosmwasm_std::testing::{mock_env, MockStorage};
     use cosmwasm_std::{Addr, StdResult};
     use provwasm_mocks::mock_dependencies;
-    use crate::util::testing::create_test_state;
 
     #[test]
     fn test_save_contributors() -> StdResult<()> {
@@ -201,5 +196,4 @@ mod tests {
 
         Ok(())
     }
-
 }

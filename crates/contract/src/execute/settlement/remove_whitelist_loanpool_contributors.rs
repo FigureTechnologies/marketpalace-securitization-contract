@@ -1,16 +1,13 @@
-use cosmwasm_std::{Addr, Env, Response, Storage};
+use cosmwasm_std::{Addr, Response};
 
+use crate::storage::whitelist_contributors_store::remove_contributors;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
     },
-    storage::{
-        state::{self},
-    },
+    storage::state::{self},
 };
-use crate::storage::whitelist_contributors_store::{remove_contributors, save_contributors};
-
 
 pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
@@ -21,6 +18,7 @@ pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> P
 
     remove_loan_pool_contributors(&mut deps, contributors)
 }
+
 pub fn remove_loan_pool_contributors(
     deps: &mut ProvDepsMut,
     loan_pool_contributors: Vec<Addr>,
@@ -28,7 +26,10 @@ pub fn remove_loan_pool_contributors(
     remove_contributors(deps.storage, loan_pool_contributors.clone())?;
 
     // Converting Vec<Addr> to Vec<String>
-    let contributors_as_str: Vec<String> = loan_pool_contributors.into_iter().map(|addr| addr.to_string()).collect();
+    let contributors_as_str: Vec<String> = loan_pool_contributors
+        .into_iter()
+        .map(|addr| addr.to_string())
+        .collect();
     // Joining Vec<String> into a single String
     let contributors_str = contributors_as_str.join(",");
 
@@ -39,14 +40,13 @@ pub fn remove_loan_pool_contributors(
     Ok(response)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{mock_env};
-    use cosmwasm_std::{Addr, Env, Response, StdResult};
-    use provwasm_mocks::mock_dependencies;
     use crate::util::testing::create_test_state;
+    use cosmwasm_std::testing::mock_env;
+    use cosmwasm_std::{Addr, StdResult};
+    use provwasm_mocks::mock_dependencies;
 
     #[test]
     fn test_add_contributors() -> StdResult<()> {
@@ -58,9 +58,8 @@ mod tests {
         let other = Addr::unchecked("addr_other");
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];
 
-
         // Test adding contributors by gp
-        let response = handle(deps.as_mut(),  gp.clone(), contributors.clone()).unwrap();
+        let response = handle(deps.as_mut(), gp.clone(), contributors.clone()).unwrap();
         assert_eq!(response.messages.len(), 0);
         assert_eq!(response.attributes.len(), 2);
         assert_eq!(response.attributes[0].key, "action");
@@ -79,5 +78,3 @@ mod tests {
         Ok(())
     }
 }
-
-

@@ -1,16 +1,13 @@
-use cosmwasm_std::{Addr, Env, MessageInfo, Response, Storage};
+use cosmwasm_std::{Addr, Response};
 
+use crate::storage::whitelist_contributors_store::save_contributors;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
         error::ContractError,
     },
-    storage::{
-        state::{self},
-    },
+    storage::state::{self},
 };
-use crate::storage::whitelist_contributors_store::save_contributors;
-
 
 pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
@@ -28,7 +25,10 @@ pub fn loan_pool_contributors(
 ) -> ProvTxResponse {
     save_contributors(deps.storage, loan_pool_contributors.clone())?;
     // Converting Vec<Addr> to Vec<String>
-    let contributors_as_str: Vec<String> = loan_pool_contributors.into_iter().map(|addr| addr.to_string()).collect();
+    let contributors_as_str: Vec<String> = loan_pool_contributors
+        .into_iter()
+        .map(|addr| addr.to_string())
+        .collect();
     // Joining Vec<String> into a single String
     let contributors_str = contributors_as_str.join(",");
     let response = Response::new()
@@ -37,14 +37,13 @@ pub fn loan_pool_contributors(
     Ok(response)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{mock_env};
-    use cosmwasm_std::{Addr, Env, Response, StdResult};
-    use provwasm_mocks::mock_dependencies;
     use crate::util::testing::create_test_state;
+    use cosmwasm_std::testing::mock_env;
+    use cosmwasm_std::{Addr, StdResult};
+    use provwasm_mocks::mock_dependencies;
 
     #[test]
     fn test_add_contributors() -> StdResult<()> {
@@ -55,7 +54,6 @@ mod tests {
         let env = mock_env();
         let other = Addr::unchecked("addr_other");
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];
-
 
         // Test adding contributors by gp
         let response = handle(deps.as_mut(), gp.clone(), contributors.clone()).unwrap();
@@ -77,5 +75,3 @@ mod tests {
         Ok(())
     }
 }
-
-

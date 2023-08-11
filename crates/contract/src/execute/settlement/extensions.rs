@@ -34,10 +34,10 @@ mod tests {
 
     #[test]
     fn test_to_err() {
-        let result: Result<(), ContractError> = Err(ContractError::Unauthorized{});
+        let result: Result<(), ContractError> = Err(ContractError::Unauthorized {});
         let error = result.unwrap_err();
         assert!(
-            matches!(error, ContractError::Unauthorized{}),
+            matches!(error, ContractError::Unauthorized {}),
             "The error should unwrap correctly, but got incorrect error: {:?}",
             error,
         );

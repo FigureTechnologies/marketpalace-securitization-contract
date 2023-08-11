@@ -27,7 +27,6 @@ impl LoanPoolMarkerCollateral {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct LoanPoolMarkers {
     pub collaterals: Vec<LoanPoolMarkerCollateral>,
@@ -39,7 +38,6 @@ impl LoanPoolMarkers {
     }
 }
 
-
 /// Holds information about a loan pool addition.
 pub struct LoanPoolAdditionData {
     /// The collateral being added to the loan.
@@ -47,8 +45,6 @@ pub struct LoanPoolAdditionData {
     /// The Provenance messages associated with the loan.
     pub messages: Vec<CosmosMsg<ProvenanceMsg>>,
 }
-
-
 
 /// Holds information about a loan pool removal.
 pub struct LoanPoolRemovalData {

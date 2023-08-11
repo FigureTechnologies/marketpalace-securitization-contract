@@ -1,28 +1,40 @@
-use cosmwasm_std::{Addr, Order, Storage};
-use cw_storage_plus::Map;
 use crate::core::collateral::LoanPoolMarkerCollateral;
 use crate::core::constants::LOAN_POOL_COLLATERAL;
 use crate::core::error::ContractError;
+use cosmwasm_std::{Addr, Order, Storage};
+use cw_storage_plus::Map;
 
 pub const COLLATERAL: Map<Addr, LoanPoolMarkerCollateral> = Map::new(LOAN_POOL_COLLATERAL);
 
-pub fn get(storage: &dyn Storage, marker_address: Addr) -> Result<LoanPoolMarkerCollateral, ContractError> {
+pub fn get(
+    storage: &dyn Storage,
+    marker_address: Addr,
+) -> Result<LoanPoolMarkerCollateral, ContractError> {
     Ok(COLLATERAL.load(storage, marker_address)?)
 }
 
-pub fn set(storage: &mut dyn Storage, collateral: &LoanPoolMarkerCollateral) -> Result<(), ContractError> {
+pub fn set(
+    storage: &mut dyn Storage,
+    collateral: &LoanPoolMarkerCollateral,
+) -> Result<(), ContractError> {
     Ok(COLLATERAL.save(storage, collateral.marker_address.clone(), collateral)?)
 }
 
-pub fn remove(storage: &mut dyn Storage,  collateral: &LoanPoolMarkerCollateral) -> Result<(), ContractError> {
-    Ok(COLLATERAL.remove(storage, collateral.marker_address.clone()  ))
+pub fn remove(
+    storage: &mut dyn Storage,
+    collateral: &LoanPoolMarkerCollateral,
+) -> Result<(), ContractError> {
+    Ok(COLLATERAL.remove(storage, collateral.marker_address.clone()))
 }
 
 pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
     COLLATERAL.has(storage, lp)
 }
 
-pub fn get_with_state(storage: &dyn Storage, state: LoanPoolMarkerCollateral) -> Vec<LoanPoolMarkerCollateral> {
+pub fn get_with_state(
+    storage: &dyn Storage,
+    state: LoanPoolMarkerCollateral,
+) -> Vec<LoanPoolMarkerCollateral> {
     let collateral: Vec<LoanPoolMarkerCollateral> = COLLATERAL
         .range(storage, None, None, Order::Ascending)
         .filter(|item| item.is_ok() && item.as_ref().unwrap().1.marker_denom == state.marker_denom)
@@ -32,8 +44,12 @@ pub fn get_with_state(storage: &dyn Storage, state: LoanPoolMarkerCollateral) ->
 }
 
 #[cfg(feature = "iterator")]
-pub fn get_all_collaterals(store: &dyn Storage) -> StdResult<Vec<(Addr, LoanPoolMarkerCollateral)>> {
-    let iter = COLLATERAL.no_prefix_raw().range(store, None, None, Order::Ascending);
+pub fn get_all_collaterals(
+    store: &dyn Storage,
+) -> StdResult<Vec<(Addr, LoanPoolMarkerCollateral)>> {
+    let iter = COLLATERAL
+        .no_prefix_raw()
+        .range(store, None, None, Order::Ascending);
 
     let items: Vec<(Addr, LoanPoolMarkerCollateral)> = iter
         .map(|item| {
@@ -48,8 +64,8 @@ pub fn get_all_collaterals(store: &dyn Storage) -> StdResult<Vec<(Addr, LoanPool
 
 #[cfg(test)]
 mod tests {
-    use provwasm_mocks::mock_dependencies;
     use super::*;
+    use provwasm_mocks::mock_dependencies;
 
     #[test]
     fn test_get_and_set() {
@@ -59,7 +75,7 @@ mod tests {
             marker_address.clone(),
             "denom".to_string(),
             100,
-            Vec::new()
+            Vec::new(),
         );
 
         // Test setting collateral
@@ -68,7 +84,7 @@ mod tests {
         assert_eq!(result, collateral);
 
         // Test removing collateral
-        remove(&mut deps.storage, &result.clone())?;
+        remove(&mut deps.storage, &result.clone()).unwrap();
         let result = get(&deps.storage, marker_address.clone());
         assert!(result.is_err()); // Expect an error because the collateral has been removed
     }
@@ -81,7 +97,7 @@ mod tests {
             marker_address.clone(),
             "denom".to_string(),
             100,
-            Vec::new()
+            Vec::new(),
         );
 
         // Test existence after setting
@@ -89,7 +105,7 @@ mod tests {
         assert!(exists(&deps.storage, marker_address.clone()));
 
         // Test existence after removing
-        remove(&mut deps.storage, &collateral.clone())?;
+        remove(&mut deps.storage, &collateral.clone()).unwrap();
         assert!(!exists(&deps.storage, marker_address.clone()));
     }
 

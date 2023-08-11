@@ -1,7 +1,13 @@
-use cosmwasm_std::{coin, Addr, Coin, CosmosMsg, StdResult, Uint128, Deps, QuerierWrapper, Empty, BankQuery, SupplyResponse, DepsMut};
-use provwasm_std::{grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceMsgParams, ProvenanceQuery};
 use crate::core::error::ContractError;
 use crate::execute::settlement::extensions::ResultExtensions;
+use cosmwasm_std::{
+    coin, Addr, BankQuery, Coin, CosmosMsg, Deps, DepsMut, Empty, QuerierWrapper, StdResult,
+    SupplyResponse, Uint128,
+};
+use provwasm_std::{
+    grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg,
+    ProvenanceMsgParams, ProvenanceQuery,
+};
 
 pub const NHASH: &str = "nhash";
 
@@ -13,7 +19,6 @@ pub fn format_coin_display(coins: &[Coin]) -> String {
         .join(", ")
 }
 
-
 pub fn marker_has_permissions(
     marker: &Marker,
     address: &Addr,
@@ -22,15 +27,14 @@ pub fn marker_has_permissions(
     marker.permissions.iter().any(|permission| {
         &permission.address == address
             && expected_permissions
-            .iter()
-            .all(|expected_permission| permission.permissions.contains(expected_permission))
+                .iter()
+                .all(|expected_permission| permission.permissions.contains(expected_permission))
     })
 }
 
 pub fn marker_has_admin(marker: &Marker, admin_address: &Addr) -> bool {
     marker_has_permissions(marker, admin_address, &[MarkerAccess::Admin])
 }
-
 
 /// Retrieves the single coin holding associated with the provided marker.
 ///
@@ -121,12 +125,11 @@ pub fn release_marker_from_contract<S: Into<String>>(
     messages.to_ok()
 }
 
-
 pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdResult<Uint128> {
     let request = BankQuery::Supply {
         denom: denom.into(),
     }
-        .into();
+    .into();
     let res: SupplyResponse = deps.querier.query(&request)?;
     Ok(res.amount.amount)
 }
@@ -134,11 +137,11 @@ pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdRe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{MOCK_CONTRACT_ADDR,  mock_env, MockStorage};
-    use cosmwasm_std::{coins, BankMsg, from_binary};
+    use crate::util::mock_marker::MockMarker;
+    use cosmwasm_std::testing::{mock_env, MockStorage, MOCK_CONTRACT_ADDR};
+    use cosmwasm_std::{coins, from_binary, BankMsg};
     use provwasm_mocks::mock_dependencies_with_balances;
     use provwasm_std::{assess_custom_fee, MarkerMsgParams, ProvenanceMsgParams};
-    use crate::util::mock_marker::MockMarker;
 
     #[test]
     fn test_format_coin_display() {
@@ -173,7 +176,7 @@ mod tests {
             }],
             ..MockMarker::default()
         }
-            .to_marker();
+        .to_marker();
         assert!(
             marker_has_permissions(&marker, &target_address, &[]),
             "no permissions passed in with an existing address on the marker should produce a true response",
@@ -238,7 +241,7 @@ mod tests {
             ],
             ..MockMarker::default()
         }
-            .to_marker();
+        .to_marker();
         assert!(
             marker_has_admin(&marker, &admin1),
             "the first admin with ONLY admin access type should produce a true response",
@@ -265,7 +268,7 @@ mod tests {
             coins: vec![],
             ..MockMarker::default()
         }
-            .to_marker();
+        .to_marker();
         match get_single_marker_coin_holding(&no_denom_marker)
             .expect_err("expected an error to occur when a marker had none of its own coin")
         {
@@ -284,7 +287,7 @@ mod tests {
             coins: vec![coin(100, "othercoin"), coin(15, "moredifferentcoin")],
             ..MockMarker::default()
         }
-            .to_marker();
+        .to_marker();
         match get_single_marker_coin_holding(&invalid_coin_marker).expect_err(
             "expected an error to occur when a marker had other coins, but none of its own",
         ) {
@@ -303,7 +306,7 @@ mod tests {
             coins: vec![coin(12, "weird"), coin(15, "weird")],
             ..MockMarker::default()
         }
-            .to_marker();
+        .to_marker();
         match get_single_marker_coin_holding(&duplicate_coin_marker).expect_err(
             "expected an error to occur when a marker had more than one entry for its own denom",
         ) {
@@ -322,7 +325,7 @@ mod tests {
             coins: vec![coin(150, "good")],
             ..MockMarker::default()
         }
-            .to_marker();
+        .to_marker();
         let marker_coin = get_single_marker_coin_holding(&good_marker).expect(
             "expected a marker containing a single entry of its denom to produce a coin response",
         );
@@ -359,7 +362,7 @@ mod tests {
                 },
             ],
         )
-            .expect("expected a result to be returned for good input");
+        .expect("expected a result to be returned for good input");
         assert_eq!(
             3,
             messages.len(),

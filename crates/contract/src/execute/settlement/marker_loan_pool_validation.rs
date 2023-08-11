@@ -1,15 +1,17 @@
-use cosmwasm_std::{Addr, Uint128};
-use provwasm_std::{Marker, MarkerAccess, MarkerStatus};
 use crate::core::error::ContractError;
 use crate::execute::settlement::extensions::ResultExtensions;
-use crate::util::provenance_utilities::{get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, query_total_supply};
+use crate::util::provenance_utilities::{
+    get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, query_total_supply,
+};
+use cosmwasm_std::{Addr, Uint128};
+use provwasm_std::{Marker, MarkerAccess, MarkerStatus};
 
 pub fn validate_marker_for_loan_pool_add_remove(
     marker: &Marker,
     original_owner_address: Option<&Addr>,
     contract_address: &Addr,
     expected_contract_permissions: &[MarkerAccess],
-    bank_supply:Uint128
+    bank_supply: Uint128,
 ) -> Result<(), ContractError> {
     if let Some(original_owner_address) = original_owner_address {
         if !marker_has_admin(marker, original_owner_address) {
@@ -20,7 +22,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
                     marker.denom,
                 ),
             }
-                .to_err();
+            .to_err();
         }
     }
     if !marker_has_permissions(marker, contract_address, expected_contract_permissions) {
@@ -32,7 +34,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
                 marker.denom,
             ),
         }
-            .to_err();
+        .to_err();
     }
     // Active check
     if marker.status != MarkerStatus::Active {
@@ -42,7 +44,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
                 marker.denom, marker.status,
             ),
         }
-            .to_err();
+        .to_err();
     }
     // get denom that this marker holds
     let marker_coin = get_single_marker_coin_holding(marker)?;
@@ -55,7 +57,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
                 marker_coin.amount.u128(),
             ),
         }
-            .to_err();
+        .to_err();
     }
     // supply fixed then we can trust the marker total_supply
     if marker.supply_fixed == true {
@@ -65,21 +67,23 @@ pub fn validate_marker_for_loan_pool_add_remove(
                     "expected marker [{}] to be holding all the shares with supply [{}]",
                     marker.denom,
                     marker_coin.amount.u128(),
-                )
-            }.to_err();
+                ),
+            }
+            .to_err();
         }
-    } else { // use the bank supply passed in
+    } else {
+        // use the bank supply passed in
         if marker_coin.amount < bank_supply {
             return ContractError::InvalidMarker {
                 message: format!(
                     "expected marker [{}] to be holding all the shares with supply [{}]",
                     marker.denom,
                     marker_coin.amount.u128(),
-                )
-            }.to_err();
+                ),
+            }
+            .to_err();
         }
     }
 
     ().to_ok()
 }
-

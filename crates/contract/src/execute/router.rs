@@ -5,13 +5,13 @@ use crate::core::{
     msg::ExecuteMsg,
 };
 
+use crate::execute::settlement::whitelist_loanpool_contributors;
+use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
 use crate::execute::{
     settlement::propose_commitment,
     settlement::withdraw_commitment,
     settlement::{accept_commitments, deposit_commitment},
 };
-use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
-use crate::execute::settlement::whitelist_loanpool_contributors;
 
 use super::settlement::{cancel_commitment, update_settlement_time, withdraw_all_commitments};
 
@@ -44,12 +44,20 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ExecuteMsg::WithdrawLoanPool { loan_pools } => {
             withdraw_loan_pool::handle(deps, env, info, loan_pools)
         }
-        ExecuteMsg::WhiteListLoanPoolContributors { loan_pool_contributors } => {
-            whitelist_loanpool_contributors::handle(deps,  info.sender, loan_pool_contributors.addresses)
-        }
-        ExecuteMsg::RemoveWhiteListLoanPoolContributors { remove_loan_pool_contributors } => {
-            whitelist_loanpool_contributors::handle(deps, info.sender, remove_loan_pool_contributors.addresses)
-        }
+        ExecuteMsg::WhiteListLoanPoolContributors {
+            loan_pool_contributors,
+        } => whitelist_loanpool_contributors::handle(
+            deps,
+            info.sender,
+            loan_pool_contributors.addresses,
+        ),
+        ExecuteMsg::RemoveWhiteListLoanPoolContributors {
+            remove_loan_pool_contributors,
+        } => whitelist_loanpool_contributors::handle(
+            deps,
+            info.sender,
+            remove_loan_pool_contributors.addresses,
+        ),
     }
 }
 
@@ -87,7 +95,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-            .unwrap();
+        .unwrap();
     }
 
     #[test]
@@ -102,7 +110,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-            .unwrap();
+        .unwrap();
         util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp", "lp").unwrap();
     }
 
@@ -120,7 +128,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-            .unwrap();
+        .unwrap();
         util::testing::withdraw_all_commitments_test(deps.as_mut(), mock_env(), "gp").unwrap();
     }
 
@@ -138,7 +146,7 @@ mod tests {
             "lp",
             &test_security_commitments(),
         )
-            .unwrap();
+        .unwrap();
         util::testing::withdraw_test(deps.as_mut(), mock_env(), "gp", "lp").unwrap();
         util::testing::update_settlement_time_test(deps.as_mut(), mock_env(), "gp").unwrap();
     }
