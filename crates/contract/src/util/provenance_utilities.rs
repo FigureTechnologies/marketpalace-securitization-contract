@@ -137,8 +137,8 @@ pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdRe
 mod tests {
     use super::*;
     use crate::util::mock_marker::MockMarker;
-    use cosmwasm_std::testing::{MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{coins};
+    use cosmwasm_std::coins;
+    use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
     use provwasm_mocks::mock_dependencies_with_balances;
     use provwasm_std::{MarkerMsgParams, ProvenanceMsgParams};
 

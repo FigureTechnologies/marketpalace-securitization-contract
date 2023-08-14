@@ -258,5 +258,4 @@ mod tests {
             Err(e) => panic!("Error: {:?}", e),
         }
     }
-
 }

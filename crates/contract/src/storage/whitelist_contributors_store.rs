@@ -117,7 +117,7 @@ pub fn get_whitelist_contributors(storage: &dyn Storage) -> Result<Vec<Addr>, Co
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{MockStorage};
+    use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{Addr, StdResult};
 
     #[test]
