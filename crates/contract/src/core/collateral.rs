@@ -22,7 +22,7 @@ impl LoanPoolMarkerCollateral {
             marker_address,
             marker_denom: marker_denom.into(),
             share_count: Uint128::new(share_count),
-            removed_permissions: removed_permissions.to_owned(),
+            removed_permissions,
         }
     }
 }

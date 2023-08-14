@@ -1,7 +1,7 @@
 use crate::core::error::ContractError;
 use crate::execute::settlement::extensions::ResultExtensions;
 use crate::util::provenance_utilities::{
-    get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, query_total_supply,
+    get_single_marker_coin_holding, marker_has_admin, marker_has_permissions,
 };
 use cosmwasm_std::{Addr, Uint128};
 use provwasm_std::{Marker, MarkerAccess, MarkerStatus};

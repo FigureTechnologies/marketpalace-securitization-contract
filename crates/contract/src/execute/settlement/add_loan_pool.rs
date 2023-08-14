@@ -55,7 +55,7 @@ pub fn handle(
         .iter()
         .any(|event| event.ty == "loan_pool_added")
     {
-        response = response.add_attribute("added_by", info.sender.clone());
+        response = response.add_attribute("added_by", info.sender);
     }
     // Set response data to collaterals vector
     response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);

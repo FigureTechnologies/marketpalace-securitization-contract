@@ -1,14 +1,8 @@
-use cosmwasm_std::{
-    to_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Storage,
-};
-use provwasm_std::{
-    grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg,
-    ProvenanceQuerier, ProvenanceQuery,
-};
+use cosmwasm_std::{to_binary, Addr, DepsMut, Env, Event, MessageInfo, Response};
+use provwasm_std::{ProvenanceQuerier, ProvenanceQuery};
 
-use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers, LoanPoolRemovalData};
+use crate::core::collateral::{LoanPoolMarkers, LoanPoolRemovalData};
 use crate::core::security::WithdrawLoanPools;
-use crate::execute::settlement::extensions::ResultExtensions;
 use crate::storage::loan_pool_collateral::{get, remove};
 use crate::util::provenance_utilities::release_marker_from_contract;
 use crate::{
@@ -48,8 +42,7 @@ pub fn handle(
                     .map_err(|_| ContractError::InvalidAddress {
                         message: pool.clone(),
                     })?;
-            let removal_data =
-                withdraw_marker_pool_collateral(&deps, &info, &env, address.to_owned())?;
+            let removal_data = withdraw_marker_pool_collateral(&deps, &env, address.to_owned())?;
             Ok((address, removal_data))
         })
         .collect::<Result<_, ContractError>>()?;
@@ -89,7 +82,6 @@ pub fn handle(
 
 fn withdraw_marker_pool_collateral(
     deps: &DepsMut<ProvenanceQuery>,
-    info: &MessageInfo,
     env: &Env,
     marker_address: Addr,
 ) -> Result<LoanPoolRemovalData, ContractError> {
@@ -98,7 +90,7 @@ fn withdraw_marker_pool_collateral(
         ProvenanceQuerier::new(&deps.querier).get_marker_by_address(marker_address.clone())?;
     let collateral = get(deps.storage, marker_address.clone())?;
     let messages = release_marker_from_contract(
-        &marker.denom,
+        marker.denom,
         &env.contract.address,
         &collateral.removed_permissions,
     )?;

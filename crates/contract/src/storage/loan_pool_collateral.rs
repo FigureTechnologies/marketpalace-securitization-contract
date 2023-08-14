@@ -43,25 +43,6 @@ pub fn get_with_state(
     collateral
 }
 
-#[cfg(feature = "iterator")]
-pub fn get_all_collaterals(
-    store: &dyn Storage,
-) -> StdResult<Vec<(Addr, LoanPoolMarkerCollateral)>> {
-    let iter = COLLATERAL
-        .no_prefix_raw()
-        .range(store, None, None, Order::Ascending);
-
-    let items: Vec<(Addr, LoanPoolMarkerCollateral)> = iter
-        .map(|item| {
-            let (addr_bytes, collateral) = item.unwrap();
-            let addr = Addr::from(addr_bytes);
-            (addr, collateral)
-        })
-        .collect();
-
-    Ok(items)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
