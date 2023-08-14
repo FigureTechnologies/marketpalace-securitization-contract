@@ -70,7 +70,15 @@ fn create_marker_pool_collateral(
     marker_denom: String,
 ) -> Result<LoanPoolAdditionData, ContractError> {
     // get marker
-    let marker = ProvenanceQuerier::new(&deps.querier).get_marker_by_denom(&marker_denom)?;
+    let marker_res = ProvenanceQuerier::new(&deps.querier).get_marker_by_denom(&marker_denom);
+    let marker = match marker_res {
+        Ok(m) => m,
+        Err(e) => {
+            return Err(ContractError::InvalidMarker {
+                message: format!("Unable to get marker by denom: {}", e),
+            })
+        }
+    };
 
     // each marker has a supply
     let supply =
@@ -106,7 +114,7 @@ fn create_marker_pool_collateral(
         ),
         messages,
     }
-    .to_ok()
+        .to_ok()
 }
 
 fn get_marker_permission_revoke_messages(
@@ -132,7 +140,7 @@ mod tests {
     use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers};
     use crate::core::error::ContractError;
     use crate::core::security::ContributeLoanPools;
-    use crate::execute::settlement::add_loan_pool::handle as add_loanpool_handle;
+    use crate::execute::settlement::add_loan_pool::{create_marker_pool_collateral, get_marker_permission_revoke_messages, handle as add_loanpool_handle};
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
@@ -256,6 +264,67 @@ mod tests {
                 assert!(found_attribute, "Failed to find added_by attribute");
             }
             Err(e) => panic!("Error: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_create_marker_pool_collateral_error_invalid_marker() {
+        let mut deps = mock_dependencies(&[]);
+
+        /* Create the necessary mocked objects. You would need to replace "someAddress",
+        "someMarkerDenom", and "someEnv" with corresponding valid objects */
+        let info = mock_info("someAddress", &[]);
+        let env = mock_env();
+
+        // use a string that doesn't correspond to an existing marker
+        let marker_denom = String::from("nonExistentMarkerDenom");
+
+        let result = create_marker_pool_collateral(&deps.as_mut(), &info, &env, marker_denom);
+
+        // Assert that the result is an error because the marker doesn't exist
+        assert!(result.is_err());
+
+        match result.unwrap_err() {
+            ContractError::InvalidMarker { .. } => (),
+            _ => panic!("Unexpected error type"),
+        }
+    }
+
+    #[test]
+    fn test_get_marker_permission_revoke_messages() {
+        let marker = MockMarker::new_owned_marker("markerOwner");
+        let contract_address = Addr::unchecked("contractAddress");
+
+        let result = get_marker_permission_revoke_messages(&marker, &contract_address);
+
+        // Assert that the result is ok
+        assert!(result.is_ok());
+        match result.ok() {
+            Some(revoke_messages) => {
+                // Assert that the messages to revoke access are as expected
+                // This depends on the specifics of your implementation
+                assert_eq!(revoke_messages.len(), marker.permissions.len());
+            },
+            None => panic!("Expected some revoke messages, got None"),
+        }
+    }
+
+    #[test]
+    fn test_get_marker_permission_revoke_messages_contract_addr_there() {
+        let marker = MockMarker::new_owned_marker("markerOwner");
+        let contract_address = Addr::unchecked("cosmos2contract");
+
+        let result = get_marker_permission_revoke_messages(&marker, &contract_address);
+
+        // Assert that the result is ok
+        assert!(result.is_ok());
+        match result.ok() {
+            Some(revoke_messages) => {
+                // Assert that the messages to revoke access are as expected
+                // This depends on the specifics of your implementation
+                assert_eq!(revoke_messages.len(), marker.permissions.len() - 1);
+            },
+            None => panic!("Expected some revoke messages, got None"),
         }
     }
 }

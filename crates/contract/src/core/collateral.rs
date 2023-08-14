@@ -38,6 +38,7 @@ impl LoanPoolMarkers {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 /// Holds information about a loan pool addition.
 pub struct LoanPoolAdditionData {
     /// The collateral being added to the loan.
@@ -46,6 +47,7 @@ pub struct LoanPoolAdditionData {
     pub messages: Vec<CosmosMsg<ProvenanceMsg>>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 /// Holds information about a loan pool removal.
 pub struct LoanPoolRemovalData {
     /// The collateral to be deleted from state
