@@ -1,5 +1,5 @@
-use cosmwasm_std::{Addr, BankMsg, Env, Event, Response, Storage};
-use provwasm_std::{mint_marker_supply, withdraw_coins};
+use cosmwasm_std::{Addr, Env, Event, Response, Storage};
+use provwasm_std::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
 
 use crate::{
     core::{
@@ -63,10 +63,12 @@ fn process_withdraw(
     commitment.state = CommitmentState::SETTLED;
     messages.extend(transfer_investment_tokens(&commitment, contract)?);
     if !capital.amount.is_zero() {
-        messages.push(ProvMsg::Bank(BankMsg::Send {
-            to_address: gp.to_string(),
-            amount: vec![capital],
-        }));
+        messages.push(transfer_marker_coins(
+            capital.amount.u128(),
+            capital.denom,
+            gp.clone(),
+            commitment.lp.clone(),
+        )?);
     }
 
     commits::set(storage, &commitment)?;
