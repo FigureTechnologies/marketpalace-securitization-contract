@@ -51,7 +51,6 @@ mod tests {
 
         let mut deps = mock_dependencies(&[]);
         create_test_state(&mut deps, &mock_env(), false);
-        let env = mock_env();
         let other = Addr::unchecked("addr_other");
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];
 

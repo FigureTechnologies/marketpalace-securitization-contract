@@ -137,10 +137,10 @@ pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdRe
 mod tests {
     use super::*;
     use crate::util::mock_marker::MockMarker;
-    use cosmwasm_std::testing::{mock_env, MockStorage, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{coins, from_binary, BankMsg};
+    use cosmwasm_std::testing::{MOCK_CONTRACT_ADDR};
+    use cosmwasm_std::{coins};
     use provwasm_mocks::mock_dependencies_with_balances;
-    use provwasm_std::{assess_custom_fee, MarkerMsgParams, ProvenanceMsgParams};
+    use provwasm_std::{MarkerMsgParams, ProvenanceMsgParams};
 
     #[test]
     fn test_format_coin_display() {
@@ -412,8 +412,6 @@ mod tests {
     fn test_query_total_supply() {
         let amount = coin(12345, "denom");
         let mut deps = mock_dependencies_with_balances(&[("alice", &[amount.clone()])]);
-        // Set up the environment
-        let env = mock_env();
         // Let's say you have a method to initialize your contract which sets the total supply
         // Initialize the contract with a total supply
         let total_supply = 12345u128;

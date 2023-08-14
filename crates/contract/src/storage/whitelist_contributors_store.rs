@@ -117,10 +117,8 @@ pub fn get_whitelist_contributors(storage: &dyn Storage) -> Result<Vec<Addr>, Co
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::testing::create_test_state;
-    use cosmwasm_std::testing::{mock_env, MockStorage};
+    use cosmwasm_std::testing::{MockStorage};
     use cosmwasm_std::{Addr, StdResult};
-    use provwasm_mocks::mock_dependencies;
 
     #[test]
     fn test_save_contributors() -> StdResult<()> {
@@ -149,7 +147,6 @@ mod tests {
     fn test_remove_contributors_no_key() -> StdResult<()> {
         let mut storage = MockStorage::new();
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];
-        let env = mock_env();
 
         // Test removing contributors when the whitelist key doesn't exist
         // This should still succeed because remove_contributors() is designed to handle this gracefully
@@ -161,9 +158,7 @@ mod tests {
 
     #[test]
     fn test_remove_contributors() -> StdResult<()> {
-        let gp = Addr::unchecked("gp");
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];
-        let env = mock_env();
         let mut storage = MockStorage::new();
         // Add contributors to the whitelist
         save_contributors(&mut storage, contributors.clone()).unwrap();

@@ -49,12 +49,11 @@ mod tests {
     use provwasm_mocks::mock_dependencies;
 
     #[test]
-    fn test_add_contributors() -> StdResult<()> {
+    fn test_remove_contributors() -> StdResult<()> {
         let gp = Addr::unchecked("gp");
 
         let mut deps = mock_dependencies(&[]);
         create_test_state(&mut deps, &mock_env(), false);
-        let env = mock_env();
         let other = Addr::unchecked("addr_other");
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];
 
@@ -63,8 +62,8 @@ mod tests {
         assert_eq!(response.messages.len(), 0);
         assert_eq!(response.attributes.len(), 2);
         assert_eq!(response.attributes[0].key, "action");
-        assert_eq!(response.attributes[0].value, "whitelist_added");
-        assert_eq!(response.attributes[1].key, "address_whitelisted");
+        assert_eq!(response.attributes[0].value, "whitelist_removed");
+        assert_eq!(response.attributes[1].key, "address_removed");
         assert_eq!(response.attributes[1].value, "addr1,addr2");
 
         // Test adding contributors by someone else

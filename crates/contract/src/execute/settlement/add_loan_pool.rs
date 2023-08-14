@@ -186,11 +186,8 @@ mod tests {
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let env_white_list = env.clone();
-        let env_loan_pool = env.clone();
         let info = mock_info("contributor", &[]);
         let info_white_list = mock_info("gp", &[]);
-        let info_loan_pool = mock_info("gp", &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =
@@ -198,18 +195,13 @@ mod tests {
         assert!(whitelist_result.is_ok());
         match whitelist_result {
             Ok(response) => {
-                let mut found_action = false;
-                let mut found_address = false;
-
                 for attribute in response.attributes.iter() {
                     if attribute.key == "action" {
                         assert_eq!(attribute.value, "whitelist_added");
-                        found_action = true;
                     } else if attribute.key == "address_whitelisted" {
                         // Verify if the addresses are correct
                         let whitelisted_addresses: Vec<&str> = attribute.value.split(",").collect();
                         assert_eq!(whitelisted_addresses, vec!["contributor"]);
-                        found_address = true;
                     }
                 }
             }
@@ -232,7 +224,7 @@ mod tests {
         }];
         // Call the handle function
         let loan_pool_result =
-            add_loanpool_handle(deps.as_mut(), env_loan_pool, info.clone(), loan_pools);
+            add_loanpool_handle(deps.as_mut(), env.to_owned(), info.clone(), loan_pools);
         // Assert that the result is an error
         assert!(loan_pool_result.is_ok());
         match loan_pool_result {
@@ -267,5 +259,4 @@ mod tests {
         }
     }
 
-    fn do_valid_marker_add_pool() {}
 }
