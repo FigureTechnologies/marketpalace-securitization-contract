@@ -73,10 +73,10 @@ pub fn validate_marker_for_loan_pool_add_remove(
         }
     } else {
         // use the bank supply passed in
-        if marker_coin.amount < bank_supply {
+        if marker_coin.amount > bank_supply {
             return ContractError::InvalidMarker {
                 message: format!(
-                    "expected marker [{}] to be holding all the shares with supply [{}]",
+                    "expected that marker, [{}] to be holding all the shares with supply, [{}]",
                     marker.denom,
                     marker_coin.amount.u128(),
                 ),

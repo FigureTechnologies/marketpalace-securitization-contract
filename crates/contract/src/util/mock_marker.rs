@@ -19,6 +19,7 @@ pub struct MockMarker {
     pub marker_type: MarkerType,
     pub supply_fixed: bool,
 }
+
 impl Default for MockMarker {
     fn default() -> Self {
         Self {
@@ -46,7 +47,34 @@ impl Default for MockMarker {
         }
     }
 }
+
 impl MockMarker {
+    pub fn new(supply_fixed: bool) -> Self {
+        Self {
+            address: Addr::unchecked(DEFAULT_MARKER_ADDRESS),
+            coins: coins(DEFAULT_MARKER_HOLDINGS, DEFAULT_MARKER_DENOM),
+            account_number: 50,
+            sequence: 0,
+            manager: "".to_string(),
+            permissions: vec![AccessGrant {
+                address: Addr::unchecked(MOCK_CONTRACT_ADDR),
+                permissions: vec![
+                    MarkerAccess::Admin,
+                    MarkerAccess::Burn,
+                    MarkerAccess::Delete,
+                    MarkerAccess::Deposit,
+                    MarkerAccess::Mint,
+                    MarkerAccess::Withdraw,
+                ],
+            }],
+            status: MarkerStatus::Active,
+            denom: DEFAULT_MARKER_DENOM.to_string(),
+            total_supply: decimal(DEFAULT_MARKER_HOLDINGS),
+            marker_type: MarkerType::Coin,
+            supply_fixed, // 'supply_fixed' passed as argument
+        }
+    }
+
     pub fn new_marker() -> Marker {
         Self::default().to_marker()
     }
@@ -68,8 +96,29 @@ impl MockMarker {
         }
     }
 
+    pub fn new_owned_mock_marker_supply_variable<S: Into<String>>(owner_address: S) -> Self {
+        Self {
+            // permissions: AccessGrant array that always leads with owner permission in test code
+            permissions: vec![
+                AccessGrant {
+                    address: Addr::unchecked(owner_address),
+                    permissions: Self::get_default_owner_permissions(),
+                },
+                AccessGrant {
+                    address: Addr::unchecked("cosmos2contract"),
+                    permissions: vec![MarkerAccess::Admin, MarkerAccess::Withdraw],
+                },
+            ],
+            ..Self::new(false)
+        }
+    }
+
     pub fn new_owned_marker<S: Into<String>>(owner_address: S) -> Marker {
         Self::new_owned_mock_marker(owner_address).to_marker()
+    }
+
+    pub fn new_owned_marker_supply_variable<S: Into<String>>(owner_address: S) -> Marker {
+        Self::new_owned_mock_marker_supply_variable(owner_address).to_marker()
     }
 
     pub fn to_marker(self) -> Marker {
