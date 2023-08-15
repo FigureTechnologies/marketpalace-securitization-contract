@@ -362,7 +362,7 @@ mod tests {
         }
 
         // transfer some value out of the marker
-        let balance = coins(10, DEFAULT_MARKER_DENOM);
+        let balance = coins(110, DEFAULT_MARKER_DENOM);
 
         // Update the balance for the given address
         let _update_balance = deps

@@ -60,6 +60,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
     }
     // supply fixed then we can trust the marker total_supply
     if marker.supply_fixed {
+         // amount held in marker cannot be greater than total supply
         if marker_coin.amount > marker.total_supply.atomics() {
             return get_contract_error(format!(
                 "expected marker [{}] to be holding all the shares with supply [{}]",
@@ -69,7 +70,8 @@ pub fn validate_marker_for_loan_pool_add_remove(
         }
     } else {
         // use the bank supply passed in
-        if marker_coin.amount > bank_supply {
+        // amount held in marker cannot be less than bank supply
+        if bank_supply > marker_coin.amount  {
             return get_contract_error(format!(
                 "expected that marker, [{}] to be holding all the shares with supply, [{}]",
                 marker.denom,
