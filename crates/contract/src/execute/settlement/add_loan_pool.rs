@@ -82,7 +82,7 @@ fn create_marker_pool_collateral(
 
     // each marker has a supply
     let supply =
-        query_total_supply(deps, &*marker_denom).map_err(|e| ContractError::InvalidMarker {
+        query_total_supply(deps, &marker_denom).map_err(|e| ContractError::InvalidMarker {
             message: format!("Error when querying total supply: {}", e),
         })?;
 

@@ -72,7 +72,7 @@ pub fn handle(
         .iter()
         .any(|event| event.ty == "loan_pool_withdrawn")
     {
-        response = response.add_attribute("removed_by", info.sender.clone());
+        response = response.add_attribute("removed_by", info.sender);
     }
     // Set response data to collaterals vector
     response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
@@ -88,7 +88,7 @@ fn withdraw_marker_pool_collateral(
     // get marker
     let marker =
         ProvenanceQuerier::new(&deps.querier).get_marker_by_address(marker_address.clone())?;
-    let collateral = get(deps.storage, marker_address.clone())?;
+    let collateral = get(deps.storage, marker_address)?;
     let messages = release_marker_from_contract(
         marker.denom,
         &env.contract.address,

@@ -60,7 +60,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
         .to_err();
     }
     // supply fixed then we can trust the marker total_supply
-    if marker.supply_fixed == true {
+    if marker.supply_fixed {
         if marker_coin.amount < marker.total_supply.atomics() {
             return ContractError::InvalidMarker {
                 message: format!(
