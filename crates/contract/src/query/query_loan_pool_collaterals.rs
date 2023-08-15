@@ -3,12 +3,39 @@ use crate::core::msg::QueryLoanPoolCollateralResponse;
 use crate::storage::loan_pool_collateral::get_all_states;
 use cosmwasm_std::{to_binary, Storage};
 
+/// This function handles the process of getting all states from storage and
+/// creates a `QueryLoanPoolCollateralResponse` with the resulting collaterals.
+/// The response is then serialized into binary form.
+///
+/// # Arguments
+///
+/// * `storage` - A dynamic reference to the storage from which to get all states
+///
+/// # Returns
+///
+/// This function returns a `ProvQueryResponse` which is basically a Result type containing serialized
+/// response in binary format or an error.
+///
+/// On successful operation, the function returns `Ok`, wrapping the binary form of the `QueryLoanPoolCollateralResponse`.
+///
+/// If there are any errors during the process (e.g., failure in getting states from storage, serializing the response),
+/// it returns an `Err` wrapping the error.
+///
+/// # Example
+///
+/// ```
+/// let response = handle(&storage);
+/// match response {
+///     Ok(binary_response) => println!("Binary response generated successfully."),
+///     Err(e) => println!("Error in generating binary response: {}", e),
+/// }
+/// ```
 pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
-    let loan_pool_collaterals = get_all_states(storage);
-    let response = QueryLoanPoolCollateralResponse {
-        collaterals: loan_pool_collaterals,
-    };
-    Ok(to_binary(&response)?)
+    Ok(to_binary(
+        &QueryLoanPoolCollateralResponse {
+            collaterals: get_all_states(storage),
+        },
+    )?)
 }
 
 #[cfg(test)]
@@ -25,7 +52,7 @@ mod tests {
     use provwasm_mocks::mock_dependencies;
 
     #[test]
-    fn test_all_collateral() {
+    fn test_all_collateral_success() {
         let mut deps = mock_dependencies(&[]);
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
@@ -56,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn test_all_collateral_zero_exists() {
+    fn test_all_collateral_none_exists() {
         let mut deps = mock_dependencies(&[]);
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
