@@ -2,10 +2,14 @@ use cosmwasm_std::Env;
 
 use crate::core::{
     aliases::{ProvDeps, ProvQueryResponse},
+    collateral,
     msg::QueryMsg,
 };
 
-use super::{query_commitments, query_investor, query_securitizations, query_state, query_version};
+use super::{
+    query_commitments, query_investor, query_loan_pool_collaterals, query_securitizations,
+    query_state, query_version,
+};
 
 pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
     match msg {
@@ -18,6 +22,7 @@ pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
         }
         QueryMsg::QueryState {} => query_state::handle(deps.storage),
         QueryMsg::QueryVersion {} => query_version::handle(deps.storage),
+        QueryMsg::QueryCollaterals {} => query_loan_pool_collaterals::handle(deps.storage),
     }
 }
 

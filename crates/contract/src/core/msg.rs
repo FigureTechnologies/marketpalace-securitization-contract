@@ -1,3 +1,4 @@
+use crate::core::collateral::LoanPoolMarkerCollateral;
 use crate::core::security::{
     ContributeLoanPools, LoanPoolContributors, RemoveLoanPoolContributors, WithdrawLoanPools,
 };
@@ -73,6 +74,9 @@ pub enum QueryMsg {
 
     #[returns(QueryVersionResponse)]
     QueryVersion {},
+
+    #[returns(QueryLoanPoolCollateralResponse)]
+    QueryCollaterals {},
 }
 
 #[cw_serde]
@@ -97,6 +101,11 @@ pub struct QueryStateResponse {
     pub securities: Vec<String>,
     pub capital_denom: String,
     pub settlement_time: Option<Uint64>,
+}
+
+#[cw_serde]
+pub struct QueryLoanPoolCollateralResponse {
+    pub collaterals: Vec<LoanPoolMarkerCollateral>,
 }
 
 #[cw_serde]

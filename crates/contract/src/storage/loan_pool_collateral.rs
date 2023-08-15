@@ -44,6 +44,13 @@ pub fn get_with_state(
     collateral
 }
 
+pub fn get_all_states(storage: &dyn Storage) -> Vec<LoanPoolMarkerCollateral> {
+    let collateral: Vec<LoanPoolMarkerCollateral> = COLLATERAL
+        .range(storage, None, None, Order::Ascending)
+        .map(|item| item.unwrap().1)
+        .collect();
+    collateral
+}
 #[cfg(feature = "iterator")]
 pub fn get_all_collaterals(
     store: &dyn Storage,
