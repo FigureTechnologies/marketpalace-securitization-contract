@@ -51,6 +51,7 @@ pub fn get_all_states(storage: &dyn Storage) -> Vec<LoanPoolMarkerCollateral> {
         .collect();
     collateral
 }
+
 #[cfg(feature = "iterator")]
 pub fn get_all_collaterals(
     store: &dyn Storage,

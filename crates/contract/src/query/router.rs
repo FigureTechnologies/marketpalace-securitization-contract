@@ -2,7 +2,6 @@ use cosmwasm_std::Env;
 
 use crate::core::{
     aliases::{ProvDeps, ProvQueryResponse},
-    collateral,
     msg::QueryMsg,
 };
 

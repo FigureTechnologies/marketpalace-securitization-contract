@@ -148,7 +148,7 @@ mod tests {
     use crate::util::mock_marker::{MockMarker, DEFAULT_MARKER_ADDRESS, DEFAULT_MARKER_DENOM};
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::{mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary, Addr, BankMsg, CosmosMsg, Empty, Event, Response};
+    use cosmwasm_std::{coins, from_binary, Addr, Empty, Event, Response};
     use provwasm_mocks::mock_dependencies;
 
     #[test]
@@ -362,11 +362,10 @@ mod tests {
         }
 
         // transfer some value out of the marker
-        let addr = "addr1".to_string();
         let balance = coins(10, DEFAULT_MARKER_DENOM);
 
         // Update the balance for the given address
-        let old_balance = deps
+        let _update_balance = deps
             .querier
             .base
             .update_balance(DEFAULT_MARKER_ADDRESS, balance.clone());
