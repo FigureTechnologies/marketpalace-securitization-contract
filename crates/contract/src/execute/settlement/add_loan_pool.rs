@@ -16,6 +16,32 @@ use crate::storage::loan_pool_collateral::set;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
 use crate::util::provenance_utilities::{get_single_marker_coin_holding, query_total_supply};
 
+/// Handles loan pool additions.
+///
+/// This function accepts multiple loan pools and processes each loan pool. It first verifies
+/// whether the sender is authorized i.e. whether the sender is in the `whitelist_contributors`.
+/// It then creates a collateral for each loan pool, adds the collateral into the storage
+/// (using the `set` function) and then updates the response with loan pool related messages
+/// and events. If all the loan pools are successfully processed and collaterals are successfully
+/// added to each one of them, the function then updates the `response` attributes and data
+/// accordingly and returns it.
+///
+/// It is important to note that this function will fail if the sender is not in the whitelist of
+/// contributors i.e. `whitelist_contributors` does not contain the sender.
+///
+/// # Arguments
+/// * `deps` - A mutable reference to the provenance dependencies.
+/// * `env` - The environment in which the contract is running.
+/// * `info` - The information of the sender.
+/// * `loan_pools` - Loan pools to be contributed to.
+///
+/// # Returns
+/// * On Success - A `ProvTxResponse` containing updated response for each loan pool addition.
+///   The response includes newly computed collaterals, messages and events.
+///
+/// * On Failure - An Err variant of `ProvTxResponse` which might contain a `ContractError` if:
+///   - The sender is not in the whitelist contributors.
+///   - There is any underlying failure with processing any of the loan pools.
 pub fn handle(
     deps: ProvDepsMut,
     env: Env,
