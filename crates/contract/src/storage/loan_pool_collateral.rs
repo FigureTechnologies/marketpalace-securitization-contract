@@ -24,7 +24,8 @@ pub fn remove(
     storage: &mut dyn Storage,
     collateral: &LoanPoolMarkerCollateral,
 ) -> Result<(), ContractError> {
-    Ok(COLLATERAL.remove(storage, collateral.marker_address.clone()))
+    COLLATERAL.remove(storage, collateral.marker_address.clone());
+    Ok(())
 }
 
 pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
