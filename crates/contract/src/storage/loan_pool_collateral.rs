@@ -4,8 +4,20 @@ use crate::core::error::ContractError;
 use cosmwasm_std::{Addr, Order, Storage};
 use cw_storage_plus::Map;
 
+// Constant for the COLLATERAL storage map with an Addr as key and LoanPoolMarkerCollateral as value
 pub const COLLATERAL: Map<Addr, LoanPoolMarkerCollateral> = Map::new(LOAN_POOL_COLLATERAL);
 
+/// Get Collateral from storage.
+///
+/// ## Arguments
+///
+/// - `storage`: A reference to the contract's storage
+/// - `marker_address`: The address of a marker within the storage
+///
+/// ## Returns
+///
+/// - Returns a `Result` with `Ok` variant containing the `LoanPoolMarkerCollateral` if the get
+/// operation is successful, otherwise a `Err` variant containing `ContractError`.
 pub fn get(
     storage: &dyn Storage,
     marker_address: Addr,
@@ -13,6 +25,15 @@ pub fn get(
     Ok(COLLATERAL.load(storage, marker_address)?)
 }
 
+/// Save Collateral to storage.
+///
+/// - `storage`: A mutable reference to the contract's storage
+/// - `collateral`: The `LoanPoolMarkerCollateral` data to be saved to storage
+///
+/// ## Returns
+///
+/// - Returns a `Result` with `Ok` variant if the save operation is successful,
+/// otherwise a `Err` variant containing `ContractError`.
 pub fn set(
     storage: &mut dyn Storage,
     collateral: &LoanPoolMarkerCollateral,
@@ -20,6 +41,11 @@ pub fn set(
     Ok(COLLATERAL.save(storage, collateral.marker_address.clone(), collateral)?)
 }
 
+/// This function is declared as a public function named `remove`. This means it can be called from other modules.
+/// It expects two parameters:
+/// `storage`: a mutable reference to a trait object of dyn Storage. Traits are a way to group method signatures
+///           that define a specific behavior in a generic way. `dyn` keyword is used for dynamic dispatch.
+/// `collateral`: an immutable reference to an instance of LoanPoolMarkerCollateral.
 pub fn remove(
     storage: &mut dyn Storage,
     collateral: &LoanPoolMarkerCollateral,
@@ -28,8 +54,23 @@ pub fn remove(
     Ok(())
 }
 
-pub fn exists(storage: &dyn Storage, lp: Addr) -> bool {
-    COLLATERAL.has(storage, lp)
+/// function defining if the marker has been added to the pool.
+/// # Parameters
+///
+/// * `storage`: It takes a shared reference to a dynamic Storage trait object.
+/// * `marker_address`: An instance of `Addr` which is likely used to represent a specific address or location within the storage.
+///
+/// This function checks if a certain marker address exists within the storage by calling the `has` method on the `COLLATERAL` variable.
+///
+/// # Returns
+///
+/// A boolean value. Returning `true` if the `marker_address` exists in the `COLLATERAL`, otherwise `false`.
+///
+/// # Note
+///
+/// It's important to remember the behavior of the function could differ considerably based on the specific implementation of the `COLLATERAL`, `Storage` trait and `has` method.
+pub fn exists(storage: &dyn Storage, marker_address: Addr) -> bool {
+    COLLATERAL.has(storage, marker_address)
 }
 
 pub fn get_with_state(
