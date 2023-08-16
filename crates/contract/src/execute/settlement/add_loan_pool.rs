@@ -175,8 +175,14 @@ mod tests {
     use crate::util::mock_marker::{MockMarker, DEFAULT_MARKER_ADDRESS, DEFAULT_MARKER_DENOM};
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::{mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary, Addr, Empty, Event, Response};
+    use cosmwasm_std::CosmosMsg::Custom;
+    use cosmwasm_std::ReplyOn::Never;
+    use cosmwasm_std::{coins, from_binary, Addr, Empty, Event, Response, SubMsg};
     use provwasm_mocks::mock_dependencies;
+    use provwasm_std::MarkerMsgParams::RevokeMarkerAccess;
+    use provwasm_std::ProvenanceMsg;
+    use provwasm_std::ProvenanceMsgParams::Marker;
+    use provwasm_std::ProvenanceRoute::Marker as marker_route;
 
     #[test]
     fn test_coin_trade_with_valid_data() {
@@ -291,6 +297,23 @@ mod tests {
                     }
                 }
 
+                assert_eq!(response.messages.len(), 1);
+
+                let expected_msg1 = SubMsg {
+                    id: 0,
+                    msg: Custom(ProvenanceMsg {
+                        route: marker_route,
+                        params: Marker(RevokeMarkerAccess {
+                            denom: "markerdenom".parse().unwrap(),
+                            address: Addr::unchecked("contributor".to_string()),
+                        }),
+                        version: "2.0.0".parse().unwrap(),
+                    }),
+                    gas_limit: None,
+                    reply_on: Never,
+                };
+
+                assert_eq!(response.messages[0], expected_msg1);
                 assert!(found_event, "Failed to find loan_pool_added event");
                 assert!(found_attribute, "Failed to find added_by attribute");
             }
