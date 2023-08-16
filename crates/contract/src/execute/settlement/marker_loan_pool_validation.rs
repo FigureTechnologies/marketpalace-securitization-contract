@@ -20,7 +20,7 @@ fn get_contract_error(msg: String) -> Result<(), ContractError> {
 ///
 /// # Arguments
 /// * `marker` - A reference to the `Marker` to be validated.
-/// * `original_owner_address` - An optional address. If provided, the function checks whether this address has administrative privileges on the marker.
+/// * `original_owner_address` - An address, the function checks whether this address has administrative privileges on the marker.
 /// * `contract_address` - The address of the contract.
 /// * `expected_contract_permissions` - A reference to the permissions that the contract is expected to have on the marker.
 /// * `bank_supply` - The total supply held by the bank.
@@ -30,19 +30,18 @@ fn get_contract_error(msg: String) -> Result<(), ContractError> {
 /// * Returns a `Result` with `Err(ContractError)` if any of the checks fails. Each failure case has a unique error message that describes what went wrong.
 pub fn validate_marker_for_loan_pool_add_remove(
     marker: &Marker,
-    original_owner_address: Option<&Addr>,
+    original_owner_address: &Addr,
     contract_address: &Addr,
     expected_contract_permissions: &[MarkerAccess],
     bank_supply: Uint128,
 ) -> Result<(), ContractError> {
-    if let Some(original_owner_address) = original_owner_address {
-        if !marker_has_admin(marker, original_owner_address) {
-            return get_contract_error(format!(
-                "expected sender [{}] to have admin privileges on marker [{}]",
-                original_owner_address.as_str(),
-                marker.denom,
-            ));
-        }
+    if !marker_has_admin(marker, original_owner_address) {
+        // Update this line
+        return get_contract_error(format!(
+            "expected sender [{}] to have admin privileges on marker [{}]",
+            original_owner_address.as_str(),
+            marker.denom,
+        ));
     }
     if !marker_has_permissions(marker, contract_address, expected_contract_permissions) {
         return get_contract_error(format!(

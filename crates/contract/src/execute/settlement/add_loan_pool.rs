@@ -118,8 +118,8 @@ fn create_marker_pool_collateral(
     // 2. The supply of the marker is completely held by the marker.
     validate_marker_for_loan_pool_add_remove(
         &marker,
-        // New asks should verify that the sender owns the marker, and then revoke its permissions
-        Some(&info.sender),
+        // New loan pool contribution should verify that the sender owns the marker, and then revoke its permissions
+        &info.sender,
         &env.contract.address,
         &[MarkerAccess::Admin, MarkerAccess::Withdraw],
         supply,
@@ -132,6 +132,7 @@ fn create_marker_pool_collateral(
             marker.address.clone(),
             &marker.denom,
             get_single_marker_coin_holding(&marker)?.amount.u128(),
+            info.sender.to_owned(),
             marker
                 .permissions
                 .into_iter()
@@ -253,6 +254,7 @@ mod tests {
             marker_address: marker.address.clone(),
             marker_denom,
             share_count: marker.total_supply.atomics(),
+            original_contributor: info.sender.to_owned(),
             removed_permissions: if let Some(first_permission) = marker.permissions.first() {
                 vec![first_permission.clone()]
             } else {
@@ -405,6 +407,7 @@ mod tests {
             marker_address: marker.address.clone(),
             marker_denom,
             share_count: marker.total_supply.atomics(),
+            original_contributor: info.sender.to_owned(),
             removed_permissions: if let Some(first_permission) = marker.permissions.first() {
                 vec![first_permission.clone()]
             } else {
@@ -499,6 +502,7 @@ mod tests {
             marker_address: marker.address.clone(),
             marker_denom,
             share_count: marker.total_supply.atomics(),
+            original_contributor: info.sender.to_owned(),
             removed_permissions: if let Some(first_permission) = marker.permissions.first() {
                 vec![first_permission.clone()]
             } else {

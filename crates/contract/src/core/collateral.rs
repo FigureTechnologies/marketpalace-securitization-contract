@@ -9,19 +9,24 @@ pub struct LoanPoolMarkerCollateral {
     pub marker_address: Addr,
     pub marker_denom: String,
     pub share_count: Uint128,
+    pub original_contributor: Addr,
+    // this is the address with ADMIN privileges that added the marker to the securitization.
     pub removed_permissions: Vec<AccessGrant>,
 }
+
 impl LoanPoolMarkerCollateral {
     pub(crate) fn new<S: Into<String>>(
         marker_address: Addr,
         marker_denom: S,
         share_count: u128,
+        original_owner: Addr,
         removed_permissions: Vec<AccessGrant>,
     ) -> Self {
         Self {
             marker_address,
             marker_denom: marker_denom.into(),
             share_count: Uint128::new(share_count),
+            original_contributor: original_owner,
             removed_permissions,
         }
     }

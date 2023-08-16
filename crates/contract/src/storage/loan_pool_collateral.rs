@@ -104,7 +104,7 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let marker_address = Addr::unchecked("addr1");
 
-        let collateral = sample_collateral("addr1", "denom", 100, Vec::new());
+        let collateral = sample_collateral("addr1", "denom", 100, Vec::new(), "owner");
         // Test setting collateral
         set(&mut deps.storage, &collateral).unwrap();
         let result = get(&deps.storage, marker_address.clone()).unwrap();
@@ -124,7 +124,7 @@ mod tests {
             permissions: vec![MarkerAccess::Mint, MarkerAccess::Transfer],
             address: Addr::unchecked("addr2"),
         }];
-        let collateral = sample_collateral("addr1", "denom", 100, permissions.clone());
+        let collateral = sample_collateral("addr1", "denom", 100, permissions.clone(), "owner");
 
         // Test setting collateral
         set(&mut deps.storage, &collateral).unwrap();
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn test_exists() {
         let mut deps = mock_dependencies(&[]);
-        let collateral = sample_collateral("addr1", "denom", 100, Vec::new());
+        let collateral = sample_collateral("addr1", "denom", 100, Vec::new(), "owner");
 
         // Test existence after setting
         set(&mut deps.storage, &collateral).unwrap();
@@ -156,13 +156,16 @@ mod tests {
         denom: &str,
         amount: u128,
         permissions: Vec<AccessGrant>,
+        original_owner: &str,
     ) -> LoanPoolMarkerCollateral {
         let marker_address = Addr::unchecked(addr);
+        let original_owner = Addr::unchecked(original_owner);
 
         LoanPoolMarkerCollateral::new(
             marker_address.clone(),
             denom.to_string(),
             amount,
+            original_owner,
             permissions,
         )
     }
@@ -172,9 +175,9 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
 
         // Set up different collaterals
-        let collateral1 = sample_collateral("addr1", "denom1", 100, Vec::new());
-        let collateral2 = sample_collateral("addr2", "denom1", 200, Vec::new());
-        let collateral3 = sample_collateral("addr3", "denom2", 300, Vec::new());
+        let collateral1 = sample_collateral("addr1", "denom1", 100, Vec::new(), "owner");
+        let collateral2 = sample_collateral("addr2", "denom1", 200, Vec::new(), "owner");
+        let collateral3 = sample_collateral("addr3", "denom2", 300, Vec::new(), "owner");
 
         // Store them
         set(&mut deps.storage, &collateral1).unwrap();
@@ -184,7 +187,7 @@ mod tests {
         // Search with denom1 state
         let results = get_with_state(
             &deps.storage,
-            sample_collateral("", "denom1", 0, Vec::new()),
+            sample_collateral("", "denom1", 0, Vec::new(), "owner"),
         );
         assert_eq!(results.len(), 2);
         assert_eq!(results.contains(&collateral1), true);
@@ -196,9 +199,9 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
 
         // Set up different collaterals
-        let collateral1 = sample_collateral("addr1", "denom1", 100, Vec::new());
-        let collateral2 = sample_collateral("addr2", "denom1", 200, Vec::new());
-        let collateral3 = sample_collateral("addr3", "denom2", 300, Vec::new());
+        let collateral1 = sample_collateral("addr1", "denom1", 100, Vec::new(), "owner");
+        let collateral2 = sample_collateral("addr2", "denom1", 200, Vec::new(), "owner");
+        let collateral3 = sample_collateral("addr3", "denom2", 300, Vec::new(), "owner");
 
         // Store them
         set(&mut deps.storage, &collateral1).unwrap();
