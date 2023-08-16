@@ -116,7 +116,6 @@ pub struct QueryLoanPoolContributorsResponse {
     pub contributors: Vec<Addr>,
 }
 
-
 #[cw_serde]
 pub struct QueryVersionResponse {
     pub contract_version: ContractVersion,

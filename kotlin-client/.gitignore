@@ -1,0 +1,5 @@
+.idea
+.gradle/
+build
+# Integration Test cloned wasm file directory
+src/integrationTest/resources/artifacts/

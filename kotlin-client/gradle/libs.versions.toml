@@ -1,0 +1,40 @@
+[versions]
+assetSpec = "1.0.0"
+bouncyCastle = "1.70"
+jackson = "2.13.3"
+jacksonProtobuf = "0.9.12"
+kotlin = "1.6.10"
+kotlinCoroutines = "1.6.2"
+kotlinLogging = "2.1.21"
+logback = "1.2.6"
+mockk = "1.12.4"
+protobuf = "3.21.1"
+provenanceClient = "1.1.1"
+provenanceHdWallet = "0.1.15"
+provenanceProtoKotlin = "1.11.0"
+provenanceScope = "0.6.0"
+testContainers = "1.17.2"
+
+[libraries]
+assetSpec = { module = "io.provenance.spec:asset-specs", version.ref = "assetSpec" }
+bouncyCastle = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncyCastle" }
+coroutinesCoreJvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version.ref = "kotlinCoroutines" }
+coroutinesJdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinCoroutines" }
+jacksonDataTypeJdk8 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jdk8", version.ref = "jackson" }
+jacksonDataTypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+jacksonDataTypeProtobuf = { module = "com.hubspot.jackson:jackson-datatype-protobuf", version.ref = "jacksonProtobuf" }
+jacksonModuleKotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+kotlinLogging = { module = "io.github.microutils:kotlin-logging-jvm", version.ref = "kotlinLogging" }
+kotlinStdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+protobuf = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+protobufUtil = { module = "com.google.protobuf:protobuf-java-util", version.ref = "protobuf" }
+provenanceGrpcClient = { module = "io.provenance.client:pb-grpc-client-kotlin", version.ref = "provenanceClient" }
+provenanceHdWallet = { module = "io.provenance.hdwallet:hdwallet", version.ref = "provenanceHdWallet" }
+provenanceProtoKotlin = { module = "io.provenance:proto-kotlin", version.ref = "provenanceProtoKotlin" }
+provenanceScopeEncryption = { module = "io.provenance.scope:encryption", version.ref = "provenanceScope" }
+provenanceScopeUtil = { module = "io.provenance.scope:util", version.ref = "provenanceScope" }
+testContainers = { module = "org.testcontainers:testcontainers", version.ref = "testContainers" }
+testContainersJUnit = { module = "org.testcontainers:junit-jupiter", version.ref = "testContainers" }

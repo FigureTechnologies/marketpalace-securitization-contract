@@ -31,11 +31,9 @@ use cosmwasm_std::{to_binary, Storage};
 /// }
 /// ```
 pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
-    Ok(to_binary(
-        &QueryLoanPoolCollateralResponse {
-            collaterals: get_all_states(storage),
-        },
-    )?)
+    Ok(to_binary(&QueryLoanPoolCollateralResponse {
+        collaterals: get_all_states(storage),
+    })?)
 }
 
 #[cfg(test)]
