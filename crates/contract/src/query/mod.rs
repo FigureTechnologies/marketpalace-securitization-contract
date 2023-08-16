@@ -6,3 +6,4 @@ mod query_state;
 mod query_version;
 pub mod router;
 pub mod validate;
+pub mod query_white_list_contributors;

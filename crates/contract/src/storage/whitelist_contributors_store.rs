@@ -89,29 +89,41 @@ pub fn remove_contributors(
 
     Ok(())
 }
-
-/// Gets all the whitelist participants.
+/// This function retrieves the list of contributors from the whitelist in the given storage.
 ///
 /// # Arguments
 ///
-/// * `storage` - A reference to the contract's storage.
+/// * `storage` - A storage object implementing the `Storage` trait. This is where the function
+///   looks for the whitelist of contributors.
 ///
 /// # Returns
 ///
-/// * A `Result` which is:
-///     - `Ok(Vec<Addr>)` containing all the whitelist contributors on success.
-///     - `Err(ContractError)` on failure, where `ContractError` is an enum defined within the contract to handle possible error cases.
+/// * A `Vec<Addr>` representing the list of contributors. If the whitelist cannot be loaded from storage,
+///   this function will return an empty `Vec<Addr>`.
 ///
-/// # Example
+/// # Examples
 ///
-/// ```ignore
-/// let whitelist = get_whitelist_contributors(deps.storage);
 /// ```
-pub fn get_whitelist_contributors(storage: &dyn Storage) -> Result<Vec<Addr>, ContractError> {
-    // Load current contributors from the storage
-    let contributors = WHITELIST.load(storage).unwrap_or_else(|_| vec![]);
-
-    Ok(contributors)
+/// use your_storage_lib::Storage;
+/// use your_other_lib::Addr;
+/// use your_utils_lib::Item;
+///
+/// // Assuming a valid storage object and a populated whitelist
+/// let storage = get_storage(); // Placeholder function
+/// let contributors = get_whitelist_contributors(&storage);
+/// println!("{:#?}", contributors);
+/// ```
+///
+/// # Panics
+///
+/// This function will panic if an error occurs while loading the whitelist from storage and will return
+/// an empty vector as default.
+///
+/// # Safety
+///
+/// This function assumes the storage provided can correctly and safely load the items requested.
+pub fn get_whitelist_contributors(storage: &dyn Storage) -> Vec<Addr> {
+    WHITELIST.load(storage).unwrap_or_else(|_| vec![])
 }
 
 #[cfg(test)]
@@ -180,13 +192,13 @@ mod tests {
         let addr2 = Addr::unchecked("addr2");
 
         // Test getting contributors when there are none
-        let empty_contributors = get_whitelist_contributors(&storage).unwrap();
+        let empty_contributors = get_whitelist_contributors(&storage);
         assert!(empty_contributors.is_empty());
 
         // Test getting contributors when there are some
         let contributors = vec![addr1.clone(), addr2.clone()];
         save_contributors(&mut storage, contributors.clone()).unwrap();
-        let stored_contributors = get_whitelist_contributors(&storage).unwrap();
+        let stored_contributors = get_whitelist_contributors(&storage);
         assert_eq!(stored_contributors, contributors);
 
         Ok(())

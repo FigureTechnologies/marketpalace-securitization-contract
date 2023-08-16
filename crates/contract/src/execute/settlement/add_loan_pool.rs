@@ -49,7 +49,7 @@ pub fn handle(
     loan_pools: ContributeLoanPools,
 ) -> ProvTxResponse {
     // Load whitelist contributors from storage
-    let whitelist_contributors = get_whitelist_contributors(deps.storage)?;
+    let whitelist_contributors = get_whitelist_contributors(deps.storage);
 
     // Check if sender is in the whitelist
     if !whitelist_contributors.contains(&info.sender) {

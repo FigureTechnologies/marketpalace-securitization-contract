@@ -77,6 +77,9 @@ pub enum QueryMsg {
 
     #[returns(QueryLoanPoolCollateralResponse)]
     QueryCollaterals {},
+
+    #[returns(QueryLoanPoolContributorsResponse)]
+    QueryLoanPoolContributors {},
 }
 
 #[cw_serde]
@@ -107,6 +110,12 @@ pub struct QueryStateResponse {
 pub struct QueryLoanPoolCollateralResponse {
     pub collaterals: Vec<LoanPoolMarkerCollateral>,
 }
+
+#[cw_serde]
+pub struct QueryLoanPoolContributorsResponse {
+    pub contributors: Vec<Addr>,
+}
+
 
 #[cw_serde]
 pub struct QueryVersionResponse {
