@@ -35,7 +35,7 @@ pub fn remove_loan_pool_contributors(
 
     let response = Response::new()
         .add_attribute("action", "whitelist_removed")
-        .add_attribute("address_removed", contributors_str);
+        .add_attribute("whitelist_address_removed", contributors_str);
 
     Ok(response)
 }
@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(response.attributes.len(), 2);
         assert_eq!(response.attributes[0].key, "action");
         assert_eq!(response.attributes[0].value, "whitelist_removed");
-        assert_eq!(response.attributes[1].key, "address_removed");
+        assert_eq!(response.attributes[1].key, "whitelist_address_removed");
         assert_eq!(response.attributes[1].value, "addr1,addr2");
 
         // Test adding contributors by someone else

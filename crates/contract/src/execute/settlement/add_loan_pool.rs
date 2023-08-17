@@ -81,7 +81,8 @@ pub fn handle(
         .iter()
         .any(|event| event.ty == "loan_pool_added")
     {
-        response = response.add_attribute("added_by", info.sender);
+        response = response.add_attribute("loan_pool_added_by", info.sender);
+        response = response.add_attribute("action", "loan_pool_added");
     }
     // Set response data to collaterals vector
     response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
@@ -102,7 +103,7 @@ fn create_marker_pool_collateral(
         Err(e) => {
             return Err(ContractError::InvalidMarker {
                 message: format!("Unable to get marker by denom: {}", e),
-            })
+            });
         }
     };
 
@@ -281,21 +282,36 @@ mod tests {
 
                 // Checking response attributes and events
                 let mut found_event = false;
-                let mut found_attribute = false;
 
+                assert_eq!(response.events.len(), 1);
+                assert_eq!(response.attributes.len(), 2);
                 for event in response.events.iter() {
                     if event.ty == "loan_pool_added" {
                         found_event = true;
-                        // Check event attributes here if needed
+                    }
+                }
+                let mut found_attributes: Vec<String> = Vec::new();
+
+                for attribute in response.attributes.iter() {
+                    match attribute.key.as_str() {
+                        "loan_pool_added_by" => {
+                            assert_eq!(attribute.value, info.sender.clone());
+                            found_attributes.push(attribute.key.clone());
+                        }
+                        "action" => {
+                            assert_eq!(attribute.value, "loan_pool_added");
+                            found_attributes.push(attribute.key.clone());
+                        }
+                        // Add more keys to check here
+                        _ => (),
                     }
                 }
 
-                for attribute in response.attributes.iter() {
-                    if attribute.key == "added_by" {
-                        assert_eq!(attribute.value, info.sender.clone());
-                        found_attribute = true;
-                    }
-                }
+                assert_eq!(
+                    found_attributes.len(),
+                    2,
+                    "Did not find all required attributes"
+                );
 
                 assert_eq!(response.messages.len(), 1);
 
@@ -315,7 +331,6 @@ mod tests {
 
                 assert_eq!(response.messages[0], expected_msg1);
                 assert!(found_event, "Failed to find loan_pool_added event");
-                assert!(found_attribute, "Failed to find added_by attribute");
             }
             Err(e) => panic!("Error: {:?}", e),
         }
@@ -386,7 +401,7 @@ mod tests {
     fn test_handle_in_whitelist_validation_fail() {
         let mut deps = mock_dependencies(&[]);
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
-        let marker = MockMarker::new_owned_marker_supply_variable("contributor");
+        let marker = MockMarker::new_owned_marker_custom("contributor", None, false);
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
@@ -481,11 +496,12 @@ mod tests {
     fn test_handle_in_whitelist_validation_success() {
         let mut deps = mock_dependencies(&[]);
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
-        let marker = MockMarker::new_owned_marker_supply_variable("contributor");
+        let marker = MockMarker::new_owned_marker_custom("contributor", None, false);
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
         let info = mock_info("contributor", &[]);
+        // use gp
         let info_white_list = mock_info("gp", &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
@@ -556,11 +572,132 @@ mod tests {
                 }
 
                 for attribute in response.attributes.iter() {
-                    if attribute.key == "added_by" {
+                    if attribute.key == "loan_pool_added_by" {
                         assert_eq!(attribute.value, info.sender.clone());
                         found_attribute = true;
                     }
                 }
+
+                assert!(found_event, "Failed to find loan_pool_added event");
+                assert!(found_attribute, "Failed to find added_by attribute");
+            }
+            Err(e) => match e {
+                ContractError::InvalidMarker { .. } => (), // continue
+                unexpected_error => panic!("Error: {:?}", unexpected_error),
+            },
+        }
+    }
+
+    #[test]
+    fn test_handle_in_whitelist_validation_success_multiple() {
+        let mut deps = mock_dependencies(&[]);
+        instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
+        let marker = MockMarker::new_owned_marker_custom("contributor", None, false);
+        let some_other_marker =
+            MockMarker::new_owned_marker_custom("contributor", Some("some_other_denom"), false);
+        deps.querier
+            .with_markers(vec![marker.clone(), some_other_marker.clone()]);
+        let env = mock_env();
+        let info = mock_info("contributor", &[]);
+        let info_white_list = mock_info("gp", &[]);
+        let addr_contributor = Addr::unchecked("contributor");
+        let white_list_addr = vec![addr_contributor.clone()];
+        let whitelist_result =
+            whitelist_loanpool_handle(deps.as_mut(), info_white_list.sender, white_list_addr);
+        assert!(whitelist_result.is_ok());
+        match whitelist_result {
+            Ok(response) => {
+                for attribute in response.attributes.iter() {
+                    if attribute.key == "action" {
+                        assert_eq!(attribute.value, "whitelist_added");
+                    } else if attribute.key == "address_whitelisted" {
+                        // Verify if the addresses are correct
+                        let whitelisted_addresses: Vec<&str> = attribute.value.split(",").collect();
+                        assert_eq!(whitelisted_addresses, vec!["contributor"]);
+                    }
+                }
+            }
+            Err(e) => panic!("Error: {:?}", e),
+        }
+
+        // Create a loan pool
+        let loan_pools = ContributeLoanPools {
+            markers: vec![marker.denom.to_owned(), some_other_marker.denom.to_owned()],
+        };
+
+        let expected_collaterals = vec![
+            LoanPoolMarkerCollateral {
+                marker_address: marker.address.clone(),
+                marker_denom: marker.denom.to_owned(),
+                share_count: marker.total_supply.atomics(),
+                original_contributor: info.sender.to_owned(),
+                removed_permissions: if let Some(first_permission) = marker.permissions.first() {
+                    vec![first_permission.clone()]
+                } else {
+                    vec![]
+                },
+            },
+            LoanPoolMarkerCollateral {
+                marker_address: some_other_marker.address.clone(),
+                marker_denom: some_other_marker.denom.to_owned(),
+                share_count: some_other_marker.total_supply.atomics(),
+                original_contributor: info.sender.to_owned(),
+                removed_permissions: if let Some(first_permission) =
+                    some_other_marker.permissions.first()
+                {
+                    vec![first_permission.clone()]
+                } else {
+                    vec![]
+                },
+            },
+        ];
+        // Call the handle function
+        let loan_pool_result =
+            add_loanpool_handle(deps.as_mut(), env.to_owned(), info.clone(), loan_pools);
+        // Assert that the result is an error
+        assert!(loan_pool_result.is_ok());
+        match loan_pool_result {
+            Ok(response) => {
+                // Checking response data
+                let loan_pool_markers: LoanPoolMarkers =
+                    from_binary(&response.data.unwrap()).unwrap();
+                assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
+
+                // Checking response attributes and events
+                let mut found_event = false;
+                let mut found_attribute = false;
+
+                for event in response.events.iter() {
+                    if event.ty == "loan_pool_added" {
+                        found_event = true;
+                        // Check event attributes here if needed
+                    }
+                }
+
+                for attribute in response.attributes.iter() {
+                    if attribute.key == "loan_pool_added_by" {
+                        assert_eq!(attribute.value, info.sender.clone());
+                        found_attribute = true;
+                    }
+                }
+
+                assert_eq!(response.messages.len(), 2);
+
+                let expected_msg1 = SubMsg {
+                    id: 0,
+                    msg: Custom(ProvenanceMsg {
+                        route: marker_route,
+                        params: Marker(RevokeMarkerAccess {
+                            denom: "markerdenom".parse().unwrap(),
+                            address: Addr::unchecked("contributor".to_string()),
+                        }),
+                        version: "2.0.0".parse().unwrap(),
+                    }),
+                    gas_limit: None,
+                    reply_on: Never,
+                };
+
+                assert_eq!(response.messages[0], expected_msg1);
 
                 assert!(found_event, "Failed to find loan_pool_added event");
                 assert!(found_attribute, "Failed to find added_by attribute");

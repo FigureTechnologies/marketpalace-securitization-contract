@@ -69,7 +69,8 @@ pub fn handle(
         .iter()
         .any(|event| event.ty == "loan_pool_withdrawn")
     {
-        response = response.add_attribute("removed_by", info.sender);
+        response = response.add_attribute("action", "loan_pool_removed");
+        response = response.add_attribute("loan_pool_removed_by", info.sender);
     }
     // Set response data to collaterals vector
     response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
@@ -208,7 +209,7 @@ mod tests {
                 }
 
                 for attribute in response.attributes.iter() {
-                    if attribute.key == "added_by" {
+                    if attribute.key == "loan_pool_added_by" {
                         assert_eq!(attribute.value, info.sender.clone());
                         found_attribute = true;
                     }
@@ -240,10 +241,10 @@ mod tests {
                 let withdraw_loan_pool_result: LoanPoolMarkers =
                     from_binary(&response.data.unwrap()).unwrap();
                 assert_eq!(withdraw_loan_pool_result.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
-
+                assert_eq!(response.events.len(), 1);
+                assert_eq!(response.attributes.len(), 2);
                 // Checking response attributes and events
                 let mut found_event = false;
-                let mut found_attribute = false;
 
                 for event in response.events.iter() {
                     if event.ty == "loan_pool_withdrawn" {
@@ -252,12 +253,28 @@ mod tests {
                     }
                 }
 
+                let mut found_attributes: Vec<String> = Vec::new();
+
                 for attribute in response.attributes.iter() {
-                    if attribute.key == "removed_by" {
-                        assert_eq!(attribute.value, info.sender.clone());
-                        found_attribute = true;
+                    match attribute.key.as_str() {
+                        "loan_pool_removed_by" => {
+                            assert_eq!(attribute.value, info.sender.clone());
+                            found_attributes.push(attribute.key.clone());
+                        }
+                        "action" => {
+                            assert_eq!(attribute.value, "loan_pool_removed");
+                            found_attributes.push(attribute.key.clone());
+                        }
+                        // Add more keys to check here
+                        _ => (),
                     }
                 }
+
+                assert_eq!(
+                    found_attributes.len(),
+                    2,
+                    "Did not find all required attributes"
+                );
 
                 assert_eq!(response.messages.len(), 2);
 
@@ -294,7 +311,6 @@ mod tests {
                 assert_eq!(response.messages[1], expected_msg2);
 
                 assert!(found_event, "Failed to find loan_pool_withdrawn event");
-                assert!(found_attribute, "Failed to find withdrawn_by attribute");
             }
             Err(e) => panic!("Error: {:?}", e),
         }

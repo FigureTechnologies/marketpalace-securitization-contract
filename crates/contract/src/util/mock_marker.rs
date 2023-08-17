@@ -49,10 +49,10 @@ impl Default for MockMarker {
 }
 
 impl MockMarker {
-    pub fn new(supply_fixed: bool) -> Self {
+    pub fn new(supply_fixed: bool, denom_str: String) -> Self {
         Self {
             address: Addr::unchecked(DEFAULT_MARKER_ADDRESS),
-            coins: coins(DEFAULT_MARKER_HOLDINGS, DEFAULT_MARKER_DENOM),
+            coins: coins(DEFAULT_MARKER_HOLDINGS, denom_str.to_owned()),
             account_number: 50,
             sequence: 0,
             manager: "".to_string(),
@@ -68,7 +68,7 @@ impl MockMarker {
                 ],
             }],
             status: MarkerStatus::Active,
-            denom: DEFAULT_MARKER_DENOM.to_string(),
+            denom: denom_str.to_owned(),
             total_supply: decimal(DEFAULT_MARKER_HOLDINGS),
             marker_type: MarkerType::Coin,
             supply_fixed, // 'supply_fixed' passed as argument
@@ -96,7 +96,14 @@ impl MockMarker {
         }
     }
 
-    pub fn new_owned_mock_marker_supply_variable<S: Into<String>>(owner_address: S) -> Self {
+    pub fn new_owned_mock_marker_supply_variable<S: Into<String>>(
+        owner_address: S,
+        denom: Option<S>,
+        supply_fixed: bool,
+    ) -> Self {
+        let default_denom = DEFAULT_MARKER_DENOM;
+        let denom_str = denom.map_or(default_denom.into(), Into::into);
+
         Self {
             // permissions: AccessGrant array that always leads with owner permission in test code
             permissions: vec![
@@ -109,7 +116,7 @@ impl MockMarker {
                     permissions: vec![MarkerAccess::Admin, MarkerAccess::Withdraw],
                 },
             ],
-            ..Self::new(false)
+            ..Self::new(supply_fixed, denom_str)
         }
     }
 
@@ -117,8 +124,13 @@ impl MockMarker {
         Self::new_owned_mock_marker(owner_address).to_marker()
     }
 
-    pub fn new_owned_marker_supply_variable<S: Into<String>>(owner_address: S) -> Marker {
-        Self::new_owned_mock_marker_supply_variable(owner_address).to_marker()
+    pub fn new_owned_marker_custom<S: Into<String>>(
+        owner_address: S,
+        denom_str: Option<S>,
+        supply_fixed: bool,
+    ) -> Marker {
+        Self::new_owned_mock_marker_supply_variable(owner_address, denom_str, supply_fixed)
+            .to_marker()
     }
 
     pub fn to_marker(self) -> Marker {
