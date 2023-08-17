@@ -31,7 +31,7 @@ pub fn handle(
 
     let mut collaterals = Vec::new();
 
-    // Validate addresses and fetch removal data
+    // Fetch removal data
     let removal_data: Vec<_> = loan_pools
         .markers
         .iter()
@@ -63,7 +63,7 @@ pub fn handle(
         );
     }
 
-    // Add added_by attribute only if loan_pool_added event is added
+    // Add removed_by attribute only if loan_pool_withdrawn event is added
     if response
         .events
         .iter()
