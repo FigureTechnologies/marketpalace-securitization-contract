@@ -90,6 +90,28 @@ pub fn handle(
     Ok(response)
 }
 
+/// Creates the collateral for a specified marker pool. This function
+/// gets and validates the marker, computes the total supply, checks if
+/// the caller of the function has admin rights to the marker, checks
+/// if the supply of the marker is completely held by the marker and
+/// upon success, it fetches messages to revoke marker permissions and updates the response
+/// with collateral data and messages regarding admin rights
+///
+/// Parameters:
+/// * `deps`: the dependency object giving access to contract's storage, APIs for making queries on blockchain, etc.
+/// * `info`: the information of the message
+/// * `env`: the environment information where the contract is executed.
+/// * `marker_denom`: the denom of the marker.
+///
+/// Returns:
+/// * `Result<collateral::LoanPoolAdditionData, ContractError>`: Result object which on success contains custom LoanPoolAddtionData value
+///   or a custom ContractError enumeration, which represents an error.
+///
+/// # Errors
+/// * if unable to fetch the marker by denom.
+/// * if unable to fetch the marker's total supply.
+/// * if unable to validate the marker for addition to loan pool
+/// * if unable to get messages to revoke the marker's permissions
 fn create_marker_pool_collateral(
     deps: &DepsMut<ProvenanceQuery>,
     info: &MessageInfo,
@@ -144,7 +166,19 @@ fn create_marker_pool_collateral(
     }
     .to_ok()
 }
-
+/// A helper function to construct messages required to revoke marker permissions
+///
+/// The function filters through access grants on the marker and prepares revoke messages
+/// for those permissions where the granted access is not to this contract. These messages
+/// can then be executed on chain to actually revoke the access.
+///
+/// Parameters:
+/// * `marker`: the marker object from which permissions are to be revoked
+/// * `contract_address`: the address of this contract
+///
+/// Returns:
+/// * `Result<Vec<CosmosMsg<ProvenanceMsg>>, ContractError>`: A result object containing either a vector of messages to revoke access
+///   or a custom ContractError enumeration, which represents an error.
 fn get_marker_permission_revoke_messages(
     marker: &Marker,
     contract_address: &Addr,
