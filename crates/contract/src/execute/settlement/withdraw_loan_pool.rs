@@ -13,6 +13,27 @@ use crate::{
     storage::state::{self},
 };
 
+/// Handle function that processes a list of loan pools to be withdrawn.
+///
+/// This function is invoked when a loan pool is to be withdrawn. It performs operations
+/// such as checking prerequisites i.e the sender must be the same as the initialized "gp",
+/// releasing the marker to the contract, updating state accordingly by removing the marker
+/// and updating the response.
+///
+/// Parameters:
+/// * `deps`: the storage dependency object that gives access to the relevant dependencies.
+/// * `env`: the environment details of the contract.
+/// * `info`: the message information.
+/// * `loan_pools`: withdraw loan pools object.
+///
+/// Returns:
+/// * `ProvTxResponse`: the status of the operation in form of `ProvTxResponse` object.
+///
+/// # Panics
+/// * if the sender is not the same as the "gp".
+/// * if the marker address from the marker denom does not exist.
+/// * if getting a marker by denom fails.
+/// * if `deps.storage` is not populated.
 pub fn handle(
     deps: ProvDepsMut,
     env: Env,

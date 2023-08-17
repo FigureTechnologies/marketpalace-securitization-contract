@@ -9,6 +9,23 @@ use crate::{
     storage::state::{self},
 };
 
+/// Handle function that processes removal of contributors from the loan pool whitelist.
+///
+/// This function gets triggered when a request to remove loan pool contributors is made.
+/// It first verifies that only the "gp" is authorized to make this request.
+/// It then calls the helper function `remove_loan_pool_contributors` to remove contributors from the loan pool.
+///
+/// Parameters:
+/// * `deps`: the storage dependency object that provides access to the relevant dependencies.
+/// * `sender`: the address of the entity attempting to remove a contributor.
+/// * `contributors`: a vector of contributor addresses that are supposed to be removed from the whitelist.
+///
+/// Returns:
+/// * `ProvTxResponse`: the status of the operation in the form of `ProvTxResponse` object.
+///
+/// # Panics
+/// * if the sender is not the same as the "gp".
+/// * if the contract's storage is not populated.
 pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
     if sender != state.gp {
@@ -19,6 +36,21 @@ pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> P
     remove_loan_pool_contributors(&mut deps, contributors)
 }
 
+/// Helper function to remove contributors from the loan pool.
+///
+/// This function is invoked by the handle function to execute the removal of contributors.
+/// It removes the contributors from the contract storage and constructs a response
+/// indicating success and specifying the contributors that were removed.
+///
+/// Parameters:
+/// * `deps`: the storage dependency object that provides access to the relevant dependencies.
+/// * `loan_pool_contributors`: a vector of contributor addresses that are supposed to be removed from the loan pool.
+///
+/// Returns:
+/// * `ProvTxResponse`: the status of the operation in the form of `ProvTxResponse` object.
+///
+/// # Panics
+/// * if unable to remove contributors from the contract's storage.
 pub fn remove_loan_pool_contributors(
     deps: &mut ProvDepsMut,
     loan_pool_contributors: Vec<Addr>,
