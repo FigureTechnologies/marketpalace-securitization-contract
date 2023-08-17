@@ -19,6 +19,13 @@ pub fn handle(mut deps: ProvDepsMut, sender: Addr, contributors: Vec<Addr>) -> P
     loan_pool_contributors(&mut deps, contributors)
 }
 
+/// This method is used to process loan pool contributors.
+/// It starts by saving the contributors list using `save_contributors` function.
+/// Then it first transforms each contributor `Addr` object into a String,
+/// and joins them into a single `String` separated by commas.
+/// Finally, it generates a `Response` with a couple of attributes: action and addresses,
+/// and returns this Response. The method signature suggests it can also return
+/// an error, which would likely be if saving contributors fails.
 pub fn loan_pool_contributors(
     deps: &mut ProvDepsMut,
     loan_pool_contributors: Vec<Addr>,
