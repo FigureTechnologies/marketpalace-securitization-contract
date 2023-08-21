@@ -5,7 +5,10 @@ use crate::core::{
     msg::QueryMsg,
 };
 
-use super::{query_commitments, query_investor, query_securitizations, query_state, query_version};
+use super::{
+    query_commitments, query_investor, query_loan_pool_collaterals, query_securitizations,
+    query_state, query_version, query_white_list_contributors,
+};
 
 pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
     match msg {
@@ -18,6 +21,10 @@ pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
         }
         QueryMsg::QueryState {} => query_state::handle(deps.storage),
         QueryMsg::QueryVersion {} => query_version::handle(deps.storage),
+        QueryMsg::QueryCollaterals {} => query_loan_pool_collaterals::handle(deps.storage),
+        QueryMsg::QueryLoanPoolContributors {} => {
+            query_white_list_contributors::handle(deps.storage)
+        }
     }
 }
 

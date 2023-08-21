@@ -42,3 +42,23 @@ pub struct AcceptedCommitment {
     pub lp: Addr,
     pub securities: Vec<SecurityCommitment>,
 }
+
+#[cw_serde]
+pub struct ContributeLoanPools {
+    pub markers: Vec<String>, // marker denom's for loan pools being contributed.
+}
+
+#[cw_serde]
+pub struct WithdrawLoanPools {
+    pub markers: Vec<String>, // marker denom's for loan pools being withdrawn, done by the GP
+}
+
+#[cw_serde]
+pub struct LoanPoolContributors {
+    pub addresses: Vec<Addr>, // white list of addresses allowed to contribute loan pols to the securitization
+}
+
+#[cw_serde]
+pub struct RemoveLoanPoolContributors {
+    pub addresses: Vec<Addr>, // white list of addresses allowed to contribute loan pols to the securitization
+}

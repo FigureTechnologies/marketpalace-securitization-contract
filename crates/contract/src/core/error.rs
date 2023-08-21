@@ -3,7 +3,7 @@ use thiserror::Error;
 
 use super::aliases::ProvTxResponse;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
@@ -82,6 +82,15 @@ pub enum ContractError {
 
     #[error("Semver parsing error: {0}")]
     SemVer(String),
+
+    #[error("Loan pool contributor not in whitelist")]
+    NotInWhitelist {},
+
+    #[error("Invalid marker: {message}")]
+    InvalidMarker { message: String },
+
+    #[error("Invalid address: {message}")]
+    InvalidAddress { message: String },
 }
 
 pub fn contract_error(err: &str) -> ProvTxResponse {
