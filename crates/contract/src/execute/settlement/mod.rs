@@ -3,7 +3,6 @@ pub mod add_loan_pool;
 pub mod cancel_commitment;
 pub mod commitment;
 pub mod deposit_commitment;
-pub mod extensions;
 pub mod marker_loan_pool_validation;
 pub mod propose_commitment;
 pub mod remove_whitelist_loanpool_contributors;

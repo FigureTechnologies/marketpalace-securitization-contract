@@ -91,6 +91,7 @@ dependencies = [
  "cw2",
  "provwasm-mocks",
  "provwasm-std",
+ "result-extensions",
  "schemars",
  "semver",
  "serde",
@@ -630,6 +631,12 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
 ]
+
+[[package]]
+name = "result-extensions"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6a16927a77de33f43b4f98a52bd08ae9d17e3a5d98e4a413d54b5fb431cfd6b"
 
 [[package]]
 name = "rfc6979"

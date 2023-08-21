@@ -1,5 +1,4 @@
 use crate::core::error::ContractError;
-use crate::execute::settlement::extensions::ResultExtensions;
 use cosmwasm_std::{
     coin, Addr, BankQuery, Coin, CosmosMsg, DepsMut, StdResult, SupplyResponse, Uint128,
 };
@@ -7,6 +6,7 @@ use provwasm_std::{
     grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg,
     ProvenanceQuery,
 };
+use result_extensions::ResultExtensions;
 
 pub const NHASH: &str = "nhash";
 

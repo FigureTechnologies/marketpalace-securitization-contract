@@ -3,6 +3,7 @@ use provwasm_std::{
     revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier,
     ProvenanceQuery,
 };
+use result_extensions::ResultExtensions;
 
 use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
 use crate::core::{
@@ -10,7 +11,6 @@ use crate::core::{
     error::ContractError,
     security::ContributeLoanPools,
 };
-use crate::execute::settlement::extensions::ResultExtensions;
 use crate::execute::settlement::marker_loan_pool_validation::validate_marker_for_loan_pool_add_remove;
 use crate::storage::loan_pool_collateral::set;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
