@@ -53,15 +53,21 @@ pub fn handle(
     // convert the security commitment into actual fund coin
     // assumes for now that the deposit == commitment
     let funds = calculate_funds(&deps, &deposit, &state.capital_denom)?;
+    if funds.is_empty() {
+        return Err(crate::core::error::ContractError::EmtpyDeposit {});
+    }
+
     let deposit_message =
         process_deposit(sender.clone(), env.contract.address.clone(), funds.clone())?;
-    update_depositer_capital(deps, sender.clone(), funds, deposit)?;
+    update_depositer_capital(deps, sender.clone(), funds.clone(), deposit)?;
 
     Ok(Response::new()
         .add_messages(deposit_message)
         .add_event(Event::new("deposited").add_attribute("lp", sender.clone()))
         .add_attribute("action", "deposit_commitment")
-        .add_attribute("lp", sender))
+        .add_attribute("sender", sender)
+        .add_attribute("recipient", env.contract.address)
+        .add_attribute("funds_amount", funds[0].amount.clone()))
 }
 
 // Check if they have a commitment - Shouldn't really matter
@@ -192,6 +198,7 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128, Uint64};
     use provwasm_mocks::mock_dependencies;
 
@@ -721,14 +728,11 @@ mod tests {
     #[test]
     fn test_handle_should_work() {
         let mut deps = mock_dependencies(&[]);
-        let sender = Addr::unchecked("lp");
+        let sender = Addr::unchecked("sender");
+        let mock_env = mock_env();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
-        settlement_tester.create_security_commitments(1);
-        let funds = vec![Coin::new(
-            settlement_tester.security_commitments[0].amount.u128(),
-            "denom".to_string(),
-        )];
+        settlement_tester.create_security_commitments(1); // should be 12 units
 
         let deposit = settlement_tester.security_commitments.clone();
         let mut commitment = Commitment::new(
@@ -751,21 +755,27 @@ mod tests {
         )
         .unwrap();
 
-        let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
+        let response = handle(deps.as_mut(), mock_env.clone(), sender.clone(), deposit)
             .expect("Should not throw error");
         assert_eq!(1, response.messages.len());
-        assert_eq!(2, response.attributes.len());
+        assert_eq!(4, response.attributes.len());
         assert_eq!(
             Attribute::new("action", "deposit_commitment"),
             response.attributes[0]
         );
-        assert_eq!(Attribute::new("lp", sender), response.attributes[1]);
+        assert_eq!(Attribute::new("sender", sender), response.attributes[1]);
+        assert_eq!(
+            Attribute::new("recipient", mock_env.contract.address.clone()),
+            response.attributes[2]
+        );
+        assert_eq!(Attribute::new("funds_amount", "11"), response.attributes[3]);
     }
 
     #[test]
     fn test_handle_should_work_with_zero_on_a_security() {
         let mut deps = mock_dependencies(&[]);
-        let sender = Addr::unchecked("lp");
+        let sender = Addr::unchecked("sender");
+        let mock_env = mock_env();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(2);
@@ -773,10 +783,6 @@ mod tests {
 
         let mut deposit = settlement_tester.security_commitments.clone();
         deposit[1].amount = Uint128::new(0);
-        let funds = vec![Coin::new(
-            deposit[0].amount.u128() + deposit[1].amount.u128(),
-            "denom".to_string(),
-        )];
 
         let mut commitment = Commitment::new(
             sender.clone(),
@@ -809,21 +815,27 @@ mod tests {
         )
         .unwrap();
 
-        let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
+        let response = handle(deps.as_mut(), mock_env.clone(), sender.clone(), deposit)
             .expect("Should not throw error");
         assert_eq!(1, response.messages.len());
-        assert_eq!(2, response.attributes.len());
+        assert_eq!(4, response.attributes.len());
         assert_eq!(
             Attribute::new("action", "deposit_commitment"),
             response.attributes[0]
         );
-        assert_eq!(Attribute::new("lp", sender), response.attributes[1]);
+        assert_eq!(Attribute::new("sender", sender), response.attributes[1]);
+        assert_eq!(
+            Attribute::new("recipient", mock_env.contract.address.clone()),
+            response.attributes[2]
+        );
+        assert_eq!(Attribute::new("funds_amount", "11"), response.attributes[3]);
     }
 
     #[test]
     fn test_handle_should_work_with_multiple() {
         let mut deps = mock_dependencies(&[]);
-        let sender = Addr::unchecked("lp");
+        let sender = Addr::unchecked("sender");
+        let mock_env = mock_env();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(2);
@@ -866,15 +878,20 @@ mod tests {
         )
         .unwrap();
 
-        let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
+        let response = handle(deps.as_mut(), mock_env.clone(), sender.clone(), deposit)
             .expect("Should not throw error");
         assert_eq!(1, response.messages.len());
-        assert_eq!(2, response.attributes.len());
+        assert_eq!(4, response.attributes.len());
         assert_eq!(
             Attribute::new("action", "deposit_commitment"),
             response.attributes[0]
         );
-        assert_eq!(Attribute::new("lp", sender), response.attributes[1]);
+        assert_eq!(Attribute::new("sender", sender), response.attributes[1]);
+        assert_eq!(
+            Attribute::new("recipient", mock_env.contract.address.clone()),
+            response.attributes[2]
+        );
+        assert_eq!(Attribute::new("funds_amount", "11"), response.attributes[3]);
     }
 
     #[test]
