@@ -61,7 +61,7 @@ pub fn handle(
         .add_messages(deposit_message)
         .add_event(Event::new("deposited").add_attribute("lp", sender.clone()))
         .add_attribute("action", "deposit_commitment")
-        .add_attribute("lp", sender.clone()))
+        .add_attribute("lp", sender))
 }
 
 // Check if they have a commitment - Shouldn't really matter
