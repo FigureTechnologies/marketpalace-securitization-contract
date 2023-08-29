@@ -16,19 +16,7 @@ use crate::{
 /// * `commitment` A reference to the commitment to check the settlement_date on.
 ///
 /// # Examples
-/// ```
-/// use contract::util::settlement::is_expired;
-/// use contract::execute::settlement::commitment::Commitment;
-///
-/// let mut commitment = Commitment::new(Addr::unchecked("sender"), vec![]);
-/// commitment.settlment_date = Some(Uint::zero());
-/// let is_expired = is_expired(&env, &commitment);
-/// assert_eq!(true, is_expired);
-///
-/// let commitment = Commitment::new(Addr::unchecked("sender"), vec![]);
-/// let is_expired = is_expired(&env, &commitment);
-/// assert_eq!(false, is_expired);
-/// ```
+
 pub fn is_expired(env: &Env, commitment: &Commitment) -> bool {
     if let Some(settlement_time) = commitment.settlment_date {
         return env.block.time.seconds() > settlement_time.u64();
@@ -44,20 +32,7 @@ pub fn is_expired(env: &Env, commitment: &Commitment) -> bool {
 /// * `time` A reference to the timestamp that will be checked for expiration.
 ///
 /// # Examples
-/// ```
-/// use contract::util::settlement::timestamp_is_expired;
-/// use contract::storage::state;
-///
-/// let state = state::State::new(Addr::unchecked("gp"), "denom".to_string(), None);
-/// state::set(&deps.storage, &state);
-/// let is_expired = timestamp_is_expired(&deps.storage, &env.block.time);
-/// assert_eq!(false, is_expired);
-///
-/// let state = state::State::new(Addr::unchecked("gp"), "denom".to_string(), &env.block.time.plus_seconds(1));
-/// state::set(&deps.storage, &state);
-/// let is_expired = timestamp_is_expired(&deps.storage, &env.block.time);
-/// assert_eq!(true, is_expired);
-/// ```
+
 pub fn timestamp_is_expired(
     storage: &dyn Storage,
     time: &Timestamp,
@@ -77,23 +52,7 @@ pub fn timestamp_is_expired(
 /// * `commitment` A reference to the commitment to check.
 ///
 /// # Examples
-/// ```
-/// use contract::util::settlement::is_settling;
-/// use contract::storage::paid_in_capital;
-/// use contract::execute::settlement::commitment::Commitment;
-///
-/// let commitment = Commitment::new(Addr::unchecked("sender"), vec![]);
-/// paid_in_capital::set(storage, commitment.clone());
-/// let settling = is_settling(&deps.storage, &commitment);
-/// assert_eq!(false, settling);
-///
-/// let mut commitment = Commitment::new(Addr::unchecked("sender"), vec![]);
-/// commitment.state = CommitmentState::ACCEPTED;
-/// paid_in_capital::set(storage, commitment.clone());
-/// let settling = is_settling(&deps.storage, &commitment);
-/// assert_eq!(true, settling);
-///
-/// ```
+
 pub fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
     let paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone());
     paid_in_capital == commitment.commitments && commitment.state == CommitmentState::ACCEPTED

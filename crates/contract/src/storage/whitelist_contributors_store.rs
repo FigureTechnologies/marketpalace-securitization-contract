@@ -103,16 +103,6 @@ pub fn remove_contributors(
 ///
 /// # Examples
 ///
-/// ```
-/// use your_storage_lib::Storage;
-/// use your_other_lib::Addr;
-/// use your_utils_lib::Item;
-///
-/// // Assuming a valid storage object and a populated whitelist
-/// let storage = get_storage(); // Placeholder function
-/// let contributors = get_whitelist_contributors(&storage);
-/// println!("{:#?}", contributors);
-/// ```
 ///
 /// # Panics
 ///

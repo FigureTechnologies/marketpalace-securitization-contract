@@ -67,7 +67,7 @@ fn process_withdraw(
             capital.amount.u128(),
             capital.denom,
             gp.clone(),
-            commitment.lp.clone(),
+            contract.clone(),
         )?);
     }
 

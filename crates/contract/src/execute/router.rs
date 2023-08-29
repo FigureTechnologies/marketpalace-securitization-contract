@@ -24,7 +24,7 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
             accept_commitments::handle(deps, env, info.sender, commitments)
         }
         ExecuteMsg::DepositCommitment { securities } => {
-            deposit_commitment::handle(deps, env, info.sender, info.funds, securities)
+            deposit_commitment::handle(deps, env, info.sender, securities)
         }
         ExecuteMsg::WithdrawCommitment { lp } => {
             withdraw_commitment::handle(deps, env, info.sender, lp)
