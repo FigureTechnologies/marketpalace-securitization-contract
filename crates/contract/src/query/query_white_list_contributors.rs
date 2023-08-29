@@ -19,18 +19,6 @@ use cosmwasm_std::{to_binary, Storage};
 ///
 /// # Examples
 ///
-/// ```rust
-/// use your_storage_lib::Storage;
-///
-/// // assuming you have a valid storage object
-/// let storage = get_storage(); // Placeholder function
-/// let response = handle(&storage);
-/// match response {
-///    Ok(data) => println!("Data: {:?}", data),
-///    Err(e) => println!("Error: {:?}", e),
-/// }
-/// ```
-///
 /// # Errors
 ///
 /// Will return an error if either loading the contributors from the storage fails

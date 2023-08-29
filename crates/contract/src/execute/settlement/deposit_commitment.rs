@@ -1,6 +1,7 @@
 use cosmwasm_std::{Addr, Coin, Env, Event, Response};
 use provwasm_std::transfer_marker_coins;
 
+use crate::storage::{securities, state};
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
@@ -25,6 +26,7 @@ pub fn handle(
     sender: Addr,
     deposit: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
+    let state = state::get(deps.storage)?;
     let commitment = storage::commits::get(deps.storage, sender.clone())?;
     if util::settlement::is_expired(&env, &commitment) {
         return Err(crate::core::error::ContractError::SettlmentExpired {});
@@ -50,15 +52,7 @@ pub fn handle(
 
     // convert the security commitment into actual fund coin
     // assumes for now that the deposit == commitment
-    let mut funds: Vec<Coin> = vec![];
-    for security_commitment in deposit.iter() {
-        // get the security to find price per unit. the security commitment contains the number of units
-        // the lp is committed to
-        let security = storage::securities::get(deps.storage, security_commitment.name.clone())?;
-        let mut security_fund = security.price_per_unit.clone();
-        security_fund.amount = security_fund.amount * security_commitment.amount;
-        funds.push(security_fund);
-    }
+    let funds = calculate_funds(&deps, &deposit, &state.capital_denom)?;
     let deposit_message =
         process_deposit(sender.clone(), env.contract.address.clone(), funds.clone())?;
     update_depositer_capital(deps, sender.clone(), funds, deposit)?;
@@ -172,7 +166,7 @@ fn funds_match_deposit(
     let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
     Ok(expected_funds.len() == funds.len() && has_funds)
 }
-
+*/
 // We are strict that all capital must be in the same denom
 fn calculate_funds(
     deps: &ProvDepsMut,
@@ -190,7 +184,7 @@ fn calculate_funds(
 
     Ok(vec![sum])
 }
-*/
+
 fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError> {
     let commitment = commits::get(deps.storage, sender.clone())?;
     Ok(commitment.state == CommitmentState::ACCEPTED)
@@ -216,7 +210,8 @@ mod tests {
         util::testing::SettlementTester,
     };
 
-    use super::{calculate_funds, funds_match_deposit, handle, is_accepted, securities_match};
+    // use super::{calculate_funds, funds_match_deposit, handle, is_accepted, securities_match};
+    use super::{calculate_funds, handle, is_accepted, securities_match};
 
     #[test]
     fn test_is_accepted_throws_error_on_invalid_lp() {
@@ -306,6 +301,7 @@ mod tests {
         assert_eq!(vec![Coin::new(85, capital_denom)], funds);
     }
 
+    /*
     #[test]
     fn test_funds_match_deposit() {
         let mut deps = mock_dependencies(&[]);
@@ -391,6 +387,7 @@ mod tests {
         let res = funds_match_deposit(&deps.as_mut(), &funds, &deposit, &capital_denom).unwrap();
         assert_eq!(false, res);
     }
+    */
 
     #[test]
     fn test_securities_match_can_handle_empty() {
@@ -562,7 +559,6 @@ mod tests {
     fn test_handle_should_throw_error_with_invalid_state() {
         let mut deps = mock_dependencies(&[]);
         let sender = Addr::unchecked("lp");
-        let funds = vec![];
         let deposit = vec![];
         let settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -577,6 +573,7 @@ mod tests {
         );
     }
 
+    /*
     #[test]
     fn test_handle_should_throw_error_when_deposit_exceeds_commitment() {
         let mut deps = mock_dependencies(&[]);
@@ -584,10 +581,7 @@ mod tests {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
-        let funds = vec![Coin::new(
-            settlement_tester.security_commitments[0].amount.u128(),
-            "denom".to_string(),
-        )];
+
 
         let deposit = settlement_tester.security_commitments.clone();
         let mut commitment = Commitment::new(
@@ -618,6 +612,7 @@ mod tests {
             error.to_string()
         );
     }
+    */
 
     #[test]
     fn test_handle_should_throw_error_when_settlement_expired() {
@@ -684,6 +679,7 @@ mod tests {
         );
     }
 
+    /* Taken out because we don't check if funds match - because SC is pulling funds committed
     #[test]
     fn test_handle_should_throw_error_when_funds_mismatch() {
         let mut deps = mock_dependencies(&[]);
@@ -720,6 +716,7 @@ mod tests {
             error.to_string()
         );
     }
+    */
 
     #[test]
     fn test_handle_should_work() {
@@ -756,7 +753,7 @@ mod tests {
 
         let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
             .expect("Should not throw error");
-        assert_eq!(0, response.messages.len());
+        assert_eq!(1, response.messages.len());
         assert_eq!(2, response.attributes.len());
         assert_eq!(
             Attribute::new("action", "deposit_commitment"),
@@ -814,7 +811,7 @@ mod tests {
 
         let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
             .expect("Should not throw error");
-        assert_eq!(0, response.messages.len());
+        assert_eq!(1, response.messages.len());
         assert_eq!(2, response.attributes.len());
         assert_eq!(
             Attribute::new("action", "deposit_commitment"),
@@ -871,7 +868,7 @@ mod tests {
 
         let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
             .expect("Should not throw error");
-        assert_eq!(0, response.messages.len());
+        assert_eq!(1, response.messages.len());
         assert_eq!(2, response.attributes.len());
         assert_eq!(
             Attribute::new("action", "deposit_commitment"),

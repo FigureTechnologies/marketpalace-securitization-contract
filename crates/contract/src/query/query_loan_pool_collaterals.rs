@@ -23,13 +23,7 @@ use cosmwasm_std::{to_binary, Storage};
 ///
 /// # Example
 ///
-/// ```
-/// let response = handle(&storage);
-/// match response {
-///     Ok(binary_response) => println!("Binary response generated successfully."),
-///     Err(e) => println!("Error in generating binary response: {}", e),
-/// }
-/// ```
+
 pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
     Ok(to_binary(&QueryLoanPoolCollateralResponse {
         collaterals: get_all_states(storage),
