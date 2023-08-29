@@ -54,7 +54,7 @@ pub fn handle(
     // assumes for now that the deposit == commitment
     let funds = calculate_funds(&deps, &deposit, &state.capital_denom)?;
     if funds.is_empty() {
-        return Err(crate::core::error::ContractError::EmtpyDeposit {});
+        return Err(crate::core::error::ContractError::EmptyDeposit {});
     }
 
     let deposit_message =

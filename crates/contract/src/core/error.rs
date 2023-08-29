@@ -66,7 +66,7 @@ pub enum ContractError {
     ExcessiveDeposit {},
 
     #[error("The deposit is empty")]
-    EmtpyDeposit {},
+    EmptyDeposit {},
 
     #[error("The commitment will exceed the remaining amount of a security")]
     CommitmentExceedsRemainingSecurityAmount {},
