@@ -1,8 +1,9 @@
-use cosmwasm_std::{Addr, Coin, Env, Response};
+use cosmwasm_std::{Addr, Coin, Env, Event, Response};
+use provwasm_std::transfer_marker_coins;
 
 use crate::{
     core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
+        aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
         error::ContractError,
         security::SecurityCommitment,
     },
@@ -11,8 +12,7 @@ use crate::{
         available_capital::{self},
         commits::{self},
         paid_in_capital::{self},
-        securities::{self},
-        state::{self},
+        // securities::{self},
     },
     util,
 };
@@ -23,10 +23,8 @@ pub fn handle(
     deps: ProvDepsMut,
     env: Env,
     sender: Addr,
-    funds: Vec<Coin>,
     deposit: Vec<SecurityCommitment>,
 ) -> ProvTxResponse {
-    let state = state::get(deps.storage)?;
     let commitment = storage::commits::get(deps.storage, sender.clone())?;
     if util::settlement::is_expired(&env, &commitment) {
         return Err(crate::core::error::ContractError::SettlmentExpired {});
@@ -40,19 +38,36 @@ pub fn handle(
         return Err(crate::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
+    /*
     if !funds_match_deposit(&deps, &funds, &deposit, &state.capital_denom)? {
         return Err(crate::core::error::ContractError::FundMismatch {});
     }
+    */
 
     if deposit_exceeds_commitment(&deps, sender.clone(), &deposit)? {
         return Err(crate::core::error::ContractError::ExcessiveDeposit {});
     }
 
+    // convert the security commitment into actual fund coin
+    // assumes for now that the deposit == commitment
+    let mut funds: Vec<Coin> = vec![];
+    for security_commitment in deposit.iter() {
+        // get the security to find price per unit. the security commitment contains the number of units
+        // the lp is committed to
+        let security = storage::securities::get(deps.storage, security_commitment.name.clone())?;
+        let mut security_fund = security.price_per_unit.clone();
+        security_fund.amount = security_fund.amount * security_commitment.amount;
+        funds.push(security_fund);
+    }
+    let deposit_message =
+        process_deposit(sender.clone(), env.contract.address.clone(), funds.clone())?;
     update_depositer_capital(deps, sender.clone(), funds, deposit)?;
 
-    Ok(Response::default()
+    Ok(Response::new()
+        .add_messages(deposit_message)
+        .add_event(Event::new("deposited").add_attribute("lp", sender.clone()))
         .add_attribute("action", "deposit_commitment")
-        .add_attribute("lp", sender))
+        .add_attribute("lp", sender.clone()))
 }
 
 // Check if they have a commitment - Shouldn't really matter
@@ -95,6 +110,26 @@ fn deposit_exceeds_commitment(
     Ok(!can_deposit)
 }
 
+fn process_deposit(
+    sender: Addr,
+    contract: Addr,
+    funds: Vec<Coin>,
+) -> Result<Vec<ProvMsg>, ContractError> {
+    let mut messages = vec![];
+    for fund in funds {
+        if !fund.amount.is_zero() {
+            messages.push(transfer_marker_coins(
+                fund.amount.u128(),
+                fund.denom,
+                contract.clone(),
+                sender.clone(),
+            )?);
+        }
+    }
+
+    Ok(messages)
+}
+
 // This updates the AVAILABLE_CAPITAL and the PAID_IN_CAPITAL
 fn update_depositer_capital(
     deps: ProvDepsMut,
@@ -126,7 +161,7 @@ fn securities_match(
         .iter()
         .all(|deposit_security| commitment_securities.contains(&deposit_security.name)))
 }
-
+/*
 fn funds_match_deposit(
     deps: &ProvDepsMut,
     funds: &Vec<Coin>,
@@ -155,7 +190,7 @@ fn calculate_funds(
 
     Ok(vec![sum])
 }
-
+*/
 fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError> {
     let commitment = commits::get(deps.storage, sender.clone())?;
     Ok(commitment.state == CommitmentState::ACCEPTED)
@@ -534,8 +569,8 @@ mod tests {
         let commitment = Commitment::new(sender.clone(), vec![]);
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
-        let error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err("should throw error");
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
         assert_eq!(
             crate::core::error::ContractError::InvalidCommitmentState {}.to_string(),
             error.to_string()
@@ -576,8 +611,8 @@ mod tests {
         )
         .unwrap();
 
-        let error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err("should throw error");
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
         assert_eq!(
             crate::core::error::ContractError::ExcessiveDeposit {}.to_string(),
             error.to_string()
@@ -619,8 +654,8 @@ mod tests {
         )
         .unwrap();
 
-        let error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err("should throw error");
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
         assert_eq!(
             crate::core::error::ContractError::SettlmentExpired {}.to_string(),
             error.to_string()
@@ -641,8 +676,8 @@ mod tests {
         settlement_tester.setup_test_state(deps.as_mut().storage);
         commits::set(deps.as_mut().storage, &commitment).unwrap();
 
-        let error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err("should throw error");
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
         assert_eq!(
             crate::core::error::ContractError::InvalidSecurityCommitment {}.to_string(),
             error.to_string()
@@ -678,8 +713,8 @@ mod tests {
         )
         .unwrap();
 
-        let error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err("should throw error");
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
         assert_eq!(
             crate::core::error::ContractError::FundMismatch {}.to_string(),
             error.to_string()
@@ -719,7 +754,7 @@ mod tests {
         )
         .unwrap();
 
-        let response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
+        let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
             .expect("Should not throw error");
         assert_eq!(0, response.messages.len());
         assert_eq!(2, response.attributes.len());
@@ -777,7 +812,7 @@ mod tests {
         )
         .unwrap();
 
-        let response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
+        let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
             .expect("Should not throw error");
         assert_eq!(0, response.messages.len());
         assert_eq!(2, response.attributes.len());
@@ -834,7 +869,7 @@ mod tests {
         )
         .unwrap();
 
-        let response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
+        let response = handle(deps.as_mut(), mock_env(), sender.clone(), deposit)
             .expect("Should not throw error");
         assert_eq!(0, response.messages.len());
         assert_eq!(2, response.attributes.len());
