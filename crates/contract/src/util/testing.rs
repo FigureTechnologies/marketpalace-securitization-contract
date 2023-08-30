@@ -182,12 +182,8 @@ pub fn deposit_test(
     sender: &str,
     deposit: &[SecurityCommitment],
 ) -> ProvTxResponse {
-    let funds = deposit
-        .iter()
-        .fold(Coin::new(0, "denom".to_string()), |acc, commit| -> Coin {
-            Coin::new((commit.amount.u128() * 100) + acc.amount.u128(), acc.denom)
-        });
-    let info = mock_info(sender, &vec![funds]);
+    let funds = Vec::new();
+    let info = mock_info(sender, &funds);
     let msg = test_deposit_message(deposit);
     execute(deps, env, info, msg)
 }

@@ -41,20 +41,10 @@ impl Validate for ExecuteMsg {
     }
 
     fn validate_msg_funds(&self, funds: &[Coin]) -> ValidateResult {
-        match self {
-            ExecuteMsg::DepositCommitment { securities: _ } => {
-                if funds.is_empty() {
-                    return Err(ContractError::MissingFunds {});
-                }
-                Ok(())
-            }
-            _ => {
-                if !funds.is_empty() {
-                    return Err(ContractError::UnexpectedFunds {});
-                }
-                Ok(())
-            }
+        if !funds.is_empty() {
+            return Err(ContractError::UnexpectedFunds {});
         }
+        Ok(())
     }
 }
 
@@ -205,9 +195,12 @@ mod tests {
                 amount: Uint128::new(5),
             }],
         };
-        let funds = vec![];
+        let funds = vec![Coin {
+            denom: "denom".to_string(),
+            amount: Uint128::new(5),
+        }];
         let output = msg.validate_msg_funds(&funds).unwrap_err();
-        let expected = ContractError::MissingFunds {}.to_string();
+        let expected = ContractError::UnexpectedFunds {}.to_string();
         assert_eq!(expected, output.to_string());
     }
 
@@ -219,10 +212,7 @@ mod tests {
                 amount: Uint128::new(5),
             }],
         };
-        let funds = vec![Coin {
-            denom: "denom".to_string(),
-            amount: Uint128::new(5),
-        }];
+        let funds = vec![];
         msg.validate_msg_funds(&funds)
             .expect("should pass with valid funds");
     }
