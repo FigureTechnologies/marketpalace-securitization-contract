@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Storage};
+use cosmwasm_std::{to_json_binary, Addr, Storage};
 
 use crate::{
     core::{aliases::ProvQueryResponse, msg::QueryInvestorResponse},
@@ -12,12 +12,12 @@ pub fn handle(storage: &dyn Storage, lp: Addr) -> ProvQueryResponse {
         commitment,
         paid_in_capital,
     };
-    Ok(to_binary(&response)?)
+    Ok(to_json_binary(&response)?)
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -42,7 +42,7 @@ mod tests {
             },
         )
         .unwrap();
-        let value: QueryInvestorResponse = from_binary(&res).unwrap();
+        let value: QueryInvestorResponse = from_json(&res).unwrap();
         assert_eq!(test_security_commitments(), value.paid_in_capital);
         assert_eq!(Addr::unchecked("lp1"), value.commitment.lp);
         assert_eq!(test_security_commitments(), value.commitment.commitments);

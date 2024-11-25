@@ -1,7 +1,7 @@
 use crate::core::aliases::ProvQueryResponse;
 use crate::core::msg::QueryLoanPoolCollateralResponse;
 use crate::storage::loan_pool_collateral::get_all_states;
-use cosmwasm_std::{to_binary, Storage};
+use cosmwasm_std::{to_json_binary, Storage};
 
 /// This function handles the process of getting all states from storage and
 /// creates a `QueryLoanPoolCollateralResponse` with the resulting collaterals.
@@ -25,7 +25,7 @@ use cosmwasm_std::{to_binary, Storage};
 ///
 
 pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
-    Ok(to_binary(&QueryLoanPoolCollateralResponse {
+    Ok(to_json_binary(&QueryLoanPoolCollateralResponse {
         collaterals: get_all_states(storage),
     })?)
 }
@@ -40,7 +40,7 @@ mod tests {
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::mock_info;
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
     #[test]
@@ -70,7 +70,7 @@ mod tests {
 
         //query all states
         let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryCollaterals {}).unwrap();
-        let value: QueryLoanPoolCollateralResponse = from_binary(&res).unwrap();
+        let value: QueryLoanPoolCollateralResponse = from_json(&res).unwrap();
         assert_eq!(1, value.collaterals.len());
     }
 
@@ -83,7 +83,7 @@ mod tests {
 
         //query all states
         let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryCollaterals {}).unwrap();
-        let value: QueryLoanPoolCollateralResponse = from_binary(&res).unwrap();
+        let value: QueryLoanPoolCollateralResponse = from_json(&res).unwrap();
         assert_eq!(0, value.collaterals.len());
     }
 }

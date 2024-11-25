@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Storage, SubMsg, Uint128, WasmMsg};
+use cosmwasm_std::{to_json_binary, Addr, Storage, SubMsg, Uint128, WasmMsg};
 
 use crate::{
     core::{aliases::ProvSubMsg, error::ContractError, msg::ContractMigrateMsg},
@@ -15,7 +15,7 @@ pub fn migrate_contracts(
         let msg = WasmMsg::Migrate {
             contract_addr: contract.to_string(),
             new_code_id: contract_id.u128() as u64,
-            msg: to_binary(&ContractMigrateMsg {})?,
+            msg: to_json_binary(&ContractMigrateMsg {})?,
         };
         let id = storage::reply::add(storage, contract)?;
         messages.push(SubMsg::reply_always(msg, id));
@@ -25,7 +25,7 @@ pub fn migrate_contracts(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, to_binary, Addr, SubMsg, Uint128, WasmMsg};
+    use cosmwasm_std::{testing::mock_env, to_json_binary, Addr, SubMsg, Uint128, WasmMsg};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -61,7 +61,7 @@ mod tests {
         let msg = WasmMsg::Migrate {
             contract_addr: "test_address".to_string(),
             new_code_id: 2,
-            msg: to_binary(&ContractMigrateMsg {}).unwrap(),
+            msg: to_json_binary(&ContractMigrateMsg {}).unwrap(),
         };
         let expected = SubMsg::reply_always(msg, 1);
 

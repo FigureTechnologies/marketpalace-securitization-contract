@@ -84,7 +84,7 @@ impl MockMarker {
             // permissions: AccessGrant array that always leads with owner permission in test code
             permissions: vec![
                 AccessGrant {
-                    address: owner_address,
+                    address: owner_address.into(),
                     permissions: Self::get_default_owner_permissions(),
                 },
                 AccessGrant {
@@ -108,7 +108,7 @@ impl MockMarker {
             // permissions: AccessGrant array that always leads with owner permission in test code
             permissions: vec![
                 AccessGrant {
-                    address: owner_address,
+                    address: owner_address.into(),
                     permissions: Self::get_default_owner_permissions(),
                 },
                 AccessGrant {

@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Storage};
+use cosmwasm_std::{to_json_binary, Storage};
 
 use crate::{
     core::{aliases::ProvQueryResponse, msg::QueryContractsResponse},
@@ -9,12 +9,12 @@ pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
     let response = QueryContractsResponse {
         contracts: storage::contract::list(storage),
     };
-    Ok(to_binary(&response)?)
+    Ok(to_json_binary(&response)?)
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -29,7 +29,7 @@ mod tests {
         let env = mock_env();
         let _ = instantiate_contract(deps.as_mut(), env).unwrap();
         let bin_response = handle(&deps.storage).unwrap();
-        let response: QueryContractsResponse = from_binary(&bin_response).unwrap();
+        let response: QueryContractsResponse = from_json(&bin_response).unwrap();
         assert_eq!(0, response.contracts.len());
     }
 
@@ -40,7 +40,7 @@ mod tests {
         let _ = instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         add_contracts(deps.as_mut(), env).unwrap();
         let bin_response = handle(&deps.storage).unwrap();
-        let response: QueryContractsResponse = from_binary(&bin_response).unwrap();
+        let response: QueryContractsResponse = from_json(&bin_response).unwrap();
         assert_eq!(
             vec![
                 Addr::unchecked("contract1"),

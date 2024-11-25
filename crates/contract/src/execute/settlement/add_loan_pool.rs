@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response};
 use provwasm_std::types::provenance::marker::v1::Access::{Admin, Withdraw};
 use provwasm_std::types::provenance::marker::v1::AccessGrant;
 use result_extensions::ResultExtensions;
@@ -83,7 +83,7 @@ pub fn handle(
         response = response.add_attribute("action", "loan_pool_added");
     }
     // Set response data to collaterals vector
-    response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
+    response = response.set_data(to_json_binary(&LoanPoolMarkers::new(collaterals))?);
 
     Ok(response)
 }
@@ -210,7 +210,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_env, mock_info};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{coins, from_binary, Addr, Empty, Event, Response, SubMsg};
+    use cosmwasm_std::{coins, from_json, Addr, Empty, Event, Response, SubMsg};
     use provwasm_mocks::mock_dependencies;
     use provwasm_std::MarkerMsgParams::RevokeMarkerAccess;
     use provwasm_std::ProvenanceMsg;
@@ -309,7 +309,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let loan_pool_markers: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events
@@ -493,7 +493,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let loan_pool_markers: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events
@@ -589,7 +589,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let loan_pool_markers: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events
@@ -692,7 +692,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let loan_pool_markers: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events

@@ -1,7 +1,7 @@
 use crate::core::aliases::ProvQueryResponse;
 use crate::core::msg::QueryLoanPoolContributorsResponse;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
-use cosmwasm_std::{to_binary, Storage};
+use cosmwasm_std::{to_json_binary, Storage};
 
 /// Handles the querying of whitelist contributors from your storage,
 /// and returns a ProvQueryResponse with the result.
@@ -32,7 +32,7 @@ use cosmwasm_std::{to_binary, Storage};
 ///
 /// This function assumes the storage passed as parameter correctly and safely implements the `Storage` trait.
 pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
-    Ok(to_binary(&QueryLoanPoolContributorsResponse {
+    Ok(to_json_binary(&QueryLoanPoolContributorsResponse {
         contributors: get_whitelist_contributors(storage),
     })?)
 }
@@ -44,7 +44,7 @@ mod tests {
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::mock_info;
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
     #[test]
@@ -65,7 +65,7 @@ mod tests {
             QueryMsg::QueryLoanPoolContributors {},
         )
         .unwrap();
-        let value: QueryLoanPoolContributorsResponse = from_binary(&res).unwrap();
+        let value: QueryLoanPoolContributorsResponse = from_json(&res).unwrap();
         assert_eq!(1, value.contributors.len());
     }
 
@@ -81,7 +81,7 @@ mod tests {
             QueryMsg::QueryLoanPoolContributors {},
         )
         .unwrap();
-        let value: QueryLoanPoolContributorsResponse = from_binary(&res).unwrap();
+        let value: QueryLoanPoolContributorsResponse = from_json(&res).unwrap();
         assert_eq!(0, value.contributors.len());
     }
 }

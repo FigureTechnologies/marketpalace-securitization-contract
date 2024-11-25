@@ -197,7 +197,6 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128, Uint64};
     use provwasm_mocks::mock_dependencies;
 

@@ -20,7 +20,7 @@ pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env};
+    use cosmwasm_std::{from_json, testing::mock_env};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -39,7 +39,7 @@ mod tests {
         let message = QueryMsg::QueryVersion {};
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = query::router::route(deps.as_ref(), env, message).unwrap();
-        let _: QueryVersionResponse = from_binary(&res).unwrap();
+        let _: QueryVersionResponse = from_json(&res).unwrap();
     }
 
     #[test]
@@ -49,7 +49,7 @@ mod tests {
         let message = QueryMsg::QueryState {};
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = query::router::route(deps.as_ref(), env, message).unwrap();
-        let _: QueryStateResponse = from_binary(&res).unwrap();
+        let _: QueryStateResponse = from_json(&res).unwrap();
     }
 
     #[test]
@@ -59,7 +59,7 @@ mod tests {
         let message = QueryMsg::QueryContracts {};
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = query::router::route(deps.as_ref(), env, message).unwrap();
-        let _: QueryContractsResponse = from_binary(&res).unwrap();
+        let _: QueryContractsResponse = from_json(&res).unwrap();
     }
 
     #[test]
@@ -72,6 +72,6 @@ mod tests {
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         add_contracts(deps.as_mut(), env.clone()).unwrap();
         let res = query::router::route(deps.as_ref(), env, message).unwrap();
-        let _: QueryContractAddressResponse = from_binary(&res).unwrap();
+        let _: QueryContractAddressResponse = from_json(&res).unwrap();
     }
 }

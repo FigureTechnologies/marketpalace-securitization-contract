@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Storage};
+use cosmwasm_std::{to_json_binary, Storage};
 
 use crate::{
     core::{aliases::ProvQueryResponse, msg::QuerySecuritizationsResponse},
@@ -14,12 +14,12 @@ pub fn handle(storage: &dyn Storage, security_names: Vec<String>) -> ProvQueryRe
 
     let response = QuerySecuritizationsResponse { securities };
 
-    Ok(to_binary(&response)?)
+    Ok(to_json_binary(&response)?)
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env};
+    use cosmwasm_std::{from_json, testing::mock_env};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -43,7 +43,7 @@ mod tests {
 
         let expected = create_test_securities();
 
-        let value: QuerySecuritizationsResponse = from_binary(&res).unwrap();
+        let value: QuerySecuritizationsResponse = from_json(&res).unwrap();
 
         assert_eq!(1, value.securities.len());
         assert_eq!(expected[0], value.securities[0]);
@@ -64,7 +64,7 @@ mod tests {
 
         let expected = create_test_securities();
 
-        let value: QuerySecuritizationsResponse = from_binary(&res).unwrap();
+        let value: QuerySecuritizationsResponse = from_json(&res).unwrap();
 
         assert_eq!(2, value.securities.len());
         assert_eq!(expected[0], value.securities[0]);

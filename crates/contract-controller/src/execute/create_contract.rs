@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Env, Response, SubMsg, Uint64, WasmMsg};
+use cosmwasm_std::{to_json_binary, Addr, Env, Response, SubMsg, Uint64, WasmMsg};
 
 use crate::{
     core::{
@@ -35,7 +35,7 @@ pub fn handle(
     let msg = WasmMsg::Instantiate {
         admin: Some(env.contract.address.to_string()),
         code_id: code_id.u64(),
-        msg: to_binary(&init_msg)?,
+        msg: to_json_binary(&init_msg)?,
         funds: vec![],
         label: "securitization".to_string(),
     };

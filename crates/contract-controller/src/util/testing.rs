@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     testing::{mock_info, MockApi, MockStorage},
-    to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
+    to_json_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
     SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
 };
 use provwasm_mocks::{mock_dependencies, ProvenanceMockQuerier};
@@ -112,7 +112,7 @@ pub fn migrate_message(contract: Addr, contract_id: Uint128, message_id: u64) ->
     let msg = WasmMsg::Migrate {
         contract_addr: contract.to_string(),
         new_code_id: contract_id.u128() as u64,
-        msg: to_binary(&ContractMigrateMsg {}).unwrap(),
+        msg: to_json_binary(&ContractMigrateMsg {}).unwrap(),
     };
     SubMsg::reply_always(msg, message_id)
 }
@@ -121,7 +121,7 @@ pub fn instantiate_contract_message(owner: Addr, code_id: Uint64) -> ProvSubMsg 
     let msg = WasmMsg::Instantiate {
         admin: Some(owner.to_string()),
         code_id: code_id.u64(),
-        msg: to_binary(&test_create_contract_init_message()).unwrap(),
+        msg: to_json_binary(&test_create_contract_init_message()).unwrap(),
         funds: vec![],
         label: format!("securitization"),
     };
@@ -170,7 +170,7 @@ pub fn create_admin_deps(
             } => {
                 let mut res = ContractInfoResponse::default();
                 res.admin = Some("admin".to_string());
-                SystemResult::Ok(ContractResult::Ok(to_binary(&res).unwrap()))
+                SystemResult::Ok(ContractResult::Ok(to_json_binary(&res).unwrap()))
             }
             #[cfg(feature = "cosmwasm_1_2")]
             WasmQuery::CodeInfo { code_id, .. } => {

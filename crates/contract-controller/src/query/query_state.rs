@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Storage, Uint128};
+use cosmwasm_std::{to_json_binary, Storage, Uint128};
 
 use crate::{
     core::{aliases::ProvQueryResponse, msg::QueryStateResponse},
@@ -11,12 +11,12 @@ pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
         batch_size: Uint128::new(state.batch_size),
         migrating: state.migrating,
     };
-    Ok(to_binary(&response)?)
+    Ok(to_json_binary(&response)?)
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Uint128};
+    use cosmwasm_std::{from_json, testing::mock_env, Uint128};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -30,7 +30,7 @@ mod tests {
         let env = mock_env();
         let _ = instantiate_contract(deps.as_mut(), env).unwrap();
         let bin_response = handle(&deps.storage).unwrap();
-        let response: QueryStateResponse = from_binary(&bin_response).unwrap();
+        let response: QueryStateResponse = from_json(&bin_response).unwrap();
         assert_eq!(Uint128::new(2), response.batch_size);
         assert_eq!(false, response.migrating);
     }

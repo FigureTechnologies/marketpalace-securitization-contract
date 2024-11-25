@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Storage};
+use cosmwasm_std::{to_json_binary, Storage};
 
 use crate::{
     core::{aliases::ProvQueryResponse, msg::QueryCommitmentsResponse},
@@ -9,12 +9,12 @@ use crate::{
 pub fn handle(storage: &dyn Storage, commitment_state: CommitmentState) -> ProvQueryResponse {
     let commitments = storage::commits::get_with_state(storage, commitment_state);
     let response = QueryCommitmentsResponse { commitments };
-    Ok(to_binary(&response)?)
+    Ok(to_json_binary(&response)?)
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -39,7 +39,7 @@ mod tests {
             },
         )
         .unwrap();
-        let value: QueryCommitmentsResponse = from_binary(&res).unwrap();
+        let value: QueryCommitmentsResponse = from_json(&res).unwrap();
         let expected_pending = test_security_commitments();
         assert_eq!(3, value.commitments.len());
 
@@ -66,7 +66,7 @@ mod tests {
             },
         )
         .unwrap();
-        let value: QueryCommitmentsResponse = from_binary(&res).unwrap();
+        let value: QueryCommitmentsResponse = from_json(&res).unwrap();
         let expected_accepted = test_security_commitments();
         assert_eq!(3, value.commitments.len());
 
@@ -93,7 +93,7 @@ mod tests {
             },
         )
         .unwrap();
-        let value: QueryCommitmentsResponse = from_binary(&res).unwrap();
+        let value: QueryCommitmentsResponse = from_json(&res).unwrap();
         let expected_accepted = test_security_commitments();
         assert_eq!(1, value.commitments.len());
 

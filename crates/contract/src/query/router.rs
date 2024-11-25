@@ -30,7 +30,7 @@ pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_dependencies;
 
     use crate::{
@@ -52,7 +52,7 @@ mod tests {
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
-        let _: QueryInvestorResponse = from_binary(&bin).unwrap();
+        let _: QueryInvestorResponse = from_json(&bin).unwrap();
     }
 
     #[test]
@@ -64,7 +64,7 @@ mod tests {
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
-        let _: QueryCommitmentsResponse = from_binary(&bin).unwrap();
+        let _: QueryCommitmentsResponse = from_json(&bin).unwrap();
     }
 
     #[test]
@@ -74,7 +74,7 @@ mod tests {
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
-        let _: QueryStateResponse = from_binary(&bin).unwrap();
+        let _: QueryStateResponse = from_json(&bin).unwrap();
     }
 
     #[test]
@@ -84,7 +84,7 @@ mod tests {
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
-        let _: QueryVersionResponse = from_binary(&bin).unwrap();
+        let _: QueryVersionResponse = from_json(&bin).unwrap();
     }
 
     #[test]
@@ -95,6 +95,6 @@ mod tests {
         };
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
-        let _: QuerySecuritizationsResponse = from_binary(&bin).unwrap();
+        let _: QuerySecuritizationsResponse = from_json(&bin).unwrap();
     }
 }

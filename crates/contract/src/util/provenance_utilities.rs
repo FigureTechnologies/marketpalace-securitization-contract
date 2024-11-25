@@ -164,11 +164,11 @@ mod tests {
         let target_address = Addr::unchecked("target_address");
         let marker = MockMarker {
             permissions: vec![AccessGrant {
-                address: target_address.clone(),
+                address: target_address.to_string(),
                 permissions: vec![
-                    Access::Admin,
-                    Access::Mint,
-                    Access::Delete,
+                    Access::Admin as i32,
+                    Access::Mint as i32,
+                    Access::Delete as i32,
                 ],
             }],
             ..MockMarker::default()

@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{to_json_binary, DepsMut, Env, Event, MessageInfo, Response};
 
 use crate::core::collateral::{LoanPoolMarkers, LoanPoolRemovalData};
 use crate::core::security::WithdrawLoanPools;
@@ -93,7 +93,7 @@ pub fn handle(
         response = response.add_attribute("loan_pool_removed_by", info.sender);
     }
     // Set response data to collaterals vector
-    response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
+    response = response.set_data(to_json_binary(&LoanPoolMarkers::new(collaterals))?);
 
     Ok(response)
 }
@@ -130,7 +130,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_env, mock_info};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{from_binary, Addr, SubMsg};
+    use cosmwasm_std::{from_json, Addr, SubMsg};
     use provwasm_mocks::mock_dependencies;
     use provwasm_std::ProvenanceMsg;
     use provwasm_std::ProvenanceMsgParams::Marker;
@@ -213,7 +213,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let loan_pool_markers: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events
@@ -258,7 +258,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let withdraw_loan_pool_result: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(withdraw_loan_pool_result.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
                 assert_eq!(response.events.len(), 1);
                 assert_eq!(response.attributes.len(), 2);
