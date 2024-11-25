@@ -1,5 +1,4 @@
 use cosmwasm_std::{to_binary, DepsMut, Env, Event, MessageInfo, Response};
-use provwasm_std::{ProvenanceQuerier, ProvenanceQuery};
 
 use crate::core::collateral::{LoanPoolMarkers, LoanPoolRemovalData};
 use crate::core::security::WithdrawLoanPools;
@@ -133,11 +132,10 @@ mod tests {
     use cosmwasm_std::ReplyOn::Never;
     use cosmwasm_std::{from_binary, Addr, SubMsg};
     use provwasm_mocks::mock_dependencies;
-    use provwasm_std::MarkerAccess::{Admin, Burn, Delete, Deposit, Mint, Withdraw};
-    use provwasm_std::MarkerMsgParams::{GrantMarkerAccess, RevokeMarkerAccess};
     use provwasm_std::ProvenanceMsg;
     use provwasm_std::ProvenanceMsgParams::Marker;
     use provwasm_std::ProvenanceRoute::Marker as marker_route;
+    use provwasm_std::types::provenance::marker::v1::Access::{Admin, Burn, Delete, Deposit, Mint, Withdraw};
 
     #[test]
     fn test_handle_should_fail_when_sender_is_not_gp() {

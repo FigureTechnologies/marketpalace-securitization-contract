@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Coin, Env, Event, Response};
-use provwasm_std::transfer_marker_coins;
 
 use crate::storage::{securities, state};
 use crate::{

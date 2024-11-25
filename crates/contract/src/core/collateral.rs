@@ -1,5 +1,5 @@
 use cosmwasm_std::{Addr, CosmosMsg, Uint128};
-use provwasm_std::{AccessGrant, ProvenanceMsg};
+use provwasm_std::types::provenance::marker::v1::AccessGrant;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

@@ -1,6 +1,6 @@
 use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
 use cosmwasm_std::{coins, Addr, Coin, Decimal, Uint128};
-use provwasm_std::{AccessGrant, Marker, MarkerAccess, MarkerStatus, MarkerType};
+use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerStatus, MarkerType};
 
 pub const DEFAULT_MARKER_ADDRESS: &str = "marker_address";
 pub const DEFAULT_MARKER_HOLDINGS: u128 = 100;
@@ -29,14 +29,14 @@ impl Default for MockMarker {
             sequence: 0,
             manager: "".to_string(),
             permissions: vec![AccessGrant {
-                address: Addr::unchecked(MOCK_CONTRACT_ADDR),
+                address: MOCK_CONTRACT_ADDR.to_string(),
                 permissions: vec![
-                    MarkerAccess::Admin,
-                    MarkerAccess::Burn,
-                    MarkerAccess::Delete,
-                    MarkerAccess::Deposit,
-                    MarkerAccess::Mint,
-                    MarkerAccess::Withdraw,
+                    Access::Admin as i32,
+                    Access::Burn as i32,
+                    Access::Delete as i32,
+                    Access::Deposit as i32,
+                    Access::Mint as i32,
+                    Access::Withdraw as i32,
                 ],
             }],
             status: MarkerStatus::Active,
@@ -57,14 +57,14 @@ impl MockMarker {
             sequence: 0,
             manager: "".to_string(),
             permissions: vec![AccessGrant {
-                address: Addr::unchecked(MOCK_CONTRACT_ADDR),
+                address: MOCK_CONTRACT_ADDR.to_string(),
                 permissions: vec![
-                    MarkerAccess::Admin,
-                    MarkerAccess::Burn,
-                    MarkerAccess::Delete,
-                    MarkerAccess::Deposit,
-                    MarkerAccess::Mint,
-                    MarkerAccess::Withdraw,
+                    Access::Admin as i32,
+                    Access::Burn as i32,
+                    Access::Delete as i32,
+                    Access::Deposit as i32,
+                    Access::Mint as i32,
+                    Access::Withdraw as i32,
                 ],
             }],
             status: MarkerStatus::Active,
@@ -84,12 +84,12 @@ impl MockMarker {
             // permissions: AccessGrant array that always leads with owner permission in test code
             permissions: vec![
                 AccessGrant {
-                    address: Addr::unchecked(owner_address),
+                    address: owner_address,
                     permissions: Self::get_default_owner_permissions(),
                 },
                 AccessGrant {
-                    address: Addr::unchecked("cosmos2contract"),
-                    permissions: vec![MarkerAccess::Admin, MarkerAccess::Withdraw],
+                    address: "cosmos2contract".to_string(),
+                    permissions: vec![Access::Admin as i32, Access::Withdraw as i32],
                 },
             ],
             ..Self::default()
@@ -108,12 +108,12 @@ impl MockMarker {
             // permissions: AccessGrant array that always leads with owner permission in test code
             permissions: vec![
                 AccessGrant {
-                    address: Addr::unchecked(owner_address),
+                    address: owner_address,
                     permissions: Self::get_default_owner_permissions(),
                 },
                 AccessGrant {
-                    address: Addr::unchecked("cosmos2contract"),
-                    permissions: vec![MarkerAccess::Admin, MarkerAccess::Withdraw],
+                    address: "cosmos2contract".to_string(),
+                    permissions: vec![Access::Admin as i32, Access::Withdraw as i32],
                 },
             ],
             ..Self::new(supply_fixed, denom_str)
@@ -149,14 +149,14 @@ impl MockMarker {
         }
     }
 
-    pub fn get_default_owner_permissions() -> Vec<MarkerAccess> {
+    pub fn get_default_owner_permissions() -> Vec<i32> {
         vec![
-            MarkerAccess::Admin,
-            MarkerAccess::Burn,
-            MarkerAccess::Delete,
-            MarkerAccess::Deposit,
-            MarkerAccess::Mint,
-            MarkerAccess::Withdraw,
+            Access::Admin as i32,
+            Access::Burn as i32,
+            Access::Delete as i32,
+            Access::Deposit as i32,
+            Access::Mint as i32,
+            Access::Withdraw as i32,
         ]
     }
 }

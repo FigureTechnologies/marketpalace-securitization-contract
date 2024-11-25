@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Env, Event, Response, Storage};
-use provwasm_std::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
 
 use crate::{
     core::{
@@ -99,7 +98,6 @@ fn transfer_investment_tokens(
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Event, Uint128, Uint64};
     use provwasm_mocks::mock_dependencies;
-    use provwasm_std::{mint_marker_supply, withdraw_coins};
 
     use crate::{
         core::error::ContractError,

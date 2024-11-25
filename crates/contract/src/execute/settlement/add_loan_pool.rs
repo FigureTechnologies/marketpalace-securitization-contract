@@ -1,8 +1,6 @@
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response};
-use provwasm_std::{
-    revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg, ProvenanceQuerier,
-    ProvenanceQuery,
-};
+use provwasm_std::types::provenance::marker::v1::Access::{Admin, Withdraw};
+use provwasm_std::types::provenance::marker::v1::AccessGrant;
 use result_extensions::ResultExtensions;
 
 use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
@@ -144,7 +142,7 @@ fn create_marker_pool_collateral(
         // New loan pool contribution should verify that the sender owns the marker, and then revoke its permissions
         &info.sender,
         &env.contract.address,
-        &[MarkerAccess::Admin, MarkerAccess::Withdraw],
+        &[Admin, Withdraw],
         supply,
     )?;
 

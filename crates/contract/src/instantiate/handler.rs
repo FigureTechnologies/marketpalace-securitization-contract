@@ -1,10 +1,6 @@
 use cosmwasm_std::{Addr, Attribute, CosmosMsg, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use provwasm_std::{
-    activate_marker, assess_custom_fee, create_marker, finalize_marker, grant_marker_access,
-    MarkerAccess, MarkerType, ProvenanceMsg,
-};
-
+use provwasm_std::types::provenance::marker::v1::{Access, MarkerType};
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -72,11 +68,11 @@ fn new_active_marker(
     amount: u128,
 ) -> StdResult<Vec<CosmosMsg<ProvenanceMsg>>> {
     let permissions = vec![
-        MarkerAccess::Admin,
-        MarkerAccess::Mint,
-        MarkerAccess::Burn,
-        MarkerAccess::Withdraw,
-        MarkerAccess::Transfer,
+        Access::Admin,
+        Access::Mint,
+        Access::Burn,
+        Access::Withdraw,
+        Access::Transfer,
     ];
     Ok(vec![
         create_marker(amount, denom.clone(), MarkerType::Restricted)?,
@@ -95,11 +91,7 @@ mod tests {
     use cosmwasm_std::{Attribute, Uint128};
     use cw2::get_contract_version;
     use provwasm_mocks::mock_dependencies;
-    use provwasm_std::{
-        activate_marker, create_marker, finalize_marker, grant_marker_access, MarkerAccess,
-        MarkerType,
-    };
-
+    use provwasm_std::types::provenance::marker::v1::{Access, MarkerType};
     use crate::storage::state::{self};
     use crate::{
         contract::instantiate,
@@ -121,11 +113,11 @@ mod tests {
         let denom = "denom".to_string();
         let amount = 1000;
         let permissions = vec![
-            MarkerAccess::Admin,
-            MarkerAccess::Mint,
-            MarkerAccess::Burn,
-            MarkerAccess::Withdraw,
-            MarkerAccess::Transfer,
+            Access::Admin,
+            Access::Mint,
+            Access::Burn,
+            Access::Withdraw,
+            Access::Transfer,
         ];
 
         let messages = new_active_marker(address.clone(), &denom, amount).unwrap();

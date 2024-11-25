@@ -2,10 +2,7 @@ use crate::core::error::ContractError;
 use cosmwasm_std::{
     coin, Addr, BankQuery, Coin, CosmosMsg, DepsMut, StdResult, SupplyResponse, Uint128,
 };
-use provwasm_std::{
-    grant_marker_access, revoke_marker_access, AccessGrant, Marker, MarkerAccess, ProvenanceMsg,
-    ProvenanceQuery,
-};
+use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
 use result_extensions::ResultExtensions;
 
 pub const NHASH: &str = "nhash";
@@ -21,7 +18,7 @@ pub fn format_coin_display(coins: &[Coin]) -> String {
 pub fn marker_has_permissions(
     marker: &Marker,
     address: &Addr,
-    expected_permissions: &[MarkerAccess],
+    expected_permissions: &[Access],
 ) -> bool {
     marker.permissions.iter().any(|permission| {
         &permission.address == address
@@ -32,7 +29,7 @@ pub fn marker_has_permissions(
 }
 
 pub fn marker_has_admin(marker: &Marker, admin_address: &Addr) -> bool {
-    marker_has_permissions(marker, admin_address, &[MarkerAccess::Admin])
+    marker_has_permissions(marker, admin_address, &[Access::Admin])
 }
 
 /// Retrieves the single coin holding associated with the provided marker.
@@ -141,6 +138,7 @@ mod tests {
     use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
     use provwasm_mocks::mock_dependencies_with_balances;
     use provwasm_std::{MarkerMsgParams, ProvenanceMsgParams};
+    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
 
     #[test]
     fn test_format_coin_display() {
@@ -168,9 +166,9 @@ mod tests {
             permissions: vec![AccessGrant {
                 address: target_address.clone(),
                 permissions: vec![
-                    MarkerAccess::Admin,
-                    MarkerAccess::Mint,
-                    MarkerAccess::Delete,
+                    Access::Admin,
+                    Access::Mint,
+                    Access::Delete,
                 ],
             }],
             ..MockMarker::default()
@@ -181,11 +179,11 @@ mod tests {
             "no permissions passed in with an existing address on the marker should produce a true response",
         );
         assert!(
-            marker_has_permissions(&marker, &target_address, &[MarkerAccess::Admin]),
+            marker_has_permissions(&marker, &target_address, &[Access::Admin]),
             "single target permission for correct address should produce a true response",
         );
         assert!(
-            marker_has_permissions(&marker, &target_address, &[MarkerAccess::Admin, MarkerAccess::Mint, MarkerAccess::Delete]),
+            marker_has_permissions(&marker, &target_address, &[Access::Admin, Access::Mint, Access::Delete]),
             "multiple target with all values present for correct address should produce a true response",
         );
         assert!(
@@ -193,7 +191,7 @@ mod tests {
             "no permissions passed in with an address not found in the marker should produce a false response",
         );
         assert!(
-            !marker_has_permissions(&marker, &Addr::unchecked("not the same address"), &[MarkerAccess::Admin]),
+            !marker_has_permissions(&marker, &Addr::unchecked("not the same address"), &[Access::Admin]),
             "single target permission for address not in marker permissions should produce a false response",
         );
         assert!(
@@ -201,9 +199,9 @@ mod tests {
                 &marker,
                 &Addr::unchecked("not the same address"),
                 &[
-                    MarkerAccess::Admin,
-                    MarkerAccess::Mint,
-                    MarkerAccess::Delete
+                    Access::Admin,
+                    Access::Mint,
+                    Access::Delete
                 ],
             ),
             "multiple target with bad target address should produce a false response",
@@ -219,23 +217,23 @@ mod tests {
         let marker = MockMarker {
             permissions: vec![
                 AccessGrant {
-                    address: admin1.clone(),
-                    permissions: vec![MarkerAccess::Admin],
+                    address: admin1.to_string(),
+                    permissions: vec![Access::Admin as i32],
                 },
                 AccessGrant {
-                    address: admin2.clone(),
+                    address: admin2.to_string(),
                     permissions: vec![
-                        MarkerAccess::Admin,
-                        MarkerAccess::Mint,
-                        MarkerAccess::Burn,
-                        MarkerAccess::Deposit,
-                        MarkerAccess::Transfer,
-                        MarkerAccess::Delete,
+                        Access::Admin as i32,
+                        Access::Mint as i32,
+                        Access::Burn as i32,
+                        Access::Deposit as i32,
+                        Access::Transfer as i32,
+                        Access::Delete as i32,
                     ],
                 },
                 AccessGrant {
-                    address: normie.clone(),
-                    permissions: vec![MarkerAccess::Withdraw, MarkerAccess::Deposit],
+                    address: normie.to_string(),
+                    permissions: vec![Access::Withdraw as i32, Access::Deposit as i32],
                 },
             ],
             ..MockMarker::default()
@@ -352,12 +350,12 @@ mod tests {
             &Addr::unchecked(MOCK_CONTRACT_ADDR),
             &[
                 AccessGrant {
-                    address: Addr::unchecked("asker"),
-                    permissions: vec![MarkerAccess::Admin, MarkerAccess::Burn],
+                    address: "asker".to_string(),
+                    permissions: vec![Access::Admin as i32, Access::Burn as i32],
                 },
                 AccessGrant {
-                    address: Addr::unchecked("innocent_bystander"),
-                    permissions: vec![MarkerAccess::Withdraw, MarkerAccess::Transfer],
+                    address: "innocent_bystander".to_string(),
+                    permissions: vec![Access::Withdraw as i32, Access::Transfer as i32],
                 },
             ],
         )
@@ -389,14 +387,14 @@ mod tests {
                 match address.as_str() {
                     "asker" => {
                         assert_eq!(
-                            vec![MarkerAccess::Admin, MarkerAccess::Burn],
+                            vec![Access::Admin, Access::Burn],
                             permissions,
                             "expected the asker's permissions to be granted",
                         );
                     }
                     "innocent_bystander" => {
                         assert_eq!(
-                            vec![MarkerAccess::Withdraw, MarkerAccess::Transfer],
+                            vec![Access::Withdraw, Access::Transfer],
                             permissions,
                             "expected the bystander's permissions to be granted",
                         );

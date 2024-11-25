@@ -97,7 +97,7 @@ pub fn get_all_states(storage: &dyn Storage) -> Vec<LoanPoolMarkerCollateral> {
 mod tests {
     use super::*;
     use provwasm_mocks::mock_dependencies;
-    use provwasm_std::{AccessGrant, MarkerAccess};
+    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
 
     #[test]
     fn test_get_and_set() {
@@ -121,8 +121,8 @@ mod tests {
         let mut deps = mock_dependencies(&[]);
         let marker_address = Addr::unchecked("addr1");
         let permissions = vec![AccessGrant {
-            permissions: vec![MarkerAccess::Mint, MarkerAccess::Transfer],
-            address: Addr::unchecked("addr2"),
+            permissions: vec![Access::Mint as i32, Access::Transfer as i32],
+            address: "addr2".to_string(),
         }];
         let collateral = sample_collateral("addr1", "denom", 100, permissions.clone(), "owner");
 

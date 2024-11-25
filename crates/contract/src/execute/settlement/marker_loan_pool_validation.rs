@@ -3,7 +3,7 @@ use crate::util::provenance_utilities::{
     get_single_marker_coin_holding, marker_has_admin, marker_has_permissions,
 };
 use cosmwasm_std::{Addr, Uint128};
-use provwasm_std::{Marker, MarkerAccess, MarkerStatus};
+use provwasm_std::types::provenance::marker::v1::{Access, MarkerStatus};
 use result_extensions::ResultExtensions;
 
 // New helper function for generating error messages
@@ -32,7 +32,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
     marker: &Marker,
     original_owner_address: &Addr,
     contract_address: &Addr,
-    expected_contract_permissions: &[MarkerAccess],
+    expected_contract_permissions: &[Access],
     bank_supply: Uint128,
 ) -> Result<(), ContractError> {
     if !marker_has_admin(marker, original_owner_address) {
