@@ -131,7 +131,7 @@ mod tests {
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
     use cosmwasm_std::{from_json, Addr, SubMsg};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
     use provwasm_std::ProvenanceMsg;
     use provwasm_std::ProvenanceMsgParams::Marker;
     use provwasm_std::ProvenanceRoute::Marker as marker_route;
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_fail_when_sender_is_not_gp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_loan_pool() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let denom = marker.denom.to_owned();

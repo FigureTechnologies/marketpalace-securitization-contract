@@ -97,7 +97,7 @@ fn transfer_investment_tokens(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Event, Uint128, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::error::ContractError,
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_process_withdraw_fails_when_commit_doesnt_exist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let gp = Addr::unchecked("gp");
         let contract = Addr::unchecked("contract");
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_process_withdraw_fails_when_available_capital_doesnt_exist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_process_withdraw_has_capital() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
@@ -180,7 +180,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, "denom".to_string())],
+            vec![Coin::new(Uint128::new(100), "denom".to_string())],
         )
         .unwrap();
 
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn test_process_withdraw_has_no_capital() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
@@ -218,7 +218,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(0, "denom".to_string())],
+            vec![Coin::new(Uint128::new(0), "denom".to_string())],
         )
         .unwrap();
 
@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_commitments_with_invalid_lp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("gp");
         let lp = Addr::unchecked("lp");
         withdraw_commitment(&mut deps.as_mut(), &mock_env(), sender, lp).unwrap_err();
@@ -250,7 +250,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_commitments_with_not_settled() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
@@ -264,7 +264,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 
@@ -287,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_commitments_with_expired_settlement() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
@@ -302,7 +302,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 
@@ -325,7 +325,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_commitments_with_settled() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
         let lp = Addr::unchecked("lp");
@@ -339,7 +339,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 
@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn test_handle_must_be_gp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
 
         let settlement_tester = SettlementTester::new();
@@ -382,7 +382,7 @@ mod tests {
 
     #[test]
     fn test_handle_succeeds() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -398,7 +398,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 

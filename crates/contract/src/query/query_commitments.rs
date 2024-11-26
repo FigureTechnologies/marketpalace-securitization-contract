@@ -15,7 +15,7 @@ pub fn handle(storage: &dyn Storage, commitment_state: CommitmentState) -> ProvQ
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_json, testing::mock_env, Addr};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         contract::query,
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn test_pending_commitments() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("Contract should instantiate.");
         create_testing_commitments(&mut deps);
         let res = query(
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_accepted_commitments() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("Contract should instantiate.");
         create_testing_commitments(&mut deps);
         let res = query(
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn test_settled_commitments() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("Contract should instantiate.");
         create_testing_commitments(&mut deps);
         let res = query(

@@ -211,7 +211,7 @@ mod tests {
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
     use cosmwasm_std::{coins, from_json, Addr, Empty, Event, Response, SubMsg};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
     use provwasm_std::MarkerMsgParams::RevokeMarkerAccess;
     use provwasm_std::ProvenanceMsg;
     use provwasm_std::ProvenanceMsgParams::Marker;
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn test_handle_not_in_whitelist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn test_handle_in_whitelist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
@@ -370,7 +370,7 @@ mod tests {
 
     #[test]
     fn test_create_marker_pool_collateral_error_invalid_marker() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         /* Create the necessary mocked objects. You would need to replace "someAddress",
         "someMarkerDenom", and "someEnv" with corresponding valid objects */
@@ -431,7 +431,7 @@ mod tests {
 
     #[test]
     fn test_handle_in_whitelist_validation_fail() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker_custom("contributor", None, false);
         let marker_denom = marker.denom.clone();
@@ -526,7 +526,7 @@ mod tests {
 
     #[test]
     fn test_handle_in_whitelist_validation_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker_custom("contributor", None, false);
         let marker_denom = marker.denom.clone();
@@ -622,7 +622,7 @@ mod tests {
 
     #[test]
     fn test_handle_in_whitelist_validation_success_multiple() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker_custom("contributor", None, false);
         let some_other_marker =

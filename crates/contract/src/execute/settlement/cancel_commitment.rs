@@ -65,7 +65,7 @@ fn refund_lp(deps: ProvDepsMut, commitment_lp: Addr) -> Result<Vec<ProvMsg>, Con
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, BankMsg, Coin, SubMsg};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::{aliases::ProvMsg, error::ContractError},
@@ -81,7 +81,7 @@ mod tests {
         let gp = Addr::unchecked("gp");
         let sender = Addr::unchecked("lp1");
         let commitment_lp = Addr::unchecked("lp2");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         state::set(
             deps.as_mut().storage,
@@ -100,7 +100,7 @@ mod tests {
     fn test_handle_should_fail_when_settled() {
         let sender = Addr::unchecked("lp7");
         let commitment_lp = Addr::unchecked("lp7");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
 
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
@@ -117,7 +117,7 @@ mod tests {
     fn test_handle_should_have_messages_and_attributes() {
         let sender = Addr::unchecked("gp");
         let commitment_lp = Addr::unchecked("lp2");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let removed_capital = Coin::new(10000, "denom");
 
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn test_refund_should_ignore_invalid_lp() {
         let commitment_lp = Addr::unchecked("lp10");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_testing_commitments(&mut deps);
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn test_refund_should_handle_proposed_commit() {
         let commitment_lp = Addr::unchecked("lp4");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_testing_commitments(&mut deps);
@@ -171,7 +171,7 @@ mod tests {
     #[test]
     fn test_refund_should_handle_accepted_commit() {
         let commitment_lp = Addr::unchecked("lp2");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_testing_commitments(&mut deps);
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn test_refund_should_handle_accepted_commit_with_no_deposit() {
         let commitment_lp = Addr::unchecked("lp3");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_testing_commitments(&mut deps);

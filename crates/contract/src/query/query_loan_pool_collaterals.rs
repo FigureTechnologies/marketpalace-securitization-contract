@@ -41,11 +41,11 @@ mod tests {
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::mock_info;
     use cosmwasm_std::{from_json, testing::mock_env, Addr};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     #[test]
     fn test_all_collateral_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_all_collateral_none_exists() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         deps.querier.with_markers(vec![marker.clone()]);

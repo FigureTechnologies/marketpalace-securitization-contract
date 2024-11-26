@@ -178,7 +178,7 @@ fn calculate_funds(
     deposit: &[SecurityCommitment],
     capital_denom: &String,
 ) -> Result<Vec<Coin>, ContractError> {
-    let mut sum = Coin::new(0, capital_denom);
+    let mut sum = Coin::new(Uint128::new(0), capital_denom);
 
     for security_commitment in deposit {
         let security = securities::get(deps.storage, security_commitment.name.clone())?;
@@ -198,7 +198,7 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
@@ -220,14 +220,14 @@ mod tests {
 
     #[test]
     fn test_is_accepted_throws_error_on_invalid_lp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
         is_accepted(&deps.as_mut(), &sender).unwrap_err();
     }
 
     #[test]
     fn test_is_accepted_should_return_false_on_invalid_state() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
         let commitment = Commitment::new(sender.clone(), vec![]);
         commits::set(deps.as_mut().storage, &commitment).unwrap();
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_is_accepted_should_return_true_on_accepted() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
         let mut commitment = Commitment::new(sender.clone(), vec![]);
         commitment.state = CommitmentState::ACCEPTED;
@@ -248,7 +248,7 @@ mod tests {
 
     #[test]
     fn test_calculate_funds_should_throw_error_with_invalid_security() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let capital_denom = "denom".to_string();
         let securities = vec![SecurityCommitment {
             name: "Security1".to_string(),
@@ -261,17 +261,17 @@ mod tests {
 
     #[test]
     fn test_calculate_funds_should_work_with_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let capital_denom = "denom".to_string();
         let securities = vec![];
 
         let funds = calculate_funds(&deps.as_mut(), &securities, &capital_denom).unwrap();
-        assert_eq!(vec![Coin::new(0, capital_denom)], funds);
+        assert_eq!(vec![Coin::new(Uint128::new(0), capital_denom)], funds);
     }
 
     #[test]
     fn test_caluclate_funds_works_with_multiple_securities() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let capital_denom = "denom".to_string();
         let securities = vec![
             Security {
@@ -279,14 +279,14 @@ mod tests {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(10, capital_denom.clone()),
+                price_per_unit: Coin::new(Uint128::new(10), capital_denom.clone()),
             },
             Security {
                 name: "Security2".to_string(),
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(5, capital_denom.clone()),
+                price_per_unit: Coin::new(Uint128::new(5), capital_denom.clone()),
             },
         ];
         let commitments = vec![
@@ -303,15 +303,15 @@ mod tests {
         securities::set(deps.as_mut().storage, &securities[1]).unwrap();
 
         let funds = calculate_funds(&deps.as_mut(), &commitments, &capital_denom).unwrap();
-        assert_eq!(vec![Coin::new(85, capital_denom)], funds);
+        assert_eq!(vec![Coin::new(Uint128::new(85), capital_denom)], funds);
     }
 
     /*
     #[test]
     fn test_funds_match_deposit() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let capital_denom = "denom".to_string();
-        let funds = vec![Coin::new(100, &capital_denom)];
+        let funds = vec![Coin::new(Uint128::new(100), &capital_denom)];
         let deposit = vec![
             SecurityCommitment {
                 name: "Security1".to_string(),
@@ -330,7 +330,7 @@ mod tests {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(50, &capital_denom),
+                price_per_unit: Coin::new(Uint128::new(50), &capital_denom),
             },
         )
         .unwrap();
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_funds_match_deposit_should_fail_with_fund_amount_mismatch() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let capital_denom = "denom".to_string();
         let funds = vec![Coin::new(120, &capital_denom)];
         let deposit = vec![
@@ -373,7 +373,7 @@ mod tests {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(50, &capital_denom),
+                price_per_unit: Coin::new(Uint128::new(50), &capital_denom),
             },
         )
         .unwrap();
@@ -396,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_securities_match_can_handle_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let initial_drawdown = vec![];
         let lp = Addr::unchecked("lp");
         commits::set(
@@ -418,7 +418,7 @@ mod tests {
 
     #[test]
     fn test_drawdown_security_length_doesnt_match() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let commitment = vec![SecurityCommitment {
             name: "Security1".to_string(),
             amount: Uint128::new(5),
@@ -449,7 +449,7 @@ mod tests {
 
     #[test]
     fn test_drawdown_invalid_security() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let commitment = vec![
             SecurityCommitment {
                 name: "Security3".to_string(),
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn test_drawdown_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let commitment = vec![SecurityCommitment {
             name: "Security1".to_string(),
             amount: Uint128::new(5),
@@ -511,10 +511,10 @@ mod tests {
 
     #[test]
     fn test_update_depositer_capital_new_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let capital_denom = "denom".to_string();
-        let funds = vec![Coin::new(10, &capital_denom)];
+        let funds = vec![Coin::new(Uint128::new(10), &capital_denom)];
         let deposit = vec![SecurityCommitment {
             name: "Security1".to_string(),
             amount: Uint128::new(5),
@@ -531,10 +531,10 @@ mod tests {
 
     #[test]
     fn test_update_depositer_capital_update_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let capital_denom = "denom".to_string();
-        let funds = vec![Coin::new(10, &capital_denom)];
+        let funds = vec![Coin::new(Uint128::new(10), &capital_denom)];
         let deposit = vec![SecurityCommitment {
             name: "Security1".to_string(),
             amount: Uint128::new(5),
@@ -557,12 +557,12 @@ mod tests {
                 amount: Uint128::new(10),
             }
         );
-        assert_eq!(available_capital[0], Coin::new(20, &capital_denom));
+        assert_eq!(available_capital[0], Coin::new(Uint128::new(20), &capital_denom));
     }
 
     #[test]
     fn test_handle_should_throw_error_with_invalid_state() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
         let deposit = vec![];
         let settlement_tester = SettlementTester::new();
@@ -581,7 +581,7 @@ mod tests {
     /*
     #[test]
     fn test_handle_should_throw_error_when_deposit_exceeds_commitment() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -605,7 +605,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_throw_error_when_settlement_expired() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -649,7 +649,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -664,9 +664,9 @@ mod tests {
 
     #[test]
     fn test_handle_should_throw_error_when_drawdown_not_met() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
-        let funds = vec![Coin::new(10, "capital_denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(10), "capital_denom".to_string())];
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let deposit = settlement_tester.security_commitments.clone();
@@ -687,9 +687,9 @@ mod tests {
     /* Taken out because we don't check if funds match - because SC is pulling funds committed
     #[test]
     fn test_handle_should_throw_error_when_funds_mismatch() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
-        let funds = vec![Coin::new(10, "capital_denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(10), "capital_denom".to_string())];
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -709,7 +709,7 @@ mod tests {
                 amount: Uint128::new(100),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(10, "capital_denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(10), "capital_denom".to_string()),
             },
         )
         .unwrap();
@@ -725,7 +725,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_work() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("sender");
         let mock_env = mock_env();
         let mut settlement_tester = SettlementTester::new();
@@ -748,7 +748,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -771,7 +771,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_work_with_zero_on_a_security() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("sender");
         let mock_env = mock_env();
         let mut settlement_tester = SettlementTester::new();
@@ -796,7 +796,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -808,7 +808,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(0),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -831,7 +831,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_work_with_multiple() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("sender");
         let mock_env = mock_env();
         let mut settlement_tester = SettlementTester::new();
@@ -859,7 +859,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(1),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -871,7 +871,7 @@ mod tests {
                 amount: Uint128::new(1000),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(0),
-                price_per_unit: Coin::new(1, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
@@ -894,7 +894,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_throws_error_on_invalid_lp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("bad address");
         let deposit = Vec::<SecurityCommitment>::new();
         deposit_exceeds_commitment(&deps.as_mut(), lp, &deposit)
@@ -903,7 +903,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_should_succeed_on_empty_deposit() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
@@ -917,7 +917,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_should_fail_on_invalid_security() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
@@ -933,7 +933,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_should_fail_on_initial_deposit_that_exceeds() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
@@ -949,7 +949,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_should_fail_on_additional_deposit_that_exceeds() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
@@ -972,7 +972,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_should_succeed_on_valid_initial_deposit() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
@@ -988,7 +988,7 @@ mod tests {
 
     #[test]
     fn test_deposit_exceeds_commitment_should_succeed_on_additional_deposit() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);

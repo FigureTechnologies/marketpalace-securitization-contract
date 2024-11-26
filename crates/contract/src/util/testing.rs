@@ -2,7 +2,7 @@ use cosmwasm_std::{
     testing::{mock_env, mock_info, MockApi, MockStorage},
     Addr, Coin, Env, OwnedDeps, Storage, Uint128, Uint64,
 };
-use provwasm_mocks::ProvenanceMockQuerier;
+use provwasm_mocks::MockProvenanceQuerier;
 use provwasm_std::ProvenanceQuery;
 
 use crate::{
@@ -77,14 +77,14 @@ pub fn create_test_securities() -> Vec<Security> {
             amount: Uint128::new(1000),
             security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
             minimum_amount: Uint128::new(10),
-            price_per_unit: Coin::new(100, "denom".to_string()),
+            price_per_unit: Coin::new(Uint128::new(100), "denom".to_string()),
         },
         Security {
             name: "Security2".to_string(),
             amount: Uint128::new(1000),
             security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
             minimum_amount: Uint128::new(10),
-            price_per_unit: Coin::new(100, "denom".to_string()),
+            price_per_unit: Coin::new(Uint128::new(100), "denom".to_string()),
         },
     ]
 }
@@ -222,7 +222,7 @@ pub fn test_update_settlement_time_message() -> ExecuteMsg {
     }
 }
 
-pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
+pub type MockDeps = OwnedDeps<MockStorage, MockApi, MockProvenanceQuerier, ProvenanceQuery>;
 
 pub fn create_test_state(deps: &mut MockDeps, env: &Env, has_settlement: bool) {
     let settlement_time = match has_settlement {

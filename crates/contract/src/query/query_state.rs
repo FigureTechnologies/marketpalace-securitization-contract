@@ -20,7 +20,7 @@ pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_json, testing::mock_env};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         contract::query,
@@ -30,7 +30,7 @@ mod tests {
 
     #[test]
     fn test_has_correct_state() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryState {}).unwrap();
         let value: QueryStateResponse = from_json(&res).unwrap();

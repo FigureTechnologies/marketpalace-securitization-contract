@@ -29,7 +29,7 @@ mod tests {
         Attribute,
     };
     use cw2::get_contract_version;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::constants::{CONTRACT_NAME, CONTRACT_VERSION},
@@ -41,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_proper_instantiation() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let info = mock_info("sender", &[]);
         let msg = test_init_message();

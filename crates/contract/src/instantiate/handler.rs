@@ -90,7 +90,7 @@ mod tests {
     };
     use cosmwasm_std::{Attribute, Uint128};
     use cw2::get_contract_version;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
     use provwasm_std::types::provenance::marker::v1::{Access, MarkerType};
     use crate::storage::state::{self};
     use crate::{
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn test_with_valid_data() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_TIME: Option<Uint64> = None;
@@ -160,14 +160,14 @@ mod tests {
                 name: "Tranche 1".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
         ];
@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn test_with_valid_data_and_fee() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
@@ -227,14 +227,14 @@ mod tests {
                 name: "Tranche 1".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
         ];
@@ -245,7 +245,7 @@ mod tests {
             settlement_time: DEFAULT_TIME,
             fee: Some(Fee {
                 recipient: Some(Addr::unchecked("recipient")),
-                amount: Coin::new(100, "nhash"),
+                amount: Coin::new(Uint128::new(100), "nhash"),
             }),
         };
 
@@ -260,7 +260,7 @@ mod tests {
                     vec![
                         Attribute::new("action", "init"),
                         Attribute::new("fee_recipient", "recipient"),
-                        Attribute::new("fee_amount", format!("{:?}", Coin::new(100, "nhash")))
+                        Attribute::new("fee_amount", format!("{:?}", Coin::new(Uint128::new(100), "nhash")))
                     ],
                     res.attributes
                 )
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn test_with_valid_data_and_provenance_fee() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
@@ -302,14 +302,14 @@ mod tests {
                 name: "Tranche 1".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
         ];
@@ -320,7 +320,7 @@ mod tests {
             settlement_time: DEFAULT_TIME,
             fee: Some(Fee {
                 recipient: None,
-                amount: Coin::new(100, "nhash"),
+                amount: Coin::new(Uint128::new(100), "nhash"),
             }),
         };
 
@@ -335,7 +335,7 @@ mod tests {
                     vec![
                         Attribute::new("action", "init"),
                         Attribute::new("fee_recipient", "msgfees_module"),
-                        Attribute::new("fee_amount", format!("{:?}", Coin::new(100, "nhash")))
+                        Attribute::new("fee_amount", format!("{:?}", Coin::new(Uint128::new(100), "nhash")))
                     ],
                     res.attributes
                 )
@@ -367,7 +367,7 @@ mod tests {
     #[test]
     fn test_with_invalid_data() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let info = mock_info("admin", &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";

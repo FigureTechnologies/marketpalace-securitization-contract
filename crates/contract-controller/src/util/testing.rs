@@ -3,7 +3,7 @@ use cosmwasm_std::{
     to_json_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
     SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
 };
-use provwasm_mocks::{mock_dependencies, ProvenanceMockQuerier};
+use provwasm_mocks::{mock_provenance_dependencies_with_custom_querier, MockProvenanceQuerier};
 use provwasm_std::ProvenanceQuery;
 
 use crate::{
@@ -149,9 +149,9 @@ pub fn get_test_admin(deps: &ProvDepsMut, env: &Env) -> Result<Addr, ContractErr
 
 pub fn create_admin_deps(
     contract_balance: &[Coin],
-) -> OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery> {
-    let mut deps = mock_dependencies(contract_balance);
-    let querier: &mut ProvenanceMockQuerier = &mut deps.querier;
+) -> OwnedDeps<MockStorage, MockApi, MockProvenanceQuerier, ProvenanceQuery> {
+    let mut deps = mock_provenance_dependencies_with_custom_querier(contract_balance);
+    let querier: &mut MockProvenanceQuerier = &mut deps.querier;
 
     let handler = Box::from(|request: &WasmQuery| -> QuerierResult {
         let err = match request {

@@ -20,7 +20,7 @@ pub fn handle(storage: &dyn Storage, security_names: Vec<String>) -> ProvQueryRe
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_json, testing::mock_env};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         contract::query,
@@ -30,7 +30,7 @@ mod tests {
 
     #[test]
     fn test_query_single_securitizations() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("Should instantiate");
         let res = query(
             deps.as_ref(),
@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_query_multiple_securitizations() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("Should instantiate");
         let res = query(
             deps.as_ref(),

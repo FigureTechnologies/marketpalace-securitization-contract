@@ -22,7 +22,7 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, settlement_time: Option<Uint64>) 
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::error::ContractError,
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_fail_if_sender_is_not_gp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let sender = Addr::unchecked("lp");
         let settlement_time = Some(Uint64::new(9999));
@@ -42,7 +42,7 @@ mod tests {
 
     #[test]
     fn test_handle_should_succeed() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let sender = Addr::unchecked("gp");
         let settlement_time = Some(Uint64::new(9999));

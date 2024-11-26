@@ -74,7 +74,7 @@ fn add_security_commitment(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Uint128};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::security::SecurityCommitment,
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_remove() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitment = Commitment::new(lp.clone(), vec![]);
         set(deps.as_mut().storage, commitment.lp.clone(), &vec![]).unwrap();
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_has() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitment = Commitment::new(lp.clone(), vec![]);
         assert_eq!(false, super::has_lp(&deps.storage, lp.clone()));
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_get_set() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
 
         let commitments = vec![
@@ -186,14 +186,14 @@ mod tests {
 
     #[test]
     fn test_get_invalid() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         assert_eq!(Vec::<SecurityCommitment>::new(), get(&deps.storage, lp));
     }
 
     #[test]
     fn add_payment_new_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitments = vec![
             SecurityCommitment {
@@ -213,7 +213,7 @@ mod tests {
 
     #[test]
     fn add_payment_update_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitments = vec![
             SecurityCommitment {

@@ -95,7 +95,7 @@ fn is_new_securities(
 #[cfg(test)]
 mod test {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::{
@@ -204,7 +204,7 @@ mod test {
 
     #[test]
     fn test_minimums_are_met() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
@@ -217,7 +217,7 @@ mod test {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount + Uint128::new(1),
-                price_per_unit: Coin::new(5, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
             },
         )
         .unwrap();
@@ -231,7 +231,7 @@ mod test {
 
     #[test]
     fn test_all_securities_exist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         create_test_state(&mut deps, &mock_env(), false);
@@ -242,7 +242,7 @@ mod test {
 
     #[test]
     fn test_fails_on_expired_timestamp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
@@ -257,7 +257,7 @@ mod test {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
-                price_per_unit: Coin::new(5, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
             },
         )
         .unwrap();
@@ -276,7 +276,7 @@ mod test {
 
     #[test]
     fn test_commit_is_added_on_success_with_unexpired_timestamp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
@@ -289,7 +289,7 @@ mod test {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
-                price_per_unit: Coin::new(5, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
             },
         )
         .unwrap();
@@ -315,7 +315,7 @@ mod test {
 
     #[test]
     fn test_commit_is_added_on_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
@@ -328,7 +328,7 @@ mod test {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
-                price_per_unit: Coin::new(5, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
             },
         )
         .unwrap();
@@ -354,7 +354,7 @@ mod test {
 
     #[test]
     fn test_cannot_accept_security_when_total_supply_is_greater_than_amount() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
@@ -367,7 +367,7 @@ mod test {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
-                price_per_unit: Coin::new(5, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
             },
         )
         .unwrap();
@@ -381,7 +381,7 @@ mod test {
 
     #[test]
     fn test_cannot_double_commit_same_security() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
@@ -394,7 +394,7 @@ mod test {
                 amount: Uint128::new(10),
                 security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: commitments[0].amount,
-                price_per_unit: Coin::new(5, "denom".to_string()),
+                price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
             },
         )
         .unwrap();
@@ -414,7 +414,7 @@ mod test {
 
     #[test]
     fn test_can_double_commit_on_different_securities() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
 
         let mut settlement_tester = SettlementTester::new();
@@ -428,7 +428,7 @@ mod test {
                     amount: Uint128::new(10),
                     security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                     minimum_amount: Uint128::zero(),
-                    price_per_unit: Coin::new(5, "denom".to_string()),
+                    price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
                 },
             )
             .unwrap();
@@ -457,7 +457,7 @@ mod test {
 
     #[test]
     fn test_can_only_commit_on_pending_securities() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
 
         let mut settlement_tester = SettlementTester::new();
@@ -471,7 +471,7 @@ mod test {
                     amount: Uint128::new(10),
                     security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
                     minimum_amount: Uint128::zero(),
-                    price_per_unit: Coin::new(5, "denom".to_string()),
+                    price_per_unit: Coin::new(Uint128::new(5), "denom".to_string()),
                 },
             )
             .unwrap();

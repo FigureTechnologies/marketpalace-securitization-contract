@@ -52,7 +52,7 @@ mod tests {
         testing::mock_env, Addr, Attribute, Event, Reply, SubMsgResponse, SubMsgResult,
     };
     use prost::Message;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{core::error::ContractError, reply, storage, util::testing::instantiate_contract};
 
@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn test_invalid_init_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let reply = Reply {
             id: 0,
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn test_valid_init_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let uuid = "uuid";
 
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_invalid_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let reply = Reply {
             id: 100,
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_valid_success_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let contract = Addr::unchecked("contract1");
         let reply = Reply {
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_valid_error_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let contract = Addr::unchecked("contract1");
         let error = "error from contract";

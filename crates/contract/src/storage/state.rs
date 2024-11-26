@@ -51,7 +51,7 @@ pub fn set_settlement_time(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::state::{get_settlement_time, set, State};
 
@@ -75,13 +75,13 @@ mod tests {
 
     #[test]
     fn test_get_invalid() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         get(&deps.storage).unwrap_err();
     }
 
     #[test]
     fn test_get_set_valid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
         let expected_time = Some(Uint64::zero());
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_get_settlement_time_not_set() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
         let expected_time = None;
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_get_settlement_time_set() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
         let expected_time = Some(Uint64::zero());
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_set_settlement() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let expected_addr = Addr::unchecked("address");
         let expected_capital_denom = "nhash";
         let expected_time = Some(Uint64::new(9999));

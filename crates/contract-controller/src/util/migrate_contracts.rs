@@ -26,7 +26,7 @@ pub fn migrate_contracts(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, to_json_binary, Addr, SubMsg, Uint128, WasmMsg};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::msg::ContractMigrateMsg,
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn test_migrate_contracts_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         instantiate_contract(deps.as_mut(), env).unwrap();
         let contracts: Vec<Addr> = vec![];
@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn test_migrate_contracts_non_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         instantiate_contract(deps.as_mut(), env).unwrap();
         let contracts: Vec<Addr> = vec![Addr::unchecked("test_address")];
