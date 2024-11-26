@@ -273,14 +273,13 @@ checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 name = "contract"
 version = "1.0.9"
 dependencies = [
- "cosmwasm-schema 1.5.8",
- "cosmwasm-std 1.5.8",
- "cosmwasm-storage",
+ "cosmwasm-schema 2.1.4",
+ "cosmwasm-std 2.1.4",
  "cw-multi-test",
  "cw-storage-plus",
  "cw2",
  "provwasm-mocks",
- "provwasm-std 2.3.0",
+ "provwasm-std",
  "result-extensions",
  "schemars",
  "semver",
@@ -293,8 +292,8 @@ name = "contract-controller"
 version = "1.0.3"
 dependencies = [
  "anyhow",
- "cosmwasm-schema 1.5.8",
- "cosmwasm-std 1.5.8",
+ "cosmwasm-schema 2.1.4",
+ "cosmwasm-std 2.1.4",
  "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus",
@@ -302,7 +301,7 @@ dependencies = [
  "cw2",
  "prost 0.11.9",
  "provwasm-mocks",
- "provwasm-std 2.3.0",
+ "provwasm-std",
  "schemars",
  "semver",
  "serde",
@@ -1212,12 +1211,13 @@ dependencies = [
 
 [[package]]
 name = "provwasm-mocks"
-version = "1.2.0"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10027546e22361120a3a3841482c4b2c9655332c7d87a267d214ca9d48e32b34"
+checksum = "8c7d48d2a4ac41401e81145df5e95e208f949a5ded894146b783f775ef3d1a30"
 dependencies = [
- "cosmwasm-std 1.5.8",
- "provwasm-std 1.2.0",
+ "cosmwasm-std 2.1.4",
+ "provwasm-common",
+ "provwasm-std",
  "schemars",
  "serde",
 ]
@@ -1234,18 +1234,6 @@ dependencies = [
  "provwasm-common",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "provwasm-std"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5c9694811b81f8d3da336055f511d9e0a6c9b31a2ef291179012d0de398dc27"
-dependencies = [
- "cosmwasm-schema 1.5.8",
- "cosmwasm-std 1.5.8",
- "schemars",
- "serde",
 ]
 
 [[package]]
