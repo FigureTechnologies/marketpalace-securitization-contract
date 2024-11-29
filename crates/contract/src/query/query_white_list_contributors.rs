@@ -43,7 +43,7 @@ mod tests {
     use crate::core::msg::{QueryLoanPoolContributorsResponse, QueryMsg};
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::mock_info;
+    use cosmwasm_std::testing::message_info;
     use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_provenance_dependencies;
 
@@ -51,7 +51,7 @@ mod tests {
     fn test_all_whitelist_success() {
         let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
-        let info_white_list = mock_info("gp", &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =

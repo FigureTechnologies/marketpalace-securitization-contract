@@ -39,7 +39,7 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        testing::{mock_env, mock_info},
+        testing::{mock_env, message_info},
         Attribute,
     };
 
@@ -58,7 +58,7 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let message = test_add_contracts_message();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = execute::router::route(deps.as_mut(), env, info, message).unwrap();
@@ -71,7 +71,7 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let message = test_create_contract_message();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = execute::router::route(deps.as_mut(), env, info, message).unwrap();
@@ -87,7 +87,7 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let message = test_remove_contracts_message();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         add_contracts(deps.as_mut(), env.clone()).unwrap();
@@ -104,7 +104,7 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let message = test_migrate_contracts_message();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         add_contracts(deps.as_mut(), env.clone()).unwrap();
@@ -121,7 +121,7 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let message = test_migrate_all_contracts_message();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         add_contracts(deps.as_mut(), env.clone()).unwrap();
@@ -138,7 +138,7 @@ mod tests {
         let mut deps = create_admin_deps(&[]);
         let env = mock_env();
         let message = test_modify_batch_size_message();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = execute::router::route(deps.as_mut(), env, info, message).unwrap();

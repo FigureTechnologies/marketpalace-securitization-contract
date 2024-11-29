@@ -39,7 +39,7 @@ mod tests {
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::mock_info;
+    use cosmwasm_std::testing::message_info;
     use cosmwasm_std::{from_json, testing::mock_env, Addr};
     use provwasm_mocks::mock_provenance_dependencies;
 
@@ -51,8 +51,8 @@ mod tests {
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
-        let info_white_list = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =

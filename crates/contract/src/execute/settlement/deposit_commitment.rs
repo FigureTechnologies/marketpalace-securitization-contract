@@ -626,10 +626,6 @@ mod tests {
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(1);
-        let funds = vec![Coin::new(
-            settlement_tester.security_commitments[0].amount.u128(),
-            "denom".to_string(),
-        )];
 
         let deposit = settlement_tester.security_commitments.clone();
         let mut commitment = Commitment::new(
@@ -666,7 +662,6 @@ mod tests {
     fn test_handle_should_throw_error_when_drawdown_not_met() {
         let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
-        let funds = vec![Coin::new(Uint128::new(10), "capital_denom".to_string())];
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let deposit = settlement_tester.security_commitments.clone();
@@ -840,10 +835,6 @@ mod tests {
         settlement_tester.security_commitments[1].amount = Uint128::new(0);
 
         let deposit = settlement_tester.security_commitments.clone();
-        let funds = vec![Coin::new(
-            deposit[0].amount.u128() + deposit[1].amount.u128(),
-            "denom".to_string(),
-        )];
 
         let mut commitment = Commitment::new(
             sender.clone(),

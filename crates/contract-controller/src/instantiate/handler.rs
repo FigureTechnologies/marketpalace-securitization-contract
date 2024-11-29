@@ -25,7 +25,7 @@ pub fn handle(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        testing::{mock_env, mock_info},
+        testing::{mock_env, message_info},
         Attribute,
     };
     use cw2::get_contract_version;
@@ -43,7 +43,7 @@ mod tests {
     fn test_proper_instantiation() {
         let mut deps = mock_provenance_dependencies();
         let env = mock_env();
-        let info = mock_info("sender", &[]);
+        let info = message_info(&Addr::unchecked("sender"), &[]);
         let msg = test_init_message();
 
         let res = handle(deps.as_mut(), env, info, msg).unwrap();

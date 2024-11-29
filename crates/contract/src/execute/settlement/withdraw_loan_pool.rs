@@ -127,7 +127,7 @@ mod tests {
     use crate::execute::settlement::withdraw_loan_pool::handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::{mock_env, mock_info};
+    use cosmwasm_std::testing::{mock_env, message_info};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
     use cosmwasm_std::{from_json, Addr, SubMsg};
@@ -144,7 +144,7 @@ mod tests {
         let marker_denom = marker.denom.clone();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let env = mock_env();
-        let info = mock_info("someone", &[]);
+        let info = message_info(&Addr::unchecked("someone"), &[]);
         // Create a loan pool
         let loan_pools = WithdrawLoanPools {
             markers: vec![marker_denom],
@@ -167,8 +167,8 @@ mod tests {
         let denom = marker.denom.to_owned();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
-        let info_white_list = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =
@@ -229,7 +229,7 @@ mod tests {
 
                 for attribute in response.attributes.iter() {
                     if attribute.key == "loan_pool_added_by" {
-                        assert_eq!(attribute.value, info.sender.clone());
+                        assert_eq!(attribute.value, info.sender.clone().to_string());
                         found_attribute = true;
                     }
                 }
@@ -244,7 +244,7 @@ mod tests {
         let withdraw_loan_pools = WithdrawLoanPools {
             markers: vec![denom.to_owned()],
         };
-        let info = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("gp"), &[]);
 
         let withdraw_loan_pool_result = handle(
             deps.as_mut(),
@@ -277,7 +277,7 @@ mod tests {
                 for attribute in response.attributes.iter() {
                     match attribute.key.as_str() {
                         "loan_pool_removed_by" => {
-                            assert_eq!(attribute.value, info.sender.clone());
+                            assert_eq!(attribute.value, info.sender.clone().to_string());
                             found_attributes.push(attribute.key.clone());
                         }
                         "action" => {

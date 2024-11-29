@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    testing::{mock_env, mock_info, MockApi, MockStorage},
+    testing::{mock_env, message_info, MockApi, MockStorage},
     Addr, Coin, Env, OwnedDeps, Storage, Uint128, Uint64,
 };
 use provwasm_mocks::MockProvenanceQuerier;
@@ -16,19 +16,6 @@ use crate::{
         state::{self, State},
     },
 };
-
-#[cfg(tests)]
-
-pub fn setup_tests() {
-    // We want things added to STATE
-    // We want things added to COMMITS
-    // We want things added to PAID_IN_CAPITAL
-    // We want a way for things added to
-}
-
-// We want a way to create a security commitment
-// We want a way to create a commitment
-// Maybe we want a way to easily transition between states for the settlement
 
 pub struct SettlementTester {
     pub security_commitments: Vec<SecurityCommitment>,
@@ -100,7 +87,7 @@ pub fn test_init_message() -> InstantiateMsg {
 
 pub fn instantiate_contract(deps: ProvDepsMut) -> ProvTxResponse {
     let env = mock_env();
-    let info = mock_info("sender", &[]);
+    let info = message_info(&Addr::unchecked("sender"), &[]);
     let msg = test_init_message();
 
     instantiate(deps, env, info, msg)
@@ -126,7 +113,7 @@ pub fn test_propose_message() -> ExecuteMsg {
 }
 
 pub fn propose_test_commitment(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
-    let info = mock_info(sender, &[]);
+    let info = message_info(&Addr::unchecked(sender), &[]);
     let msg = test_propose_message();
     execute(deps, env, info, msg)
 }
@@ -153,7 +140,7 @@ pub fn test_cancel_message(lp: &str) -> ExecuteMsg {
 }
 
 pub fn cancel_test(deps: ProvDepsMut, env: Env, sender: &str, lp: &str) -> ProvTxResponse {
-    let info = mock_info(sender, &[]);
+    let info = message_info(&Addr::unchecked(sender), &[]);
     let msg = test_cancel_message(lp);
     execute(deps, env, info, msg)
 }
@@ -164,7 +151,7 @@ pub fn accept_test_commitment(
     sender: &str,
     lps: &[&str],
 ) -> ProvTxResponse {
-    let info = mock_info(sender, &[]);
+    let info = message_info(&Addr::unchecked(sender), &[]);
     let msg = test_accept_message(lps);
     execute(deps, env, info, msg)
 }
@@ -182,13 +169,13 @@ pub fn deposit_test(
     deposit: &[SecurityCommitment],
 ) -> ProvTxResponse {
     let funds = Vec::new();
-    let info = mock_info(sender, &funds);
+    let info = message_info(&Addr::unchecked(sender), &funds);
     let msg = test_deposit_message(deposit);
     execute(deps, env, info, msg)
 }
 
 pub fn withdraw_test(deps: ProvDepsMut, env: Env, sender: &str, lp: &str) -> ProvTxResponse {
-    let info = mock_info(sender, &[]);
+    let info = message_info(&Addr::unchecked(sender), &[]);
     let msg = test_withdraw_message(lp);
     execute(deps, env, info, msg)
 }
@@ -200,7 +187,7 @@ pub fn test_withdraw_message(lp: &str) -> ExecuteMsg {
 }
 
 pub fn withdraw_all_commitments_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
-    let info = mock_info(sender, &[]);
+    let info = message_info(&Addr::unchecked(sender), &[]);
     let msg = test_withdraw_all_commitments_message();
     execute(deps, env, info, msg)
 }
@@ -210,7 +197,7 @@ pub fn test_withdraw_all_commitments_message() -> ExecuteMsg {
 }
 
 pub fn update_settlement_time_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
-    let info = mock_info(sender, &[]);
+    let info = message_info(&Addr::unchecked(sender), &[]);
     let msg = test_update_settlement_time_message();
     execute(deps, env, info, msg)
 }

@@ -85,7 +85,7 @@ fn new_active_marker(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        testing::{mock_env, mock_info},
+        testing::{mock_env, message_info},
         Addr, Coin, StdError, Uint64,
     };
     use cosmwasm_std::{Attribute, Uint128};
@@ -151,7 +151,7 @@ mod tests {
     fn test_with_valid_data() {
         // create valid init data
         let mut deps = mock_provenance_dependencies();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_TIME: Option<Uint64> = None;
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
@@ -218,7 +218,7 @@ mod tests {
     fn test_with_valid_data_and_fee() {
         // create valid init data
         let mut deps = mock_provenance_dependencies();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         const DEFAULT_TIME: Option<Uint64> = None;
@@ -293,7 +293,7 @@ mod tests {
     fn test_with_valid_data_and_provenance_fee() {
         // create valid init data
         let mut deps = mock_provenance_dependencies();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         const DEFAULT_TIME: Option<Uint64> = None;
@@ -368,7 +368,7 @@ mod tests {
     fn test_with_invalid_data() {
         // create valid init data
         let mut deps = mock_provenance_dependencies();
-        let info = mock_info("admin", &[]);
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         const DEFAULT_TIME: Option<Uint64> = None;

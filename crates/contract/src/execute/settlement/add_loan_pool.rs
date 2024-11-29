@@ -207,7 +207,7 @@ mod tests {
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::{MockMarker, DEFAULT_MARKER_ADDRESS, DEFAULT_MARKER_DENOM};
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::{mock_env, mock_info};
+    use cosmwasm_std::testing::{mock_env, message_info};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
     use cosmwasm_std::{coins, from_json, Addr, Empty, Event, Response, SubMsg};
@@ -237,7 +237,7 @@ mod tests {
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
         //
         // Create a loan pool
         let loan_pools = ContributeLoanPools {
@@ -263,8 +263,8 @@ mod tests {
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
-        let info_white_list = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =
@@ -327,7 +327,7 @@ mod tests {
                 for attribute in response.attributes.iter() {
                     match attribute.key.as_str() {
                         "loan_pool_added_by" => {
-                            assert_eq!(attribute.value, info.sender.clone());
+                            assert_eq!(attribute.value, info.sender.clone().to_string());
                             found_attributes.push(attribute.key.clone());
                         }
                         "action" => {
@@ -374,7 +374,7 @@ mod tests {
 
         /* Create the necessary mocked objects. You would need to replace "someAddress",
         "someMarkerDenom", and "someEnv" with corresponding valid objects */
-        let info = mock_info("someAddress", &[]);
+        let info = message_info(&Addr::unchecked("someAddress"), &[]);
         let env = mock_env();
 
         // use a string that doesn't correspond to an existing marker
@@ -437,8 +437,8 @@ mod tests {
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
-        let info_white_list = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =
@@ -532,9 +532,9 @@ mod tests {
         let marker_denom = marker.denom.clone();
         deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
         // use gp
-        let info_white_list = mock_info("gp", &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =
@@ -630,8 +630,8 @@ mod tests {
         deps.querier
             .with_markers(vec![marker.clone(), some_other_marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
-        let info_white_list = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =

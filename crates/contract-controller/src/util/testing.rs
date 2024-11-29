@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    testing::{mock_info, MockApi, MockStorage},
+    testing::{message_info, MockApi, MockStorage},
     to_json_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
     SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
 };
@@ -129,13 +129,13 @@ pub fn instantiate_contract_message(owner: Addr, code_id: Uint64) -> ProvSubMsg 
 }
 
 pub fn instantiate_contract(deps: ProvDepsMut, env: Env) -> ProvTxResponse {
-    let info = mock_info("sender", &[]);
+    let info = message_info(&Addr::unchecked("sender"), &[]);
     let msg = test_init_message();
     instantiate(deps, env, info, msg)
 }
 
 pub fn add_contracts(deps: ProvDepsMut, env: Env) -> ProvTxResponse {
-    let info = mock_info("admin", &[]);
+    let info = message_info(&Addr::unchecked("admin"), &[]);
     let msg = test_add_contracts_message();
     execute(deps, env, info, msg)
 }
