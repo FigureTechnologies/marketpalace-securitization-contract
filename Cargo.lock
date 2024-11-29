@@ -289,27 +289,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "contract-controller"
-version = "1.0.3"
-dependencies = [
- "anyhow",
- "cosmwasm-schema 2.1.4",
- "cosmwasm-std 2.1.4",
- "cosmwasm-storage",
- "cw-multi-test",
- "cw-storage-plus 2.0.0",
- "cw-utils",
- "cw2 2.0.0",
- "prost 0.11.9",
- "provwasm-mocks",
- "provwasm-std",
- "schemars",
- "semver",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "cosmwasm-core"
 version = "2.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1161,16 +1140,6 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.11.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b82eaa1d779e9a4bc1c3217db8ffbeabaae1dca241bf70183242128d48681cd"
-dependencies = [
- "bytes",
- "prost-derive 0.11.9",
-]
-
-[[package]]
-name = "prost"
 version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b0487d90e047de87f984913713b85c601c05609aad5b0df4b4573fbf69aa13f"
@@ -1184,19 +1153,6 @@ name = "prost-derive"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9cc1a3263e07e0bf68e96268f37665207b49560d98739662cdfaae215c720fe"
-dependencies = [
- "anyhow",
- "itertools 0.10.5",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "prost-derive"
-version = "0.11.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
 dependencies = [
  "anyhow",
  "itertools 0.10.5",

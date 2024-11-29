@@ -49,7 +49,7 @@ pub struct LoanPoolAdditionData {
     /// The collateral being added to the loan.
     pub collateral: LoanPoolMarkerCollateral,
     /// The Provenance messages associated with the loan.
-    pub messages: Vec<CosmosMsg<ProvenanceMsg>>,
+    pub messages: Vec<CosmosMsg>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -58,5 +58,5 @@ pub struct LoanPoolRemovalData {
     /// The collateral to be deleted from state
     pub collateral: LoanPoolMarkerCollateral,
     /// The Provenance messages associated with the loan.
-    pub messages: Vec<CosmosMsg<ProvenanceMsg>>,
+    pub messages: Vec<CosmosMsg>,
 }

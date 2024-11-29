@@ -402,7 +402,7 @@ mod tests {
         assert_eq!(res.attributes[0].key, "action");
         assert_eq!(res.attributes[0].value, "accept_commitments");
         assert_eq!(res.attributes[1].key, "gp");
-        assert_eq!(res.attributes[1].value, gp);
+        assert_eq!(res.attributes[1].value, gp.to_string());
     }
 
     #[test]
@@ -418,7 +418,7 @@ mod tests {
         assert_eq!(res.attributes[0].key, "action");
         assert_eq!(res.attributes[0].value, "accept_commitments");
         assert_eq!(res.attributes[1].key, "gp");
-        assert_eq!(res.attributes[1].value, gp);
+        assert_eq!(res.attributes[1].value, gp.to_string());
     }
 
     #[test]

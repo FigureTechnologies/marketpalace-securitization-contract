@@ -64,7 +64,7 @@ fn refund_lp(deps: ProvDepsMut, commitment_lp: Addr) -> Result<Vec<ProvMsg>, Con
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, BankMsg, Coin, SubMsg};
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, BankMsg, Coin, SubMsg, Uint128};
     use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
@@ -119,7 +119,7 @@ mod tests {
         let commitment_lp = Addr::unchecked("lp2");
         let mut deps = mock_provenance_dependencies();
         let env = mock_env();
-        let removed_capital = Coin::new(10000, "denom");
+        let removed_capital = Coin::new(Uint128::new(10000), "denom");
 
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_testing_commitments(&mut deps);
@@ -200,7 +200,7 @@ mod tests {
         assert_eq!(
             vec![ProvMsg::Bank(BankMsg::Send {
                 to_address: commitment_lp.to_string(),
-                amount: vec![Coin::new(10000, "denom")],
+                amount: vec![Coin::new(Uint128::new(10000), "denom")],
             })],
             refund_messages
         );

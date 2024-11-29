@@ -3,7 +3,6 @@ use cosmwasm_std::{
     Addr, Coin, Env, OwnedDeps, Storage, Uint128, Uint64,
 };
 use provwasm_mocks::MockProvenanceQuerier;
-use provwasm_std::ProvenanceQuery;
 
 use crate::{
     contract::{execute, instantiate},
@@ -222,7 +221,7 @@ pub fn test_update_settlement_time_message() -> ExecuteMsg {
     }
 }
 
-pub type MockDeps = OwnedDeps<MockStorage, MockApi, MockProvenanceQuerier, ProvenanceQuery>;
+pub type MockDeps = OwnedDeps<MockStorage, MockApi, MockProvenanceQuerier>;
 
 pub fn create_test_state(deps: &mut MockDeps, env: &Env, has_settlement: bool) {
     let settlement_time = match has_settlement {
