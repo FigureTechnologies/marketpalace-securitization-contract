@@ -1,3 +1,4 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, CosmosMsg, Uint128};
 use provwasm_std::types::provenance::marker::v1::AccessGrant;
 use schemars::JsonSchema;
@@ -11,7 +12,22 @@ pub struct LoanPoolMarkerCollateral {
     pub share_count: Uint128,
     pub original_contributor: Addr,
     // this is the address with ADMIN privileges that added the marker to the securitization.
-    pub removed_permissions: Vec<AccessGrant>,
+    pub removed_permissions: Vec<AccessGrantSerializable>,
+}
+
+#[cw_serde]
+pub struct AccessGrantSerializable {
+    pub address: String,
+    pub permissions: Vec<i32>,
+}
+
+impl From<AccessGrant> for AccessGrantSerializable {
+    fn from(access_grant: AccessGrant) -> Self {
+        AccessGrantSerializable {
+            address: access_grant.address,
+            permissions: access_grant.permissions,
+        }
+    }
 }
 
 impl LoanPoolMarkerCollateral {
@@ -27,7 +43,7 @@ impl LoanPoolMarkerCollateral {
             marker_denom: marker_denom.into(),
             share_count: Uint128::new(share_count),
             original_contributor: original_owner,
-            removed_permissions,
+            removed_permissions: removed_permissions.into_iter().map(AccessGrantSerializable::from).collect(),
         }
     }
 }

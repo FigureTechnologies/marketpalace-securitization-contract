@@ -60,26 +60,26 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(QueryInvestorResponse)]
-    QueryInvestor { investor: Addr },
-
-    #[returns(QueryCommitmentsResponse)]
-    QueryCommitments { commitment_state: CommitmentState },
-
-    #[returns(QuerySecuritizationsResponse)]
-    QuerySecuritizations { securities: Vec<String> },
-
-    #[returns(QueryStateResponse)]
-    QueryState {},
-
-    #[returns(QueryVersionResponse)]
-    QueryVersion {},
-
-    #[returns(QueryLoanPoolCollateralResponse)]
-    QueryCollaterals {},
-
-    #[returns(QueryLoanPoolContributorsResponse)]
-    QueryLoanPoolContributors {},
+    // #[returns(QueryInvestorResponse)]
+    // QueryInvestor { investor: Addr },
+    //
+    // #[returns(QueryCommitmentsResponse)]
+    // QueryCommitments { commitment_state: CommitmentState },
+    //
+    // #[returns(QuerySecuritizationsResponse)]
+    // QuerySecuritizations { securities: Vec<String> },
+    //
+    // #[returns(QueryStateResponse)]
+    // QueryState {},
+    //
+    // #[returns(QueryVersionResponse)]
+    // QueryVersion {},
+    //
+    // #[returns(QueryLoanPoolCollateralResponse)]
+    // QueryCollaterals {},
+    //
+    // #[returns(QueryLoanPoolContributorsResponse)]
+    // QueryLoanPoolContributors {},
 }
 
 #[cw_serde]

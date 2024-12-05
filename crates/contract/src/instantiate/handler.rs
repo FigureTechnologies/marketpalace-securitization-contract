@@ -1,6 +1,7 @@
-use cosmwasm_std::{Addr, Attribute, CosmosMsg, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Addr, Attribute, CosmosMsg, Env, MessageInfo, Response, StdResult, Uint128};
 use cw2::set_contract_version;
-use provwasm_std::types::provenance::marker::v1::{Access, MarkerType};
+use provwasm_std::types::provenance::{marker::v1::{Access, MarkerType}};
+use provwasm_std::types::provenance::marker::v1::AccessGrant;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -14,7 +15,7 @@ use crate::{
     },
     util::to,
 };
-use crate::util::provenance_utilities::{activate_marker, create_marker, finalize_marker, grant_marker_access};
+use crate::util::provenance_utilities::{activate_marker, assess_custom_fee, create_marker, finalize_marker, grant_marker_access};
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -33,7 +34,7 @@ pub fn handle(
         let investment_name =
             to::security_to_investment_name(&security.name, &env.contract.address);
         let mut investment_marker =
-            new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
+            new_active_marker(env.contract.address.clone(), &investment_name, Uint128::new(0))?;
         messages.append(&mut investment_marker);
         securities::set(deps.storage, security)?;
         remaining_securities::set(deps.storage, security.name.clone(), security.amount.u128())?;
@@ -66,21 +67,26 @@ pub fn handle(
 fn new_active_marker(
     owner: Addr,
     denom: &String,
-    amount: u128,
+    amount: Uint128,
 ) -> StdResult<Vec<CosmosMsg>> {
-    let permissions = vec![
-        Access::Admin,
-        Access::Mint,
-        Access::Burn,
-        Access::Withdraw,
-        Access::Transfer,
-    ];
     let address = Addr::unchecked("address");
+    let grants = vec![
+        AccessGrant {
+            address: owner.to_string(),
+            permissions: vec![
+                Access::Admin.into(),
+                Access::Mint.into(),
+                Access::Burn.into(),
+                Access::Withdraw.into(),
+                Access::Transfer.into(),
+            ],
+        }
+    ];
     Ok(vec![
-        create_marker(amount, denom.clone(), MarkerType::Restricted, address)?,
-        grant_marker_access(denom, owner, permissions)?,
-        finalize_marker(denom, address)?,
-        activate_marker(denom, address)?,
+        create_marker(amount, denom.clone(), MarkerType::Restricted, address.clone())?,
+        grant_marker_access(denom, owner, grants)?,
+        finalize_marker(denom, address.clone())?,
+        activate_marker(denom, address.clone())?,
     ])
 }
 
@@ -93,7 +99,8 @@ mod tests {
     use cosmwasm_std::{Attribute, Uint128};
     use cw2::get_contract_version;
     use provwasm_mocks::mock_provenance_dependencies;
-    use provwasm_std::types::provenance::marker::v1::{Access, MarkerType};
+    use provwasm_std::types::cosmos::orm::query::v1alpha1::index_value::Value::Uint;
+    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerType};
     use crate::storage::state::{self};
     use crate::{
         contract::instantiate,
@@ -114,13 +121,18 @@ mod tests {
     fn test_new_active_marker_creates_and_activates_marker() {
         let address = Addr::unchecked("address");
         let denom = "denom".to_string();
-        let amount = 1000;
-        let permissions = vec![
-            Access::Admin,
-            Access::Mint,
-            Access::Burn,
-            Access::Withdraw,
-            Access::Transfer,
+        let amount = Uint128::new(1000);
+        let grants = vec![
+            AccessGrant {
+                address: address.to_string(),
+                permissions: vec![
+                    Access::Admin.into(),
+                    Access::Mint.into(),
+                    Access::Burn.into(),
+                    Access::Withdraw.into(),
+                    Access::Transfer.into(),
+                ],
+            }
         ];
 
         let messages = new_active_marker(address.clone(), &denom, amount).unwrap();
@@ -130,7 +142,7 @@ mod tests {
             messages[0]
         );
         assert_eq!(
-            grant_marker_access(&denom, address.clone(), permissions).unwrap(),
+            grant_marker_access(&denom, address.clone(), grants).unwrap(),
             messages[1]
         );
         assert_eq!(finalize_marker(&denom, address.clone()).unwrap(), messages[2]);
@@ -140,12 +152,12 @@ mod tests {
     #[test]
     fn test_new_active_marker_throws_errors_on_invalid_marker_txs() {
         let bad_addr =
-            new_active_marker(Addr::unchecked(""), &"mycustomdenom".to_string(), 1000).unwrap_err();
+            new_active_marker(Addr::unchecked(""), &"mycustomdenom".to_string(), Uint128::new(1000)).unwrap_err();
         let expected = StdError::generic_err("address must not be empty");
         assert_eq!(expected, bad_addr);
 
         let bad_denom =
-            new_active_marker(Addr::unchecked("address"), &"".to_string(), 1000).unwrap_err();
+            new_active_marker(Addr::unchecked("address"), &"".to_string(), Uint128::new(1000)).unwrap_err();
         let expected = StdError::generic_err("denom must not be empty");
         assert_eq!(expected, bad_denom);
     }

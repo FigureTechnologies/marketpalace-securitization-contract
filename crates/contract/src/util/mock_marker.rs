@@ -76,9 +76,9 @@ impl MockMarker {
         }
     }
 
-    pub fn new_marker() -> Marker {
-        Self::default().to_marker()
-    }
+    // pub fn new_marker() -> MockMarker {
+    //     Self::default().to_marker()
+    // }
 
     pub fn new_owned_mock_marker<S: Into<String>>(owner_address: S) -> Self {
         Self {
@@ -125,14 +125,14 @@ impl MockMarker {
         Self::new_owned_mock_marker(owner_address).to_marker()
     }
 
-    pub fn new_owned_marker_custom<S: Into<String>>(
-        owner_address: S,
-        denom_str: Option<S>,
-        supply_fixed: bool,
-    ) -> Marker {
-        Self::new_owned_mock_marker_supply_variable(owner_address, denom_str, supply_fixed)
-            .to_marker()
-    }
+    // pub fn new_owned_marker_custom<S: Into<String>>(
+    //     owner_address: S,
+    //     denom_str: Option<S>,
+    //     supply_fixed: bool,
+    // ) -> Marker {
+    //     Self::new_owned_mock_marker_supply_variable(owner_address, denom_str, supply_fixed)
+    //         .to_marker()
+    // }
 
     pub fn to_marker(self) -> MockMarker {
         MockMarker {

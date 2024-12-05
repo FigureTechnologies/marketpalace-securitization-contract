@@ -46,11 +46,11 @@ pub fn instantiate(
 /// details, as well as blockchain information at the time of the transaction.
 /// * `msg` A custom query message enum defined by this contract to allow multiple different results
 /// to be determined for this route.
-#[entry_point]
-pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
-    msg.validate()?;
-    query::router::route(deps, env, msg)
-}
+// #[entry_point]
+// pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
+//     msg.validate()?;
+//     query::router::route(deps, env, msg)
+// }
 
 /// The entry point used when an external address initiates a process defined in the
 /// contract.  This defines the primary purposes of this contract, like the onboarding and
@@ -68,12 +68,12 @@ pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
 /// * `msg` A custom execution message enum defined by this contract to allow multiple different
 /// processes to be defined for the singular execution route entry point allowed by the
 /// cosmwasm framework.
-#[entry_point]
-pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
-    msg.validate()?;
-    msg.validate_msg_funds(&info.funds)?;
-    execute::router::route(deps, env, info, msg)
-}
+// #[entry_point]
+// pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
+//     msg.validate()?;
+//     msg.validate_msg_funds(&info.funds)?;
+//     execute::router::route(deps, env, info, msg)
+// }
 
 /// The entry point used when migrating a live contract instance to a new code instance, or to
 /// refresh the contract with an existing matching codebase for the purpose of running migration
@@ -88,9 +88,11 @@ pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) 
 /// * msg` A custom migrate message enum defined by this contract to allow multiple different
 /// results of invoking the migrate endpoint.
 #[entry_point]
-pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) -> ProvTxResponse {
-    msg.validate()?;
-    let res = migrate::handler::handle(&deps, env, msg);
-    cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    res
+pub fn migrate(deps: ProvDepsMut, env: Env, msg: MigrateMsg) {
 }
+//     msg.validate()?;
+//     let res = migrate::handler::handle(&deps, env, msg);
+//     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+//     res
+// }
+
