@@ -1,6 +1,6 @@
 use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response};
 use provwasm_std::types::provenance::marker::v1::Access::{Admin, Withdraw};
-use provwasm_std::types::provenance::marker::v1::AccessGrant;
+use provwasm_std::types::provenance::marker::v1::{AccessGrant, MarkerQuerier};
 use result_extensions::ResultExtensions;
 
 use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
@@ -12,7 +12,7 @@ use crate::core::{
 use crate::execute::settlement::marker_loan_pool_validation::validate_marker_for_loan_pool_add_remove;
 use crate::storage::loan_pool_collateral::set;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
-use crate::util::provenance_utilities::{get_single_marker_coin_holding, query_total_supply};
+use crate::util::provenance_utilities::{get_marker_by_denom, get_single_marker_coin_holding, query_total_supply, Marker};
 
 /// Handles loan pool additions.
 ///
@@ -111,13 +111,14 @@ pub fn handle(
 /// * if unable to validate the marker for addition to loan pool
 /// * if unable to get messages to revoke the marker's permissions
 fn create_marker_pool_collateral(
-    deps: &DepsMut<ProvenanceQuery>,
+    deps: &DepsMut,
     info: &MessageInfo,
     env: &Env,
     marker_denom: String,
 ) -> Result<LoanPoolAdditionData, ContractError> {
     // get marker
-    let marker_res = ProvenanceQuerier::new(&deps.querier).get_marker_by_denom(&marker_denom);
+    let querier = MarkerQuerier::new(&deps.querier);
+    let marker_res = get_marker_by_denom(&marker_denom, &querier);
     let marker = match marker_res {
         Ok(m) => m,
         Err(e) => {
@@ -175,13 +176,13 @@ fn create_marker_pool_collateral(
 /// * `contract_address`: the address of this contract
 ///
 /// Returns:
-/// * `Result<Vec<CosmosMsg<ProvenanceMsg>>, ContractError>`: A result object containing either a vector of messages to revoke access
+/// * `Result<Vec<CosmosMsg>, ContractError>`: A result object containing either a vector of messages to revoke access
 ///   or a custom ContractError enumeration, which represents an error.
 fn get_marker_permission_revoke_messages(
     marker: &Marker,
     contract_address: &Addr,
-) -> Result<Vec<CosmosMsg<ProvenanceMsg>>, ContractError> {
-    let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = vec![];
+) -> Result<Vec<CosmosMsg>, ContractError> {
+    let mut messages: Vec<CosmosMsg> = vec![];
     for permission in marker
         .permissions
         .iter()
@@ -210,12 +211,9 @@ mod tests {
     use cosmwasm_std::testing::{mock_env, message_info};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{coins, from_json, Addr, Empty, Event, Response, SubMsg};
+    use cosmwasm_std::{coins, from_json, Addr, AnyMsg, Empty, Event, Response, SubMsg};
     use provwasm_mocks::mock_provenance_dependencies;
-    use provwasm_std::MarkerMsgParams::RevokeMarkerAccess;
-    use provwasm_std::ProvenanceMsg;
-    use provwasm_std::ProvenanceMsgParams::Marker;
-    use provwasm_std::ProvenanceRoute::Marker as marker_route;
+    use provwasm_std::types::provenance::marker::v1::MarkerQuerier;
 
     #[test]
     fn test_coin_trade_with_valid_data() {
@@ -349,7 +347,7 @@ mod tests {
 
                 let expected_msg1 = SubMsg {
                     id: 0,
-                    msg: Custom(ProvenanceMsg {
+                    msg: Custom(AnyMsg {
                         route: marker_route,
                         params: Marker(RevokeMarkerAccess {
                             denom: "markerdenom".parse().unwrap(),

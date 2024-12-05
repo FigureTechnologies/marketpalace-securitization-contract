@@ -1,9 +1,11 @@
+use cosmwasm_schema::cw_serde;
 use crate::core::error::ContractError;
-use cosmwasm_std::{
-    coin, Addr, BankQuery, Coin, CosmosMsg, DepsMut, StdResult, SupplyResponse, Uint128,
-};
-use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
+use cosmwasm_std::{coin, Addr, BankQuery, Coin, CosmosMsg, Decimal, DepsMut, Empty, StdError, StdResult, SupplyResponse, Uint128};
+use provwasm_std::try_proto_to_cosmwasm_coins;
+use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerAccount, MarkerQuerier, MarkerStatus, MarkerType, MsgActivateRequest, MsgAddAccessRequest, MsgAddMarkerRequest, MsgFinalizeRequest, MsgMintRequest, MsgTransferRequest, MsgWithdrawRequest};
 use result_extensions::ResultExtensions;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 pub const NHASH: &str = "nhash";
 
@@ -28,8 +30,78 @@ pub fn marker_has_permissions(
     })
 }
 
+pub fn create_marker<S: Into<String>>(
+    amount: u128,
+    denom: S,
+    marker_type: MarkerType,
+    contract_address: Addr,
+) -> StdResult<CosmosMsg> {
+    let coin = Coin {
+        amount: amount,
+        denom: validate_string(denom, "denom")?,
+    };
+
+    Ok(MsgAddMarkerRequest {
+        amount: Some(coin),
+        manager: validate_address(contract_address.clone())?.to_string(),
+        from_address: validate_address(contract_address)?.to_string(),
+        status: MarkerStatus::Proposed.into(),
+        marker_type: marker_type.into(),
+        access_list: vec![],
+        supply_fixed: false,
+        allow_governance_control: false,
+        allow_forced_transfer: false,
+        required_attributes: vec![],
+        usd_cents: 0,
+        volume: 0,
+        usd_mills: 0,
+    }
+        .into())
+}
+
 pub fn marker_has_admin(marker: &Marker, admin_address: &Addr) -> bool {
     marker_has_permissions(marker, admin_address, &[Access::Admin])
+}
+
+pub struct MockMarker {
+    pub address: Addr,
+    pub coins: Vec<Coin>,
+    pub account_number: u64,
+    pub sequence: u64,
+    pub manager: String,
+    pub permissions: Vec<AccessGrant>,
+    pub status: MarkerStatus,
+    pub denom: String,
+    pub total_supply: Decimal,
+    pub marker_type: MarkerType,
+    pub supply_fixed: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+// pub struct Marker {
+//     pub address: Addr,
+//     // pub allow_forced_transfer: bool,
+//     #[serde(default)]
+//     pub coins: Vec<Coin>,
+//     pub account_number: u64,
+//     pub sequence: u64,
+//     #[serde(default)]
+//     pub manager: String,
+//     pub permissions: Vec<AccessGrant>,
+//     pub status: MarkerStatus,
+//     pub denom: String,
+//     pub total_supply: Decimal,
+//     pub marker_type: MarkerType,
+//     pub supply_fixed: bool,
+// }
+
+#[cw_serde]
+pub struct MarkAccount {
+    pub base_account: Option<String>,
+    pub manager: String,
+    pub denom: String,
+    pub supply: String,
 }
 
 /// Retrieves the single coin holding associated with the provided marker.
@@ -95,11 +167,163 @@ pub fn calculate_marker_quote(marker_share_count: u128, quote_per_share: &[Coin]
         .collect::<Vec<Coin>>()
 }
 
+pub fn finalize_marker<S: Into<String>>(denom: S, contract_address: Addr) -> StdResult<CosmosMsg> {
+    Ok(MsgFinalizeRequest {
+        denom: validate_string(denom, "denom")?,
+        administrator: validate_address(contract_address)?.to_string(),
+    }
+        .into())
+}
+
+pub fn get_marker_by_denom<H: Into<String>>(
+    denom: H,
+    querier: &MarkerQuerier<Empty>,
+) -> StdResult<Marker> {
+    get_marker(validate_string(denom, "denom")?, querier)
+}
+
+pub struct Marker {
+    pub marker_account: MarkAccount,
+    pub coins: Vec<cosmwasm_std::Coin>,
+}
+
+pub fn get_marker(id: String, querier: &MarkerQuerier<Empty>) -> StdResult<Marker> {
+    let response = querier.marker(id)?;
+    if let Some(marker) = response.marker {
+        return if let Ok(account) = MarkerAccount::try_from(marker) {
+            let escrow = querier.escrow(account.clone().base_account.unwrap().address)?;
+            Ok(Marker {
+                marker_account: account.into(),
+                coins: try_proto_to_cosmwasm_coins(escrow.escrow)?,
+            })
+        } else {
+            Err(StdError::generic_err("unable to type-cast marker account"))
+        };
+    }
+    Err(StdError::generic_err(format!(
+        "no marker found for id: response: {:?}",
+        response
+    )))
+}
+
+// pub fn activate_marker<S: Into<String>>(denom: S) -> StdResult<CosmosMsg> {
+//     Ok(create_marker_msg(MarkerMsgParams::ActivateMarker {
+//         denom: validate_string(denom, "denom")?,
+//     }))
+// }
+//
+pub fn activate_marker<S: Into<String>>(denom: S, contract_address: Addr) -> StdResult<CosmosMsg> {
+    Ok(MsgActivateRequest {
+        denom: validate_string(denom, "denom")?,
+        administrator: validate_address(contract_address)?.to_string(),
+    }
+        .into())
+}
+
+pub fn transfer_marker_coins<S: Into<String>, H: Into<Addr>>(
+    amount: u128,
+    denom: S,
+    to: H,
+    from: H,
+    contract_address: H,
+) -> StdResult<CosmosMsg> {
+    if amount == 0 {
+        return Err(StdError::generic_err("transfer amount must be > 0"));
+    }
+    let coin = Coin {
+        denom: validate_string(denom, "denom")?,
+        amount: amount.to_string(),
+    };
+    Ok(MsgTransferRequest {
+        amount: Some(coin),
+        administrator: contract_address.into().to_string(),
+        from_address: validate_address(from)?.to_string(),
+        to_address: validate_address(to)?.to_string(),
+    }
+        .into())
+}
+
+pub fn mint_marker_supply<S: Into<String>>(
+    amount: u128,
+    denom: S,
+    contract_address: Addr,
+) -> StdResult<CosmosMsg> {
+    if amount == 0 {
+        return Err(StdError::generic_err("mint amount must be > 0"));
+    }
+    let coin = Coin {
+        denom: validate_string(denom, "denom")?,
+        amount: amount.to_string(),
+    };
+
+    Ok(MsgMintRequest {
+        amount: Some(coin),
+        administrator: validate_address(contract_address)?.to_string(),
+    }
+        .into())
+}
+
+pub fn withdraw_coins<S: Into<String>, H: Into<Addr>>(
+    marker_denom: S,
+    amount: u128,
+    denom: S,
+    recipient: H,
+    contract_address: Addr,
+) -> StdResult<CosmosMsg> {
+    if amount == 0 {
+        return Err(StdError::generic_err("withdraw amount must be > 0"));
+    }
+    let coin = Coin {
+        denom: validate_string(denom, "denom")?,
+        amount: amount.to_string(),
+    };
+    Ok(MsgWithdrawRequest {
+        denom: validate_string(marker_denom, "marker_denom")?,
+        administrator: validate_address(contract_address)?.to_string(),
+        to_address: validate_address(recipient)?.to_string(),
+        amount: vec![coin],
+    }
+        .into())
+}
+
+pub fn grant_marker_access<S: Into<String>, H: Into<Addr>>(
+    denom: S,
+    address: H,
+    permissions: Vec<AccessGrant>,
+) -> StdResult<CosmosMsg> {
+    Ok(MsgAddAccessRequest {
+        denom: validate_string(denom, "denom")?,
+        administrator: validate_address(address)?.to_string(),
+        access: permissions,
+    }
+        .into())
+}
+
+/// A helper that ensures string params are non-empty.
+pub fn validate_string<S: Into<String>>(input: S, param_name: &str) -> StdResult<String> {
+    let s: String = input.into();
+    if s.trim().is_empty() {
+        let err = format!("{} must not be empty", param_name);
+        Err(StdError::generic_err(err))
+    } else {
+        Ok(s)
+    }
+}
+/// A helper that ensures address params are non-empty.
+pub fn validate_address<H: Into<Addr>>(input: H) -> StdResult<Addr> {
+    let h: Addr = input.into();
+    if h.to_string().trim().is_empty() {
+        Err(StdError::generic_err("address must not be empty"))
+    } else {
+        Ok(h)
+    }
+}
+
 pub fn release_marker_from_contract<S: Into<String>>(
     marker_denom: S,
     contract_address: &Addr,
     permissions_to_grant: &[AccessGrant],
-) -> Result<Vec<CosmosMsg<ProvenanceMsg>>, ContractError> {
+) -> Result<Vec<CosmosMsg>, ContractError> {
     let marker_denom = marker_denom.into();
     let mut messages = vec![];
     // Restore all permissions that the marker had before it was transferred to the
@@ -121,7 +345,7 @@ pub fn release_marker_from_contract<S: Into<String>>(
     messages.to_ok()
 }
 
-pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdResult<Uint128> {
+pub fn query_total_supply(deps: &DepsMut, denom: &str) -> StdResult<Uint128> {
     let request = BankQuery::Supply {
         denom: denom.into(),
     }
@@ -134,10 +358,8 @@ pub fn query_total_supply(deps: &DepsMut<ProvenanceQuery>, denom: &str) -> StdRe
 mod tests {
     use super::*;
     use crate::util::mock_marker::MockMarker;
-    use cosmwasm_std::coins;
+    use cosmwasm_std::{coins, AnyMsg};
     use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
-    use provwasm_mocks::mock_dependencies_with_balances;
-    use provwasm_std::{MarkerMsgParams, ProvenanceMsgParams};
     use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
 
     #[test]
@@ -366,7 +588,7 @@ mod tests {
             "the correct number of messages should be produced",
         );
         messages.into_iter().for_each(|msg| match msg {
-            CosmosMsg::Custom(ProvenanceMsg { params: ProvenanceMsgParams::Marker(MarkerMsgParams::RevokeMarkerAccess { denom, address }), .. }) => {
+            CosmosMsg::Any(AnyMsg { params: ProvenanceMsgParams::Marker(MarkerMsgParams::RevokeMarkerAccess { denom, address }), .. }) => {
                 assert_eq!(
                     "testdenom",
                     denom,
@@ -378,7 +600,7 @@ mod tests {
                     "the target address for revocation should always be the contract's address",
                 );
             }
-            CosmosMsg::Custom(ProvenanceMsg { params: ProvenanceMsgParams::Marker(MarkerMsgParams::GrantMarkerAccess { denom, address, permissions }), .. }) => {
+            CosmosMsg::Any(AnyMsg { params: ProvenanceMsgParams::Marker(MarkerMsgParams::GrantMarkerAccess { denom, address, permissions }), .. }) => {
                 assert_eq!(
                     "testdenom",
                     denom,

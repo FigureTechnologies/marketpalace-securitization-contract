@@ -14,6 +14,7 @@ use crate::{
     },
     util::to,
 };
+use crate::util::provenance_utilities::{activate_marker, create_marker, finalize_marker, grant_marker_access};
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -27,7 +28,7 @@ pub fn handle(
     state::set(deps.storage, &state)?;
 
     // Create the markers
-    let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = Vec::new();
+    let mut messages: Vec<CosmosMsg> = Vec::new();
     for security in &msg.securities {
         let investment_name =
             to::security_to_investment_name(&security.name, &env.contract.address);
@@ -66,7 +67,7 @@ fn new_active_marker(
     owner: Addr,
     denom: &String,
     amount: u128,
-) -> StdResult<Vec<CosmosMsg<ProvenanceMsg>>> {
+) -> StdResult<Vec<CosmosMsg>> {
     let permissions = vec![
         Access::Admin,
         Access::Mint,
@@ -74,11 +75,12 @@ fn new_active_marker(
         Access::Withdraw,
         Access::Transfer,
     ];
+    let address = Addr::unchecked("address");
     Ok(vec![
-        create_marker(amount, denom.clone(), MarkerType::Restricted)?,
+        create_marker(amount, denom.clone(), MarkerType::Restricted, address)?,
         grant_marker_access(denom, owner, permissions)?,
-        finalize_marker(denom)?,
-        activate_marker(denom)?,
+        finalize_marker(denom, address)?,
+        activate_marker(denom, address)?,
     ])
 }
 
@@ -106,6 +108,7 @@ mod tests {
         storage::securities::{self},
     };
     use crate::{instantiate::handler::new_active_marker, storage::remaining_securities};
+    use crate::util::provenance_utilities::{activate_marker, create_marker, finalize_marker, grant_marker_access};
 
     #[test]
     fn test_new_active_marker_creates_and_activates_marker() {
@@ -123,15 +126,15 @@ mod tests {
         let messages = new_active_marker(address.clone(), &denom, amount).unwrap();
         assert_eq!(4, messages.len());
         assert_eq!(
-            create_marker(amount, &denom, MarkerType::Restricted).unwrap(),
+            create_marker(amount, &denom, MarkerType::Restricted, address.clone()).unwrap(),
             messages[0]
         );
         assert_eq!(
-            grant_marker_access(&denom, address.clone(), permissions,).unwrap(),
+            grant_marker_access(&denom, address.clone(), permissions).unwrap(),
             messages[1]
         );
-        assert_eq!(finalize_marker(&denom).unwrap(), messages[2]);
-        assert_eq!(activate_marker(&denom).unwrap(), messages[3]);
+        assert_eq!(finalize_marker(&denom, address.clone()).unwrap(), messages[2]);
+        assert_eq!(activate_marker(&denom, address.clone()).unwrap(), messages[3]);
     }
 
     #[test]

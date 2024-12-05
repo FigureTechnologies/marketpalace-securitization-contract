@@ -1,6 +1,7 @@
 use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
 use cosmwasm_std::{coins, Addr, Coin, Decimal, Uint128};
 use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerStatus, MarkerType};
+use crate::util::provenance_utilities::Marker;
 
 pub const DEFAULT_MARKER_ADDRESS: &str = "marker_address";
 pub const DEFAULT_MARKER_HOLDINGS: u128 = 100;
@@ -120,7 +121,7 @@ impl MockMarker {
         }
     }
 
-    pub fn new_owned_marker<S: Into<String>>(owner_address: S) -> Marker {
+    pub fn new_owned_marker<S: Into<String>>(owner_address: S) -> MockMarker {
         Self::new_owned_mock_marker(owner_address).to_marker()
     }
 
@@ -133,8 +134,8 @@ impl MockMarker {
             .to_marker()
     }
 
-    pub fn to_marker(self) -> Marker {
-        Marker {
+    pub fn to_marker(self) -> MockMarker {
+        MockMarker {
             address: self.address,
             coins: self.coins,
             account_number: self.account_number,

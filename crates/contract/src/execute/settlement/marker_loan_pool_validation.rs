@@ -1,7 +1,5 @@
 use crate::core::error::ContractError;
-use crate::util::provenance_utilities::{
-    get_single_marker_coin_holding, marker_has_admin, marker_has_permissions,
-};
+use crate::util::provenance_utilities::{get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, Marker};
 use cosmwasm_std::{Addr, Uint128};
 use provwasm_std::types::provenance::marker::v1::{Access, MarkerStatus};
 use result_extensions::ResultExtensions;
@@ -40,7 +38,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
         return get_contract_error(format!(
             "expected sender [{}] to have admin privileges on marker [{}]",
             original_owner_address.as_str(),
-            marker.denom,
+            marker.marker_account.denom,
         ));
     }
     if !marker_has_permissions(marker, contract_address, expected_contract_permissions) {
@@ -48,7 +46,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
             "expected this contract [{}] to have privileges {:?} on marker [{}]",
             contract_address.as_str(),
             expected_contract_permissions,
-            marker.denom,
+            marker.marker_account.denom,
         ));
     }
     // Active check

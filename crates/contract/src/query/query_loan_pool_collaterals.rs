@@ -39,17 +39,19 @@ mod tests {
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::message_info;
-    use cosmwasm_std::{from_json, testing::mock_env, Addr};
-    use provwasm_mocks::mock_provenance_dependencies;
+    use cosmwasm_std::testing::{message_info, MOCK_CONTRACT_ADDR};
+    use cosmwasm_std::{coin, from_json, testing::mock_env, Addr};
+    use provwasm_mocks::{mock_provenance_dependencies, mock_provenance_dependencies_with_custom_querier, MockProvenanceQuerier};
 
     #[test]
     fn test_all_collateral_success() {
-        let mut deps = mock_provenance_dependencies();
+        let mut deps = mock_provenance_dependencies_with_custom_querier(
+            MockProvenanceQuerier::new(&[(MOCK_CONTRACT_ADDR, &[coin(30, "base_1")])]),
+        );
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
-        deps.querier.with_markers(vec![marker.clone()]);
+        // deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
         let info = message_info(&Addr::unchecked("contributor"), &[]);
         let info_white_list = message_info(&Addr::unchecked("gp"), &[]);

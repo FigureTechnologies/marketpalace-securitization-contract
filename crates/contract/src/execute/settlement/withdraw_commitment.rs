@@ -12,7 +12,7 @@ use crate::{
     },
     util::{self, to},
 };
-
+use crate::util::provenance_utilities::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
 use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(mut deps: ProvDepsMut, env: Env, sender: Addr, commitment: Addr) -> ProvTxResponse {
@@ -67,6 +67,7 @@ fn process_withdraw(
             capital.denom,
             gp.clone(),
             contract.clone(),
+            contract.clone()
         )?);
     }
 
@@ -81,7 +82,7 @@ fn transfer_investment_tokens(
     let mut messages = vec![];
     for security in &commitment.commitments {
         let investment_name = to::security_to_investment_name(&security.name, contract);
-        let mint_msg = mint_marker_supply(security.amount.u128(), &investment_name)?;
+        let mint_msg = mint_marker_supply(security.amount.u128(), &investment_name, contract)?;
         let withdraw_msg = withdraw_coins(
             &investment_name,
             security.amount.u128(),
@@ -109,7 +110,7 @@ mod tests {
         },
         util::{testing::SettlementTester, to},
     };
-
+    use crate::util::provenance_utilities::{mint_marker_supply, withdraw_coins};
     use super::{handle, process_withdraw, transfer_investment_tokens, withdraw_commitment};
 
     #[test]

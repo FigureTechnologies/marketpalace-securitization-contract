@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Coin, Env, Event, Response};
+use cosmwasm_std::{Addr, Coin, Env, Event, Response, Uint128};
 
 use crate::storage::{securities, state};
 use crate::{
@@ -16,7 +16,7 @@ use crate::{
     },
     util,
 };
-
+use crate::util::provenance_utilities::transfer_marker_coins;
 use super::commitment::CommitmentState;
 
 pub fn handle(
@@ -122,6 +122,7 @@ fn process_deposit(
                 fund.denom,
                 contract.clone(),
                 sender.clone(),
+                contract.clone(),
             )?);
         }
     }
