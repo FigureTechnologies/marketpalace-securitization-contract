@@ -1,6 +1,7 @@
 use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
 use cosmwasm_std::{coins, Addr, Coin, Decimal, Uint128};
-use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerStatus, MarkerType};
+use provwasm_std::types::cosmos::auth::v1beta1::BaseAccount;
+use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerAccount, MarkerStatus, MarkerType};
 use crate::util::provenance_utilities::Marker;
 
 pub const DEFAULT_MARKER_ADDRESS: &str = "marker_address";
@@ -122,17 +123,17 @@ impl MockMarker {
     }
 
     pub fn new_owned_marker<S: Into<String>>(owner_address: S) -> MockMarker {
-        Self::new_owned_mock_marker(owner_address).to_marker()
+        Self::new_owned_mock_marker(owner_address)
     }
 
-    // pub fn new_owned_marker_custom<S: Into<String>>(
-    //     owner_address: S,
-    //     denom_str: Option<S>,
-    //     supply_fixed: bool,
-    // ) -> Marker {
-    //     Self::new_owned_mock_marker_supply_variable(owner_address, denom_str, supply_fixed)
-    //         .to_marker()
-    // }
+    pub fn new_owned_marker_custom<S: Into<String>>(
+        owner_address: S,
+        denom_str: Option<S>,
+        supply_fixed: bool,
+    ) -> MockMarker {
+        Self::new_owned_mock_marker_supply_variable(owner_address, denom_str, supply_fixed)
+            .to_marker()
+    }
 
     pub fn to_marker(self) -> MockMarker {
         MockMarker {
@@ -147,6 +148,27 @@ impl MockMarker {
             total_supply: self.total_supply,
             marker_type: self.marker_type,
             supply_fixed: self.supply_fixed,
+        }
+    }
+
+    pub fn to_marker_account(self) -> MarkerAccount {
+        MarkerAccount {
+            base_account: Some(BaseAccount {
+                address: self.address.to_string(),
+                pub_key: None,
+                account_number: self.account_number,
+                sequence: self.sequence,
+            }),
+            manager: self.manager,
+            access_control: self.permissions,
+            status: self.status.into(),
+            denom: self.denom,
+            supply: self.total_supply.to_string(),
+            marker_type: self.marker_type.into(),
+            supply_fixed: self.supply_fixed,
+            allow_governance_control: false,
+            allow_forced_transfer: false,
+            required_attributes: vec![],
         }
     }
 

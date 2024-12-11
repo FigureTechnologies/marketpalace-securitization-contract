@@ -24,25 +24,25 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    ProposeCommitment {
-        securities: Vec<SecurityCommitment>,
-    },
-    AcceptCommitment {
-        commitments: Vec<AcceptedCommitment>,
-    },
-    DepositCommitment {
-        securities: Vec<SecurityCommitment>,
-    },
-    WithdrawCommitment {
-        lp: Addr,
-    },
-    WithdrawAllCommitments {},
-    UpdateSettlementTime {
-        settlement_time: Option<Uint64>,
-    },
-    CancelCommitment {
-        lp: Addr,
-    },
+    // ProposeCommitment {
+    //     securities: Vec<SecurityCommitment>,
+    // },
+    // AcceptCommitment {
+    //     commitments: Vec<AcceptedCommitment>,
+    // },
+    // DepositCommitment {
+    //     securities: Vec<SecurityCommitment>,
+    // },
+    // WithdrawCommitment {
+    //     lp: Addr,
+    // },
+    // WithdrawAllCommitments {},
+    // UpdateSettlementTime {
+    //     settlement_time: Option<Uint64>,
+    // },
+    // CancelCommitment {
+    //     lp: Addr,
+    // },
     ContributeLoanPool {
         loan_pools: ContributeLoanPools,
     },

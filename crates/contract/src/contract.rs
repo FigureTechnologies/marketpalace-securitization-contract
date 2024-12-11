@@ -68,12 +68,12 @@ pub fn instantiate(
 /// * `msg` A custom execution message enum defined by this contract to allow multiple different
 /// processes to be defined for the singular execution route entry point allowed by the
 /// cosmwasm framework.
-// #[entry_point]
-// pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
-//     msg.validate()?;
-//     msg.validate_msg_funds(&info.funds)?;
-//     execute::router::route(deps, env, info, msg)
-// }
+#[entry_point]
+pub fn execute(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
+    // msg.validate()?;
+    // msg.validate_msg_funds(&info.funds)?;
+    execute::router::route(deps, env, info, msg)
+}
 
 /// The entry point used when migrating a live contract instance to a new code instance, or to
 /// refresh the contract with an existing matching codebase for the purpose of running migration

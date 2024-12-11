@@ -29,6 +29,14 @@ impl From<AccessGrant> for AccessGrantSerializable {
         }
     }
 }
+impl From<AccessGrantSerializable> for AccessGrant {
+    fn from(serializable: AccessGrantSerializable) -> Self {
+        AccessGrant {
+            address: serializable.address,
+            permissions: serializable.permissions,
+        }
+    }
+}
 
 impl LoanPoolMarkerCollateral {
     pub(crate) fn new<S: Into<String>>(

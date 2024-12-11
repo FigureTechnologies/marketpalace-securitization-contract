@@ -45,9 +45,9 @@ optimize-arm = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-provwasm-std = { version = "=2.5.0" }
-cosmwasm-schema = "2.1.4"
-cosmwasm-std = { version = "2.1.4"}
+provwasm-std = { version = "=2.3.0" }
+cosmwasm-schema = "2.1.3"
+cosmwasm-std = { version = "2.1.3"}
 cosmwasm-storage = "1.5.2"
 cw-storage-plus = { version = "2.0.0", features = ["iterator"]}
 cw2 = "2.0.0"
@@ -58,5 +58,5 @@ thiserror = { version = "1.0.31" }
 semver = "1"
 
 [dev-dependencies]
-provwasm-mocks = { version = "2.5.0" }
+provwasm-mocks = { version = "2.3.0" }
 cw-multi-test = "0.16.2"

@@ -3,7 +3,8 @@ use crate::core::error::ContractError;
 use provwasm_std::types::cosmos::base::v1beta1::Coin;
 use cosmwasm_std::{coin, Addr, BankQuery, CosmosMsg, Decimal, DepsMut, Empty, StdError, StdResult, SupplyResponse, Uint128};
 use provwasm_std::try_proto_to_cosmwasm_coins;
-use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerAccount, MarkerQuerier, MarkerStatus, MarkerType, MsgActivateRequest, MsgAddAccessRequest, MsgAddMarkerRequest, MsgDeleteAccessRequest, MsgFinalizeRequest, MsgMintRequest, MsgTransferRequest, MsgWithdrawRequest};
+use provwasm_std::types::cosmos::auth::v1beta1::BaseAccount;
+use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerAccount, MarkerQuerier, MarkerStatus, MarkerType, MsgActivateRequest, MsgAddAccessRequest, MsgAddMarkerRequest, MsgDeleteAccessRequest, MsgFinalizeRequest, MsgMintRequest, MsgTransferRequest, MsgWithdrawRequest, QueryHoldingRequest, QueryHoldingResponse};
 use provwasm_std::types::provenance::msgfees::v1::MsgAssessCustomMsgFeeRequest;
 use result_extensions::ResultExtensions;
 use schemars::JsonSchema;
@@ -19,18 +20,30 @@ pub fn format_coin_display(coins: &[Coin]) -> String {
         .join(", ")
 }
 
-// pub fn marker_has_permissions(
-//     marker: &MarkerAccount,
-//     address: &Addr,
-//     expected_permissions: &[Access],
-// ) -> bool {
-//     marker.permissions.iter().any(|permission| {
-//         &permission.address == address
-//             && expected_permissions
-//                 .iter()
-//                 .all(|expected_permission| permission.permissions.contains(expected_permission))
-//     })
-// }
+pub fn marker_has_permissions(
+    marker: &MarkerAccount,
+    address: &Addr,
+    expected_permissions: &[Access],
+) -> bool {
+    marker.access_control.iter().any(|permission| {
+        &permission.address == &address.clone().into_string()
+            && expected_permissions
+                .iter()
+                .all(|expected_permission| permission.permissions.contains(&expected_permission.to_i32()))
+    })
+}
+
+pub trait AccessExt {
+    fn to_i32(&self) -> i32;
+}
+
+// Implement the trait for the Access enum
+impl AccessExt for Access {
+    fn to_i32(&self) -> i32 {
+        *self as i32
+    }
+}
+
 
 pub fn create_marker<S: Into<String>>(
     amount: Uint128,
@@ -61,9 +74,9 @@ pub fn create_marker<S: Into<String>>(
         .into())
 }
 
-// pub fn marker_has_admin(marker: &Marker, admin_address: &Addr) -> bool {
-//     marker_has_permissions(marker, admin_address, &[Access::Admin])
-// }
+pub fn marker_has_admin(marker: &MarkerAccount, admin_address: &Addr) -> bool {
+    marker_has_permissions(marker, admin_address, &[Access::Admin])
+}
 
 pub struct MockMarker {
     pub address: Addr,
@@ -107,60 +120,68 @@ pub struct MockMarker {
 //     pub supply: String,
 // }
 
-/// Retrieves the single coin holding associated with the provided marker.
-///
-/// This function takes a reference to a `Marker` object, iterates through its coins, and filters
-/// the coins that match the denomination of the marker. It then checks whether there is exactly
-/// one matching coin. If the marker has a single coin entry with the matching denomination, it
-/// returns that coin. If there is more than one or none, it returns an error.
-///
-/// # Arguments
-///
-/// * `marker` - A reference to a `Marker` object, representing the marker whose single coin
-///   holding is to be retrieved.
-///
-/// # Returns
-///
-/// * `Result<Coin, ContractError>` - Returns a `Coin` object wrapped in an `Ok` variant if
-///   the marker contains exactly one coin entry with the given denomination. Returns an `Err`
-///   variant with a `ContractError::InvalidMarker` error if the marker does not contain exactly
-///   one coin entry with the given denomination.
-///
-/// # Errors
-///
-/// * `ContractError::InvalidMarker` - If the marker does not have exactly one coin entry for
-///   the given denomination. The error message includes the marker address, denomination, and
-///   current holdings.
-///
-/// # Example
-///
-/// ```ignore
-/// let marker = get_marker();
-/// match get_single_marker_coin_holding(&marker) {
-///     Ok(coin) => println!("Single coin holding: {}", coin),
-///     Err(e) => println!("Error retrieving coin holding: {}", e),
-/// }
-/// ```
-// pub fn get_single_marker_coin_holding(marker: &MarkerAccount) -> Result<Coin, ContractError> {
-//     let marker_denom_holdings = marker
-//         .coins
-//         .iter()
-//         .cloned()
-//         .filter(|coin| coin.denom == marker.denom)
-//         .collect::<Vec<Coin>>();
-//     // only single coin is permitted
-//     if marker_denom_holdings.len() != 1 {
-//         return ContractError::InvalidMarker {
-//             message: format!(
-//                 "expected marker [{}] to have a single coin entry for denom [{}], but it did not. Holdings: [{}]",
-//                 marker.address.as_str(),
-//                 marker.denom,
-//                 format_coin_display(&marker.coins),
-//             )
-//         }.to_err();
-//     }
-//     marker_denom_holdings.first().unwrap().to_owned().to_ok()
+// Retrieves the single coin holding associated with the provided marker.
+//
+// This function takes a reference to a `Marker` object, iterates through its coins, and filters
+// the coins that match the denomination of the marker. It then checks whether there is exactly
+// one matching coin. If the marker has a single coin entry with the matching denomination, it
+// returns that coin. If there is more than one or none, it returns an error.
+//
+// # Arguments
+//
+// * `marker` - A reference to a `Marker` object, representing the marker whose single coin
+//   holding is to be retrieved.
+//
+// # Returns
+//
+// * `Result<Coin, ContractError>` - Returns a `Coin` object wrapped in an `Ok` variant if
+//   the marker contains exactly one coin entry with the given denomination. Returns an `Err`
+//   variant with a `ContractError::InvalidMarker` error if the marker does not contain exactly
+//   one coin entry with the given denomination.
+//
+// # Errors
+//
+// * `ContractError::InvalidMarker` - If the marker does not have exactly one coin entry for
+//   the given denomination. The error message includes the marker address, denomination, and
+//   current holdings.
+//
+// # Example
+//
+// ```ignore
+// let marker = get_marker();
+// match get_single_marker_coin_holding(&marker) {
+//     Ok(coin) => println!("Single coin holding: {}", coin),
+//     Err(e) => println!("Error retrieving coin holding: {}", e),
 // }
+// ```
+pub fn get_single_marker_coin_holding(deps: &DepsMut, marker: &MarkerAccount) -> Result<Coin, ContractError> {
+    let holding_response: QueryHoldingResponse = deps.querier.query(
+        &QueryHoldingRequest {
+            id: marker.denom.clone(),
+            pagination: None,
+        }.into(),
+    )?;
+    let marker_denom_holdings = holding_response
+        .balances
+        .iter()
+        .cloned()
+        .flat_map(|balance| balance.coins)
+        .filter(|coin| coin.denom == marker.denom)
+        .collect::<Vec<Coin>>();
+    let marker_address = get_marker_address(marker.base_account.clone())?;
+    // only single coin is permitted
+    if marker_denom_holdings.len() != 1 {
+        return ContractError::InvalidMarker {
+            message: format!(
+                "expected marker [{}] to have a single coin entry for denom [{}], but it did not. Holdings: [{}]",
+                marker_address.to_string(),
+                marker.denom,
+                format_coin_display(&marker_denom_holdings),
+            )
+        }.to_err();
+    }
+    marker_denom_holdings.first().unwrap().to_owned().to_ok()
+}
 
 // pub fn calculate_marker_quote(marker_share_count: u128, quote_per_share: &[Coin]) -> Vec<Coin> {
 //     quote_per_share
@@ -178,36 +199,49 @@ pub fn finalize_marker<S: Into<String>>(denom: S, contract_address: Addr) -> Std
         .into())
 }
 
-pub fn get_marker_by_denom<H: Into<String>>(
-    denom: H,
-    querier: &MarkerQuerier<Empty>,
-) -> StdResult<Marker> {
-    get_marker(validate_string(denom, "denom")?, querier)
+// pub fn get_marker_by_denom<H: Into<String>>(
+//     denom: H,
+//     querier: &MarkerQuerier<Empty>,
+// ) -> StdResult<Marker> {
+//     get_marker(validate_string(denom, "denom")?, querier)
+// }
+
+pub fn get_marker(id: String, querier: &MarkerQuerier<Empty>) -> StdResult<MarkerAccount> {
+    let response = querier.marker(id)?;
+    if let Some(marker) = response.marker {
+        return if let Ok(account) = MarkerAccount::try_from(marker) {
+            Ok(account)
+        } else {
+            Err(StdError::generic_err("unable to type-cast marker account"))
+        };
+    } else {
+        Err(StdError::generic_err("no marker found for id"))
+    }
 }
 
 pub struct Marker {
     pub marker_account: MarkerAccount,
-    pub coins: Vec<cosmwasm_std::Coin>,
+    pub coins: Vec<Coin>,
 }
 
-pub fn get_marker(id: String, querier: &MarkerQuerier<Empty>) -> StdResult<Marker> {
-    let response = querier.marker(id)?;
-    if let Some(marker) = response.marker {
-        return if let Ok(account) = MarkerAccount::try_from(marker) {
-            let escrow = querier.escrow(account.clone().base_account.unwrap().address)?;
-            Ok(Marker {
-                marker_account: account.into(),
-                coins: try_proto_to_cosmwasm_coins(escrow.escrow)?,
-            })
-        } else {
-            Err(StdError::generic_err("unable to type-cast marker account"))
-        };
-    }
-    Err(StdError::generic_err(format!(
-        "no marker found for id: response: {:?}",
-        response
-    )))
-}
+// pub fn get_marker(id: String, querier: &MarkerQuerier<Empty>) -> StdResult<Marker> {
+//     let response = querier.marker(id)?;
+//     if let Some(marker) = response.marker {
+//         return if let Ok(account) = MarkerAccount::try_from(marker) {
+//             let escrow = querier.escrow(account.clone().base_account.unwrap().address)?;
+//             Ok(Marker {
+//                 marker_account: account.into(),
+//                 coins: try_proto_to_cosmwasm_coins(escrow.escrow)?,
+//             })
+//         } else {
+//             Err(StdError::generic_err("unable to type-cast marker account"))
+//         };
+//     }
+//     Err(StdError::generic_err(format!(
+//         "no marker found for id: response: {:?}",
+//         response
+//     )))
+// }
 
 // pub fn activate_marker<S: Into<String>>(denom: S) -> StdResult<CosmosMsg> {
 //     Ok(create_marker_msg(MarkerMsgParams::ActivateMarker {
@@ -382,13 +416,21 @@ pub fn assess_custom_fee<S: Into<String>>(
         .into())
 }
 
-pub fn query_total_supply(deps: &DepsMut, denom: &str) -> StdResult<Uint128> {
+pub fn query_total_supply(deps: &DepsMut, denom: String) -> StdResult<Uint128> {
     let request = BankQuery::Supply {
         denom: denom.into(),
     }
     .into();
     let res: SupplyResponse = deps.querier.query(&request)?;
     Ok(res.amount.amount)
+}
+
+pub fn get_marker_address(base_account: Option<BaseAccount>) -> Result<String, ContractError> {
+    base_account
+        .ok_or(ContractError::InvalidMarker {
+            message: "Base account is missing".to_string(),
+        })
+        .map(|account| account.address)
 }
 
 #[cfg(test)]
