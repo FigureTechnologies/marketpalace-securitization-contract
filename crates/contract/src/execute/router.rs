@@ -5,7 +5,7 @@ use crate::core::{
     msg::ExecuteMsg,
 };
 
-use crate::execute::settlement::{propose_commitment, update_settlement_time, whitelist_loanpool_contributors};
+use crate::execute::settlement::{propose_commitment, remove_whitelist_loanpool_contributors, update_settlement_time, whitelist_loanpool_contributors};
 use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
 // use crate::execute::{
 //     settlement::propose_commitment,
@@ -53,7 +53,7 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ),
         ExecuteMsg::RemoveWhiteListLoanPoolContributors {
             remove_loan_pool_contributors,
-        } => whitelist_loanpool_contributors::handle(
+        } => remove_whitelist_loanpool_contributors::handle(
             deps,
             info.sender,
             remove_loan_pool_contributors.addresses,

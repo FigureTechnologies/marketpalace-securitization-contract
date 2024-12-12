@@ -5,7 +5,7 @@ pub mod commitment;
 // pub mod deposit_commitment;
 pub mod marker_loan_pool_validation;
 pub mod propose_commitment;
-// pub mod remove_whitelist_loanpool_contributors;
+pub mod remove_whitelist_loanpool_contributors;
 pub mod update_settlement_time;
 pub mod whitelist_loanpool_contributors;
 // pub mod withdraw_all_commitments;
