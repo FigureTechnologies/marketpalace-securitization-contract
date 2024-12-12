@@ -66,9 +66,9 @@ pub enum QueryMsg {
     // #[returns(QueryCommitmentsResponse)]
     // QueryCommitments { commitment_state: CommitmentState },
     //
-    // #[returns(QuerySecuritizationsResponse)]
-    // QuerySecuritizations { securities: Vec<String> },
-    //
+    #[returns(QuerySecuritizationsResponse)]
+    QuerySecuritizations { securities: Vec<String> },
+
     #[returns(QueryStateResponse)]
     QueryState {},
     //
