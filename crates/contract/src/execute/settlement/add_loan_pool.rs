@@ -238,7 +238,7 @@ mod tests {
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
-        deps.querier.with_markers(vec![marker]);
+        // deps.querier.with_markers(vec![marker]);
         let env = mock_env();
         let info = message_info(&Addr::unchecked("contributor"), &[]);
         //
@@ -257,7 +257,7 @@ mod tests {
             _ => panic!("Unexpected error type"),
         }
     }
-//
+
 //     #[test]
 //     fn test_handle_in_whitelist() {
 //         let mut deps = mock_provenance_dependencies();
@@ -394,43 +394,43 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn test_get_marker_permission_revoke_messages() {
-    //     let marker = MockMarker::new_owned_marker("markerOwner");
-    //     let contract_address = Addr::unchecked("contractAddress");
-    //
-    //     let result = get_marker_permission_revoke_messages(&marker, &contract_address);
-    //
-    //     // Assert that the result is ok
-    //     assert!(result.is_ok());
-    //     match result.ok() {
-    //         Some(revoke_messages) => {
-    //             // Assert that the messages to revoke access are as expected
-    //             // This depends on the specifics of your implementation
-    //             assert_eq!(revoke_messages.len(), marker.permissions.len());
-    //         }
-    //         None => panic!("Expected some revoke messages, got None"),
-    //     }
-    // }
+    #[test]
+    fn test_get_marker_permission_revoke_messages() {
+        let marker = MockMarker::new_owned_marker("markerOwner").to_marker_account();
+        let contract_address = Addr::unchecked("contractAddress");
 
-//     #[test]
-//     fn test_get_marker_permission_revoke_messages_contract_addr_there() {
-//         let marker = MockMarker::new_owned_marker("markerOwner");
-//         let contract_address = Addr::unchecked("cosmos2contract");
-//
-//         let result = get_marker_permission_revoke_messages(&marker, &contract_address);
-//
-//         // Assert that the result is ok
-//         assert!(result.is_ok());
-//         match result.ok() {
-//             Some(revoke_messages) => {
-//                 // Assert that the messages to revoke access are as expected
-//                 // This depends on the specifics of your implementation
-//                 assert_eq!(revoke_messages.len(), marker.permissions.len() - 1);
-//             }
-//             None => panic!("Expected some revoke messages, got None"),
-//         }
-//     }
+        let result = get_marker_permission_revoke_messages(&marker, &contract_address);
+
+        // Assert that the result is ok
+        assert!(result.is_ok());
+        match result.ok() {
+            Some(revoke_messages) => {
+                // Assert that the messages to revoke access are as expected
+                // This depends on the specifics of your implementation
+                assert_eq!(revoke_messages.len(), marker.access_control.len());
+            }
+            None => panic!("Expected some revoke messages, got None"),
+        }
+    }
+
+    #[test]
+    fn test_get_marker_permission_revoke_messages_contract_addr_there() {
+        let marker = MockMarker::new_owned_marker("markerOwner").to_marker_account();
+        let contract_address = Addr::unchecked("cosmos2contract");
+
+        let result = get_marker_permission_revoke_messages(&marker, &contract_address);
+
+        // Assert that the result is ok
+        assert!(result.is_ok());
+        match result.ok() {
+            Some(revoke_messages) => {
+                // Assert that the messages to revoke access are as expected
+                // This depends on the specifics of your implementation
+                assert_eq!(revoke_messages.len(), marker.access_control.len() - 1);
+            }
+            None => panic!("Expected some revoke messages, got None"),
+        }
+    }
 //
 //     #[test]
 //     fn test_handle_in_whitelist_validation_fail() {

@@ -84,7 +84,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
         // amount held in marker cannot be less than bank supply
         if bank_supply > Uint128::from_str(marker_coin.amount.as_str())? {
             return get_contract_error(format!(
-                "expected that marker, [{}] 2 be holding all the shares with supply, [{}]",
+                "expected that marker, [{}] to be holding all the shares with supply, [{}]",
                 marker.denom,
                 marker_coin.amount,
             ));

@@ -47,10 +47,10 @@ pub fn instantiate(
 /// * `msg` A custom query message enum defined by this contract to allow multiple different results
 /// to be determined for this route.
 // #[entry_point]
-// pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
-//     msg.validate()?;
-//     query::router::route(deps, env, msg)
-// }
+pub fn query(deps: ProvDeps, env: Env, msg: QueryMsg) -> ProvQueryResponse {
+    // msg.validate()?;
+    query::router::route(deps, env, msg)
+}
 
 /// The entry point used when an external address initiates a process defined in the
 /// contract.  This defines the primary purposes of this contract, like the onboarding and

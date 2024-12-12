@@ -200,7 +200,7 @@ mod tests {
         let expected_collaterals = vec![LoanPoolMarkerCollateral {
             marker_address: marker.address.clone(),
             marker_denom: denom.clone(),
-            share_count: Uint128::new(1),
+            share_count: Uint128::new(100),
             original_contributor: info.sender.to_owned(),
             removed_permissions: if let Some(first_permission) = marker.permissions.first() {
                 vec![AccessGrantSerializable::from(first_permission.clone())]

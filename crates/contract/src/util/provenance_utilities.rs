@@ -92,34 +92,6 @@ pub struct MockMarker {
     pub supply_fixed: bool,
 }
 
-// #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
-// #[serde(rename_all = "snake_case")]
-// pub struct Marker {
-//     pub address: Addr,
-//     // pub allow_forced_transfer: bool,
-//     #[serde(default)]
-//     pub coins: Vec<Coin>,
-//     pub account_number: u64,
-//     pub sequence: u64,
-//     #[serde(default)]
-//     pub manager: String,
-//     pub permissions: Vec<AccessGrant>,
-//     pub status: MarkerStatus,
-//     pub denom: String,
-//     pub total_supply: Decimal,
-//     pub marker_type: MarkerType,
-//     pub supply_fixed: bool,
-// }
-
-// #[cw_serde]
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-// pub struct MarkAccount {
-//     pub base_account: Option<String>,
-//     pub manager: String,
-//     pub denom: String,
-//     pub supply: String,
-// }
-
 // Retrieves the single coin holding associated with the provided marker.
 //
 // This function takes a reference to a `Marker` object, iterates through its coins, and filters
