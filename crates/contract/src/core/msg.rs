@@ -37,9 +37,9 @@ pub enum ExecuteMsg {
     //     lp: Addr,
     // },
     // WithdrawAllCommitments {},
-    // UpdateSettlementTime {
-    //     settlement_time: Option<Uint64>,
-    // },
+    UpdateSettlementTime {
+        settlement_time: Option<Uint64>,
+    },
     // CancelCommitment {
     //     lp: Addr,
     // },

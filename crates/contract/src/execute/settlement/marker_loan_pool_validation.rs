@@ -60,18 +60,21 @@ pub fn validate_marker_for_loan_pool_add_remove(
     }
     // get denom that this marker holds, where denom == marker denom
     let marker_coin = get_single_marker_coin_holding(deps, marker)?;
+    let coin_amount = Uint128::from_str(marker_coin.amount.as_str())?;
+    let marker_supply = Uint128::from_str(marker.supply.as_str())?;
 
-    if marker_coin.amount == 0.to_string() {
+    if coin_amount == Uint128::new(0) {
         return get_contract_error(format!(
             "expected marker [{}] to hold at least one of its supply of denom, but it had [{}]",
             marker.denom,
             marker_coin.amount,
         ));
     }
+
     // supply fixed then we can trust the marker total_supply
     if marker.supply_fixed {
         // amount held in marker cannot be greater than total supply
-        if marker_coin.amount > marker.supply {
+        if coin_amount > marker_supply {
             return get_contract_error(format!(
                 "expected marker [{}] to be holding all the shares with supply [{}], found [{}]",
                 marker.denom,
@@ -82,7 +85,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
     } else {
         // use the bank supply passed in
         // amount held in marker cannot be less than bank supply
-        if bank_supply > Uint128::from_str(marker_coin.amount.as_str())? {
+        if bank_supply > coin_amount {
             return get_contract_error(format!(
                 "expected that marker, [{}] to be holding all the shares with supply, [{}]",
                 marker.denom,

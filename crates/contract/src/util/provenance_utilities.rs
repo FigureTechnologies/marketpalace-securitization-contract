@@ -407,6 +407,16 @@ pub fn get_marker_address(base_account: Option<BaseAccount>) -> Result<String, C
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+    use cosmwasm_std::{coin, coins, Addr, Uint128};
+    use provwasm_mocks::mock_provenance_dependencies;
+    use provwasm_std::types::cosmos::base::v1beta1::Coin;
+    use provwasm_std::types::provenance::attribute::v1::AttributeType::String;
+    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
+    use crate::core::error::ContractError;
+    use crate::util::mock_marker::MockMarker;
+    use crate::util::provenance_utilities::{format_coin_display, get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, NHASH};
+
     // use super::*;
     // use crate::util::mock_marker::MockMarker;
     // use cosmwasm_std::{coins, AnyMsg};
@@ -432,189 +442,190 @@ mod tests {
     //     );
     // }
     //
-    // #[test]
-    // fn test_marker_has_permissions() {
-    //     let target_address = Addr::unchecked("target_address");
-    //     let marker = MockMarker {
-    //         permissions: vec![AccessGrant {
-    //             address: target_address.to_string(),
-    //             permissions: vec![
-    //                 Access::Admin as i32,
-    //                 Access::Mint as i32,
-    //                 Access::Delete as i32,
-    //             ],
-    //         }],
-    //         ..MockMarker::default()
-    //     }
-    //     .to_marker();
-    //     assert!(
-    //         marker_has_permissions(&marker, &target_address, &[]),
-    //         "no permissions passed in with an existing address on the marker should produce a true response",
-    //     );
-    //     assert!(
-    //         marker_has_permissions(&marker, &target_address, &[Access::Admin]),
-    //         "single target permission for correct address should produce a true response",
-    //     );
-    //     assert!(
-    //         marker_has_permissions(&marker, &target_address, &[Access::Admin, Access::Mint, Access::Delete]),
-    //         "multiple target with all values present for correct address should produce a true response",
-    //     );
-    //     assert!(
-    //         !marker_has_permissions(&marker, &Addr::unchecked("not the same address"), &[]),
-    //         "no permissions passed in with an address not found in the marker should produce a false response",
-    //     );
-    //     assert!(
-    //         !marker_has_permissions(&marker, &Addr::unchecked("not the same address"), &[Access::Admin]),
-    //         "single target permission for address not in marker permissions should produce a false response",
-    //     );
-    //     assert!(
-    //         !marker_has_permissions(
-    //             &marker,
-    //             &Addr::unchecked("not the same address"),
-    //             &[
-    //                 Access::Admin,
-    //                 Access::Mint,
-    //                 Access::Delete
-    //             ],
-    //         ),
-    //         "multiple target with bad target address should produce a false response",
-    //     );
-    // }
-    //
-    // #[test]
-    // fn test_marker_has_admin() {
-    //     let admin1 = Addr::unchecked("admin1");
-    //     let admin2 = Addr::unchecked("admin2");
-    //     let normie = Addr::unchecked("normie2");
-    //     let missing = Addr::unchecked("missing");
-    //     let marker = MockMarker {
-    //         permissions: vec![
-    //             AccessGrant {
-    //                 address: admin1.to_string(),
-    //                 permissions: vec![Access::Admin as i32],
-    //             },
-    //             AccessGrant {
-    //                 address: admin2.to_string(),
-    //                 permissions: vec![
-    //                     Access::Admin as i32,
-    //                     Access::Mint as i32,
-    //                     Access::Burn as i32,
-    //                     Access::Deposit as i32,
-    //                     Access::Transfer as i32,
-    //                     Access::Delete as i32,
-    //                 ],
-    //             },
-    //             AccessGrant {
-    //                 address: normie.to_string(),
-    //                 permissions: vec![Access::Withdraw as i32, Access::Deposit as i32],
-    //             },
-    //         ],
-    //         ..MockMarker::default()
-    //     }
-    //     .to_marker();
-    //     assert!(
-    //         marker_has_admin(&marker, &admin1),
-    //         "the first admin with ONLY admin access type should produce a true response",
-    //     );
-    //     assert!(
-    //         marker_has_admin(&marker, &admin2),
-    //         "the second admin with many access types should produce a true response",
-    //     );
-    //     assert!(
-    //         !marker_has_admin(&marker, &normie),
-    //         "the account without admin access should produce a false response",
-    //     );
-    //     assert!(
-    //         !marker_has_admin(&marker, &missing),
-    //         "the account not present in the marker permissions should produce a false response",
-    //     );
-    // }
-    //
-    // #[test]
-    // fn test_get_single_marker_coin_holding() {
-    //     let no_denom_marker = MockMarker {
-    //         address: Addr::unchecked("nodenomaddr"),
-    //         denom: "nodenom".to_string(),
-    //         coins: vec![],
-    //         ..MockMarker::default()
-    //     }
-    //     .to_marker();
-    //     match get_single_marker_coin_holding(&no_denom_marker)
-    //         .expect_err("expected an error to occur when a marker had none of its own coin")
-    //     {
-    //         ContractError::InvalidMarker { message } => {
-    //             assert_eq!(
-    //                 message,
-    //                 "expected marker [nodenomaddr] to have a single coin entry for denom [nodenom], but it did not. Holdings: []",
-    //                 "unexpected error message",
-    //             );
-    //         }
-    //         e => panic!("unexpected error encountered: {:?}", e),
-    //     };
-    //     let invalid_coin_marker = MockMarker {
-    //         address: Addr::unchecked("badcoinaddr"),
-    //         denom: "badcoin".to_string(),
-    //         coins: vec![coin(100, "othercoin"), coin(15, "moredifferentcoin")],
-    //         ..MockMarker::default()
-    //     }
-    //     .to_marker();
-    //     match get_single_marker_coin_holding(&invalid_coin_marker).expect_err(
-    //         "expected an error to occur when a marker had other coins, but none of its own",
-    //     ) {
-    //         ContractError::InvalidMarker { message } => {
-    //             assert_eq!(
-    //                 message,
-    //                 "expected marker [badcoinaddr] to have a single coin entry for denom [badcoin], but it did not. Holdings: [100othercoin, 15moredifferentcoin]",
-    //                 "unexpected error message",
-    //             );
-    //         }
-    //         e => panic!("unexpected error encountered: {:?}", e),
-    //     }
-    //     let duplicate_coin_marker = MockMarker {
-    //         address: Addr::unchecked("weirdaddr"),
-    //         denom: "weird".to_string(),
-    //         coins: vec![coin(12, "weird"), coin(15, "weird")],
-    //         ..MockMarker::default()
-    //     }
-    //     .to_marker();
-    //     match get_single_marker_coin_holding(&duplicate_coin_marker).expect_err(
-    //         "expected an error to occur when a marker had more than one entry for its own denom",
-    //     ) {
-    //         ContractError::InvalidMarker { message } => {
-    //             assert_eq!(
-    //                 message,
-    //                 "expected marker [weirdaddr] to have a single coin entry for denom [weird], but it did not. Holdings: [12weird, 15weird]",
-    //                 "unexpected error message",
-    //             );
-    //         }
-    //         e => panic!("unexpected error encountered: {:?}", e),
-    //     };
-    //     let mut good_marker = MockMarker {
-    //         address: Addr::unchecked("goodaddr"),
-    //         denom: "good".to_string(),
-    //         coins: vec![coin(150, "good")],
-    //         ..MockMarker::default()
-    //     }
-    //     .to_marker();
-    //     let marker_coin = get_single_marker_coin_holding(&good_marker).expect(
-    //         "expected a marker containing a single entry of its denom to produce a coin response",
-    //     );
-    //     assert_eq!(
-    //         150,
-    //         marker_coin.amount.u128(),
-    //         "expected the coin's amount to be unaltered",
-    //     );
-    //     assert_eq!(
-    //         "good", marker_coin.denom,
-    //         "expected the coin's denom to be unaltered",
-    //     );
-    //     good_marker.coins = vec![marker_coin.clone(), coin(10, "bitcoin"), coin(15, NHASH)];
-    //     let extra_holdings_coin = get_single_marker_coin_holding(&good_marker).expect("expected a marker containing a single entry of its own denom and some other holdings to produce a coin response");
-    //     assert_eq!(
-    //         marker_coin, extra_holdings_coin,
-    //         "the same coin should be produced in similar good scenarios",
-    //     );
-    // }
+    #[test]
+    fn test_marker_has_permissions() {
+        let target_address = Addr::unchecked("target_address");
+        let marker = MockMarker {
+            permissions: vec![AccessGrant {
+                address: target_address.to_string(),
+                permissions: vec![
+                    Access::Admin as i32,
+                    Access::Mint as i32,
+                    Access::Delete as i32,
+                ],
+            }],
+            ..MockMarker::default()
+        }
+        .to_marker_account();
+        assert!(
+            marker_has_permissions(&marker, &target_address, &[]),
+            "no permissions passed in with an existing address on the marker should produce a true response",
+        );
+        assert!(
+            marker_has_permissions(&marker, &target_address, &[Access::Admin]),
+            "single target permission for correct address should produce a true response",
+        );
+        assert!(
+            marker_has_permissions(&marker, &target_address, &[Access::Admin, Access::Mint, Access::Delete]),
+            "multiple target with all values present for correct address should produce a true response",
+        );
+        assert!(
+            !marker_has_permissions(&marker, &Addr::unchecked("not the same address"), &[]),
+            "no permissions passed in with an address not found in the marker should produce a false response",
+        );
+        assert!(
+            !marker_has_permissions(&marker, &Addr::unchecked("not the same address"), &[Access::Admin]),
+            "single target permission for address not in marker permissions should produce a false response",
+        );
+        assert!(
+            !marker_has_permissions(
+                &marker,
+                &Addr::unchecked("not the same address"),
+                &[
+                    Access::Admin,
+                    Access::Mint,
+                    Access::Delete
+                ],
+            ),
+            "multiple target with bad target address should produce a false response",
+        );
+    }
+
+    #[test]
+    fn test_marker_has_admin() {
+        let admin1 = Addr::unchecked("admin1");
+        let admin2 = Addr::unchecked("admin2");
+        let normie = Addr::unchecked("normie2");
+        let missing = Addr::unchecked("missing");
+        let marker = MockMarker {
+            permissions: vec![
+                AccessGrant {
+                    address: admin1.to_string(),
+                    permissions: vec![Access::Admin as i32],
+                },
+                AccessGrant {
+                    address: admin2.to_string(),
+                    permissions: vec![
+                        Access::Admin as i32,
+                        Access::Mint as i32,
+                        Access::Burn as i32,
+                        Access::Deposit as i32,
+                        Access::Transfer as i32,
+                        Access::Delete as i32,
+                    ],
+                },
+                AccessGrant {
+                    address: normie.to_string(),
+                    permissions: vec![Access::Withdraw as i32, Access::Deposit as i32],
+                },
+            ],
+            ..MockMarker::default()
+        }
+        .to_marker_account();
+        assert!(
+            marker_has_admin(&marker, &admin1),
+            "the first admin with ONLY admin access type should produce a true response",
+        );
+        assert!(
+            marker_has_admin(&marker, &admin2),
+            "the second admin with many access types should produce a true response",
+        );
+        assert!(
+            !marker_has_admin(&marker, &normie),
+            "the account without admin access should produce a false response",
+        );
+        assert!(
+            !marker_has_admin(&marker, &missing),
+            "the account not present in the marker permissions should produce a false response",
+        );
+    }
+
+    #[test]
+    fn test_get_single_marker_coin_holding() {
+        let mut deps = mock_provenance_dependencies();
+        let no_denom_marker = MockMarker {
+            address: Addr::unchecked("nodenomaddr"),
+            denom: "nodenom".to_string(),
+            coins: vec![],
+            ..MockMarker::default()
+        }
+        .to_marker_account();
+        match get_single_marker_coin_holding(&deps.as_mut(), &no_denom_marker)
+            .expect_err("expected an error to occur when a marker had none of its own coin")
+        {
+            ContractError::InvalidMarker { message } => {
+                assert_eq!(
+                    message,
+                    "expected marker [nodenomaddr] to have a single coin entry for denom [nodenom], but it did not. Holdings: []",
+                    "unexpected error message",
+                );
+            }
+            e => panic!("unexpected error encountered: {:?}", e),
+        };
+        let invalid_coin_marker = MockMarker {
+            address: Addr::unchecked("badcoinaddr"),
+            denom: "badcoin".to_string(),
+            coins: vec![coin(100, "othercoin"), coin(15, "moredifferentcoin")],
+            ..MockMarker::default()
+        }
+        .to_marker_account();
+        match get_single_marker_coin_holding(&deps.as_mut(), &invalid_coin_marker).expect_err(
+            "expected an error to occur when a marker had other coins, but none of its own",
+        ) {
+            ContractError::InvalidMarker { message } => {
+                assert_eq!(
+                    message,
+                    "expected marker [badcoinaddr] to have a single coin entry for denom [badcoin], but it did not. Holdings: [100othercoin, 15moredifferentcoin]",
+                    "unexpected error message",
+                );
+            }
+            e => panic!("unexpected error encountered: {:?}", e),
+        }
+        let duplicate_coin_marker = MockMarker {
+            address: Addr::unchecked("weirdaddr"),
+            denom: "weird".to_string(),
+            coins: vec![coin(12, "weird"), coin(15, "weird")],
+            ..MockMarker::default()
+        }
+        .to_marker_account();
+        match get_single_marker_coin_holding(&deps.as_mut(), &duplicate_coin_marker).expect_err(
+            "expected an error to occur when a marker had more than one entry for its own denom",
+        ) {
+            ContractError::InvalidMarker { message } => {
+                assert_eq!(
+                    message,
+                    "expected marker [weirdaddr] to have a single coin entry for denom [weird], but it did not. Holdings: [12weird, 15weird]",
+                    "unexpected error message",
+                );
+            }
+            e => panic!("unexpected error encountered: {:?}", e),
+        };
+        let mut good_marker = MockMarker {
+            address: Addr::unchecked("goodaddr"),
+            denom: "good".to_string(),
+            coins: vec![coin(150, "good")],
+            ..MockMarker::default()
+        }
+        .to_marker_account();
+        let marker_coin = get_single_marker_coin_holding(&deps.as_mut(), &good_marker).expect(
+            "expected a marker containing a single entry of its denom to produce a coin response",
+        );
+        assert_eq!(
+            150.to_string(),
+            marker_coin.amount.as_str(),
+            "expected the coin's amount to be unaltered",
+        );
+        assert_eq!(
+            "good", marker_coin.denom,
+            "expected the coin's denom to be unaltered",
+        );
+        // good_marker.coins = vec![marker_coin.clone(), coin(10, "bitcoin"), coin(15, NHASH)];
+        // let extra_holdings_coin = get_single_marker_coin_holding(&deps.as_mut(), &good_marker).expect("expected a marker containing a single entry of its own denom and some other holdings to produce a coin response");
+        // assert_eq!(
+        //     marker_coin, extra_holdings_coin,
+        //     "the same coin should be produced in similar good scenarios",
+        // );
+    }
     //
     // #[test]
     // fn test_release_marker_from_contract_produces_correct_output() {

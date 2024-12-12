@@ -203,7 +203,7 @@ fn get_marker_permission_revoke_messages(
 
 #[cfg(test)]
 mod tests {
-    use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers};
+    use crate::core::collateral::{AccessGrantSerializable, LoanPoolMarkerCollateral, LoanPoolMarkers};
     use crate::core::error::ContractError;
     use crate::core::security::ContributeLoanPools;
     use crate::execute::settlement::add_loan_pool::{
@@ -216,9 +216,11 @@ mod tests {
     use cosmwasm_std::testing::{mock_env, message_info};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{coins, from_json, Addr, AnyMsg, Empty, Event, Response, SubMsg};
+    use cosmwasm_std::{coins, from_json, to_json_binary, Addr, AnyMsg, Binary, ContractResult, Empty, Event, Response, SubMsg, SystemResult};
     use provwasm_mocks::{mock_provenance_dependencies, mock_provenance_dependencies_with_custom_querier};
-    use provwasm_std::types::provenance::marker::v1::MarkerQuerier;
+    use provwasm_std::shim::Any;
+    use provwasm_std::types::cosmos::base::v1beta1::Coin;
+    use provwasm_std::types::provenance::marker::v1::{AccessGrant, Balance, MarkerQuerier, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse};
 
     #[test]
     fn test_coin_trade_with_valid_data() {
@@ -258,118 +260,165 @@ mod tests {
         }
     }
 
-//     #[test]
-//     fn test_handle_in_whitelist() {
-//         let mut deps = mock_provenance_dependencies();
-//         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
-//         let marker = MockMarker::new_owned_marker("contributor");
-//         let marker_denom = marker.denom.clone();
-//         deps.querier.with_markers(vec![marker.clone()]);
-//         let env = mock_env();
-//         let info = message_info(&Addr::unchecked("contributor"), &[]);
-//         let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
-//         let addr_contributor = Addr::unchecked("contributor");
-//         let white_list_addr = vec![addr_contributor.clone()];
-//         let whitelist_result =
-//             whitelist_loanpool_handle(deps.as_mut(), info_white_list.sender, white_list_addr);
-//         assert!(whitelist_result.is_ok());
-//         match whitelist_result {
-//             Ok(response) => {
-//                 for attribute in response.attributes.iter() {
-//                     if attribute.key == "action" {
-//                         assert_eq!(attribute.value, "whitelist_added");
-//                     } else if attribute.key == "address_whitelisted" {
-//                         // Verify if the addresses are correct
-//                         let whitelisted_addresses: Vec<&str> = attribute.value.split(",").collect();
-//                         assert_eq!(whitelisted_addresses, vec!["contributor"]);
-//                     }
-//                 }
-//             }
-//             Err(e) => panic!("Error: {:?}", e),
-//         }
-//         // Create a loan pool
-//         let loan_pools = ContributeLoanPools {
-//             markers: vec![marker_denom.clone()],
-//         };
-//
-//         let expected_collaterals = vec![LoanPoolMarkerCollateral {
-//             marker_address: marker.address.clone(),
-//             marker_denom,
-//             share_count: marker.total_supply.atomics(),
-//             original_contributor: info.sender.to_owned(),
-//             removed_permissions: if let Some(first_permission) = marker.permissions.first() {
-//                 vec![first_permission.clone()]
-//             } else {
-//                 vec![]
-//             },
-//         }];
-//         // Call the handle function
-//         let loan_pool_result =
-//             add_loanpool_handle(deps.as_mut(), env.to_owned(), info.clone(), loan_pools);
-//         // Assert that the result is not an error
-//         assert!(loan_pool_result.is_ok());
-//         match loan_pool_result {
-//             Ok(response) => {
-//                 // Checking response data
-//                 let loan_pool_markers: LoanPoolMarkers =
-//                     from_json(&response.data.unwrap()).unwrap();
-//                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
-//
-//                 // Checking response attributes and events
-//                 let mut found_event = false;
-//
-//                 assert_eq!(response.events.len(), 1);
-//                 assert_eq!(response.attributes.len(), 2);
-//                 for event in response.events.iter() {
-//                     if event.ty == "loan_pool_added" {
-//                         found_event = true;
-//                     }
-//                 }
-//                 let mut found_attributes: Vec<String> = Vec::new();
-//
-//                 for attribute in response.attributes.iter() {
-//                     match attribute.key.as_str() {
-//                         "loan_pool_added_by" => {
-//                             assert_eq!(attribute.value, info.sender.clone().to_string());
-//                             found_attributes.push(attribute.key.clone());
-//                         }
-//                         "action" => {
-//                             assert_eq!(attribute.value, "loan_pool_added");
-//                             found_attributes.push(attribute.key.clone());
-//                         }
-//                         // Add more keys to check here
-//                         _ => (),
-//                     }
-//                 }
-//
-//                 assert_eq!(
-//                     found_attributes.len(),
-//                     2,
-//                     "Did not find all required attributes"
-//                 );
-//
-//                 assert_eq!(response.messages.len(), 1);
-//
-//                 let expected_msg1 = SubMsg {
-//                     id: 0,
-//                     msg: Custom(AnyMsg {
-//                         route: marker_route,
-//                         params: Marker(RevokeMarkerAccess {
-//                             denom: "markerdenom".parse().unwrap(),
-//                             address: Addr::unchecked("contributor".to_string()),
-//                         }),
-//                         version: "2.0.0".parse().unwrap(),
-//                     }),
-//                     gas_limit: None,
-//                     reply_on: Never,
-//                 };
-//
-//                 assert_eq!(response.messages[0], expected_msg1);
-//                 assert!(found_event, "Failed to find loan_pool_added event");
-//             }
-//             Err(e) => panic!("Error: {:?}", e),
-//         }
-//     }
+    // #[test]
+    // fn test_handle_in_whitelist() {
+    //     let mut deps = mock_provenance_dependencies();
+    //     instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
+    //     let marker = MockMarker::new_owned_marker("contributor");
+    //     let marker_denom = marker.denom.clone();
+    //
+    //     let cb = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+    //         let message = QueryMarkerRequest::try_from(bin.clone()).unwrap();
+    //         let inner_deps = mock_provenance_dependencies();
+    //         let expected_marker = MockMarker::new_owned_marker("contributor").to_marker_account();
+    //
+    //         let response = QueryMarkerResponse {
+    //             marker: Some(Any {
+    //                 type_url: "/provenance.marker.v1.MarkerAccount".to_string(),
+    //                 value: expected_marker.to_proto_bytes(),
+    //             }),
+    //         };
+    //
+    //         let binary = to_json_binary(&response).unwrap();
+    //         SystemResult::Ok(ContractResult::Ok(binary))
+    //     });
+    //
+    //     deps.querier
+    //         .registered_custom_queries
+    //         .insert("/provenance.marker.v1.Query/Marker".to_string(), cb);
+    //
+    //     let cb_holding = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+    //         let message = QueryHoldingRequest::try_from(bin.clone()).unwrap();
+    //
+    //         let response = if message.id == "markerdenom" {
+    //             QueryHoldingResponse {
+    //                 balances: vec![Balance {
+    //                     address: Addr::unchecked("markerdenom").to_string(),
+    //                     coins: vec![Coin {
+    //                         denom: "markerdenom".to_string(),
+    //                         amount: "1".to_string(),
+    //                     }],
+    //                 }],
+    //                 pagination: None,
+    //             }
+    //         } else {
+    //             panic!("unexpected query for denom")
+    //         };
+    //
+    //         let binary = to_json_binary(&response).unwrap();
+    //         SystemResult::Ok(ContractResult::Ok(binary))
+    //     });
+    //
+    //     deps.querier.registered_custom_queries.insert(
+    //         "/provenance.marker.v1.Query/Holding".to_string(),
+    //         cb_holding,
+    //     );
+    //
+    //     let env = mock_env();
+    //     let info = message_info(&Addr::unchecked("contributor"), &[]);
+    //     let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
+    //     let addr_contributor = Addr::unchecked("contributor");
+    //     let white_list_addr = vec![addr_contributor.clone()];
+    //     let whitelist_result =
+    //         whitelist_loanpool_handle(deps.as_mut(), info_white_list.sender, white_list_addr);
+    //     assert!(whitelist_result.is_ok());
+    //     match whitelist_result {
+    //         Ok(response) => {
+    //             for attribute in response.attributes.iter() {
+    //                 if attribute.key == "action" {
+    //                     assert_eq!(attribute.value, "whitelist_added");
+    //                 } else if attribute.key == "address_whitelisted" {
+    //                     // Verify if the addresses are correct
+    //                     let whitelisted_addresses: Vec<&str> = attribute.value.split(",").collect();
+    //                     assert_eq!(whitelisted_addresses, vec!["contributor"]);
+    //                 }
+    //             }
+    //         }
+    //         Err(e) => panic!("Error: {:?}", e),
+    //     }
+    //     // Create a loan pool
+    //     let loan_pools = ContributeLoanPools {
+    //         markers: vec![marker_denom.clone()],
+    //     };
+    //
+    //     let expected_collaterals = vec![LoanPoolMarkerCollateral {
+    //         marker_address: marker.address.clone(),
+    //         marker_denom,
+    //         share_count: marker.total_supply.atomics(),
+    //         original_contributor: info.sender.to_owned(),
+    //         removed_permissions: if let Some(first_permission) = marker.permissions.first() {
+    //             vec![AccessGrantSerializable::from(first_permission.clone())]
+    //         } else {
+    //             vec![]
+    //         },
+    //     }];
+    //     // Call the handle function
+    //     let loan_pool_result =
+    //         add_loanpool_handle(deps.as_mut(), env.to_owned(), info.clone(), loan_pools);
+    //     // Assert that the result is not an error
+    //     assert!(loan_pool_result.is_ok());
+    //     match loan_pool_result {
+    //         Ok(response) => {
+    //             // Checking response data
+    //             let loan_pool_markers: LoanPoolMarkers =
+    //                 from_json(&response.data.unwrap()).unwrap();
+    //             assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
+    //
+    //             // Checking response attributes and events
+    //             let mut found_event = false;
+    //
+    //             assert_eq!(response.events.len(), 1);
+    //             assert_eq!(response.attributes.len(), 2);
+    //             for event in response.events.iter() {
+    //                 if event.ty == "loan_pool_added" {
+    //                     found_event = true;
+    //                 }
+    //             }
+    //             let mut found_attributes: Vec<String> = Vec::new();
+    //
+    //             for attribute in response.attributes.iter() {
+    //                 match attribute.key.as_str() {
+    //                     "loan_pool_added_by" => {
+    //                         assert_eq!(attribute.value, info.sender.clone().to_string());
+    //                         found_attributes.push(attribute.key.clone());
+    //                     }
+    //                     "action" => {
+    //                         assert_eq!(attribute.value, "loan_pool_added");
+    //                         found_attributes.push(attribute.key.clone());
+    //                     }
+    //                     // Add more keys to check here
+    //                     _ => (),
+    //                 }
+    //             }
+    //
+    //             assert_eq!(
+    //                 found_attributes.len(),
+    //                 2,
+    //                 "Did not find all required attributes"
+    //             );
+    //
+    //             assert_eq!(response.messages.len(), 1);
+    //
+    //             let expected_msg1 = SubMsg {
+    //                 id: 0,
+    //                 msg: Custom(AnyMsg {
+    //                     route: marker_route,
+    //                     params: Marker(RevokeMarkerAccess {
+    //                         denom: "markerdenom".parse().unwrap(),
+    //                         address: Addr::unchecked("contributor".to_string()),
+    //                     }),
+    //                     version: "2.0.0".parse().unwrap(),
+    //                 }),
+    //                 gas_limit: None,
+    //                 reply_on: Never,
+    //             };
+    //
+    //             assert_eq!(response.messages[0], expected_msg1);
+    //             assert!(found_event, "Failed to find loan_pool_added event");
+    //         }
+    //         Err(e) => panic!("Error: {:?}", e),
+    //     }
+    // }
 
     #[test]
     fn test_create_marker_pool_collateral_error_invalid_marker() {

@@ -5,7 +5,7 @@ use crate::core::{
     msg::ExecuteMsg,
 };
 
-use crate::execute::settlement::{propose_commitment, whitelist_loanpool_contributors};
+use crate::execute::settlement::{propose_commitment, update_settlement_time, whitelist_loanpool_contributors};
 use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
 // use crate::execute::{
 //     settlement::propose_commitment,
@@ -32,9 +32,9 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         // ExecuteMsg::WithdrawAllCommitments {} => {
         //     withdraw_all_commitments::handle(deps, env, info.sender)
         // }
-        // ExecuteMsg::UpdateSettlementTime { settlement_time } => {
-        //     update_settlement_time::handle(deps, info.sender, settlement_time)
-        // }
+        ExecuteMsg::UpdateSettlementTime { settlement_time } => {
+            update_settlement_time::handle(deps, info.sender, settlement_time)
+        }
         // ExecuteMsg::CancelCommitment { lp } => {
         //     cancel_commitment::handle(deps, env, info.sender, lp)
         // }
