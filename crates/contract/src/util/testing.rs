@@ -106,17 +106,17 @@ pub fn test_security_commitments() -> Vec<SecurityCommitment> {
     ]
 }
 
-pub fn test_propose_message() -> ExecuteMsg {
-    ExecuteMsg::ProposeCommitment {
-        securities: test_security_commitments(),
-    }
-}
+// pub fn test_propose_message() -> ExecuteMsg {
+//     ExecuteMsg::ProposeCommitment {
+//         securities: test_security_commitments(),
+//     }
+// }
 
-pub fn propose_test_commitment(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
-    let info = message_info(&Addr::unchecked(sender), &[]);
-    let msg = test_propose_message();
-    execute(deps, env, info, msg)
-}
+// pub fn propose_test_commitment(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
+//     let info = message_info(&Addr::unchecked(sender), &[]);
+//     let msg = test_propose_message();
+//     execute(deps, env, info, msg)
+// }
 
 pub fn test_create_accepted_commitments(lps: &[&str]) -> Vec<AcceptedCommitment> {
     lps.iter()

@@ -24,9 +24,9 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    ProposeCommitment {
-        securities: Vec<SecurityCommitment>,
-    },
+    // ProposeCommitment {
+    //     securities: Vec<SecurityCommitment>,
+    // },
     // AcceptCommitment {
     //     commitments: Vec<AcceptedCommitment>,
     // },
@@ -72,14 +72,14 @@ pub enum QueryMsg {
     #[returns(QueryStateResponse)]
     QueryState {},
     //
-    // #[returns(QueryVersionResponse)]
-    // QueryVersion {},
+    #[returns(QueryVersionResponse)]
+    QueryVersion {},
     //
     // #[returns(QueryLoanPoolCollateralResponse)]
     // QueryCollaterals {},
     //
-    // #[returns(QueryLoanPoolContributorsResponse)]
-    // QueryLoanPoolContributors {},
+    #[returns(QueryLoanPoolContributorsResponse)]
+    QueryLoanPoolContributors {},
 }
 
 #[cw_serde]

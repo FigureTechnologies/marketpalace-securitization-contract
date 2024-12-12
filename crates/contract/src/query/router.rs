@@ -4,7 +4,7 @@ use crate::core::{
     aliases::{ProvDeps, ProvQueryResponse},
     msg::QueryMsg,
 };
-use crate::query::query_state;
+use crate::query::{query_state, query_version, query_white_list_contributors};
 // use super::{
 //     query_commitments, query_investor, query_loan_pool_collaterals, query_securitizations,
 //     query_state, query_version, query_white_list_contributors,
@@ -20,11 +20,11 @@ pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
         //     query_securitizations::handle(deps.storage, securities)
         // }
         QueryMsg::QueryState {} => query_state::handle(deps.storage),
-        // QueryMsg::QueryVersion {} => query_version::handle(deps.storage),
+        QueryMsg::QueryVersion {} => query_version::handle(deps.storage),
         // QueryMsg::QueryCollaterals {} => query_loan_pool_collaterals::handle(deps.storage),
-        // QueryMsg::QueryLoanPoolContributors {} => {
-        //     query_white_list_contributors::handle(deps.storage)
-        // }
+        QueryMsg::QueryLoanPoolContributors {} => {
+            query_white_list_contributors::handle(deps.storage)
+        }
     }
 }
 
@@ -72,7 +72,7 @@ mod tests {
         let mut deps = mock_provenance_dependencies();
         let msg = crate::core::msg::QueryMsg::QueryState {};
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
-        util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
+        // util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp1").unwrap();
         let bin = route(deps.as_ref(), mock_env(), msg).unwrap();
         let _: QueryStateResponse = from_json(&bin).unwrap();
     }

@@ -17,9 +17,9 @@ use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
 
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
-        ExecuteMsg::ProposeCommitment { securities } => {
-            propose_commitment::handle(deps, &env, info.sender, securities)
-        }
+        // ExecuteMsg::ProposeCommitment { securities } => {
+        //     propose_commitment::handle(deps, &env, info.sender, securities)
+        // }
         // ExecuteMsg::AcceptCommitment { commitments } => {
         //     accept_commitments::handle(deps, env, info.sender, commitments)
         // }
