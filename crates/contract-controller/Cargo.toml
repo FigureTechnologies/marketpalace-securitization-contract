@@ -46,7 +46,7 @@ optimize-arm = """docker run --rm -v "$(pwd)":/code \
 
 [dependencies]
 provwasm-std = { version = "2.5.0" }
-cw-utils = {version = "2.0.0"}
+cw-utils = {version = "1.0.3"}
 cosmwasm-schema = "2.1.3"
 cosmwasm-std = { version = "2.1.3" }
 cosmwasm-storage = "1.5.2"
