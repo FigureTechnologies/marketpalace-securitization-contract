@@ -24,7 +24,7 @@ pub fn set(storage: &mut dyn Storage, security: &Security) -> Result<(), Contrac
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Coin, Uint128};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::security::{Security, SecurityType, TrancheSecurity},
@@ -35,20 +35,20 @@ mod tests {
 
     #[test]
     fn test_get_invalid() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let security_name = "badname".to_string();
         get(&deps.storage, security_name).unwrap_err();
     }
 
     #[test]
     fn test_get_set_valid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security = Security {
             name: "Security1".to_string(),
             amount: Uint128::new(100),
             security_type: SecurityType::Tranche(TrancheSecurity {}),
             minimum_amount: Uint128::new(10),
-            price_per_unit: Coin::new(100, "denom".to_string()),
+            price_per_unit: Coin::new(Uint128::new(100), "denom".to_string()),
         };
         set(deps.as_mut().storage, &security).unwrap();
 

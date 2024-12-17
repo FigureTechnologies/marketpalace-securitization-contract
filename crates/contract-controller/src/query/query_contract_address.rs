@@ -15,7 +15,7 @@ pub fn handle(storage: &dyn Storage, uuid: String) -> ProvQueryResponse {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_binary, testing::mock_env, Addr};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::msg::QueryContractAddressResponse,
@@ -25,7 +25,7 @@ mod tests {
 
     #[test]
     fn test_query_contracts_handles_invalid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let _ = instantiate_contract(deps.as_mut(), env).unwrap();
         handle(&deps.storage, "bad_address".to_string()).unwrap_err();

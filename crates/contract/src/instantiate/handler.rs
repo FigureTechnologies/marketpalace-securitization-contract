@@ -1,10 +1,7 @@
-use cosmwasm_std::{Addr, Attribute, CosmosMsg, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Addr, Attribute, CosmosMsg, Env, MessageInfo, Response, StdResult, Uint128};
 use cw2::set_contract_version;
-use provwasm_std::{
-    activate_marker, assess_custom_fee, create_marker, finalize_marker, grant_marker_access,
-    MarkerAccess, MarkerType, ProvenanceMsg,
-};
-
+use provwasm_std::types::provenance::{marker::v1::{Access, MarkerType}};
+use provwasm_std::types::provenance::marker::v1::AccessGrant;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -18,6 +15,7 @@ use crate::{
     },
     util::to,
 };
+use crate::util::provenance_utilities::{activate_marker, assess_custom_fee, create_marker, finalize_marker, grant_marker_access};
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -31,12 +29,12 @@ pub fn handle(
     state::set(deps.storage, &state)?;
 
     // Create the markers
-    let mut messages: Vec<CosmosMsg<ProvenanceMsg>> = Vec::new();
+    let mut messages: Vec<CosmosMsg> = Vec::new();
     for security in &msg.securities {
         let investment_name =
             to::security_to_investment_name(&security.name, &env.contract.address);
         let mut investment_marker =
-            new_active_marker(env.contract.address.clone(), &investment_name, 0)?;
+            new_active_marker(env.contract.address.clone(), &investment_name, Uint128::new(0))?;
         messages.append(&mut investment_marker);
         securities::set(deps.storage, security)?;
         remaining_securities::set(deps.storage, security.name.clone(), security.amount.u128())?;
@@ -69,37 +67,40 @@ pub fn handle(
 fn new_active_marker(
     owner: Addr,
     denom: &String,
-    amount: u128,
-) -> StdResult<Vec<CosmosMsg<ProvenanceMsg>>> {
-    let permissions = vec![
-        MarkerAccess::Admin,
-        MarkerAccess::Mint,
-        MarkerAccess::Burn,
-        MarkerAccess::Withdraw,
-        MarkerAccess::Transfer,
+    amount: Uint128,
+) -> StdResult<Vec<CosmosMsg>> {
+    let address = Addr::unchecked("address");
+    let grants = vec![
+        AccessGrant {
+            address: owner.to_string(),
+            permissions: vec![
+                Access::Admin.into(),
+                Access::Mint.into(),
+                Access::Burn.into(),
+                Access::Withdraw.into(),
+                Access::Transfer.into(),
+            ],
+        }
     ];
     Ok(vec![
-        create_marker(amount, denom.clone(), MarkerType::Restricted)?,
-        grant_marker_access(denom, owner, permissions)?,
-        finalize_marker(denom)?,
-        activate_marker(denom)?,
+        create_marker(amount, denom.clone(), MarkerType::Restricted, address.clone())?,
+        grant_marker_access(denom, owner, grants)?,
+        finalize_marker(denom, address.clone())?,
+        activate_marker(denom, address.clone())?,
     ])
 }
 
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{
-        testing::{mock_env, mock_info},
+        testing::{mock_env, message_info},
         Addr, Coin, StdError, Uint64,
     };
     use cosmwasm_std::{Attribute, Uint128};
     use cw2::get_contract_version;
-    use provwasm_mocks::mock_dependencies;
-    use provwasm_std::{
-        activate_marker, create_marker, finalize_marker, grant_marker_access, MarkerAccess,
-        MarkerType,
-    };
-
+    use provwasm_mocks::mock_provenance_dependencies;
+    use provwasm_std::types::cosmos::orm::query::v1alpha1::index_value::Value::Uint;
+    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerType};
     use crate::storage::state::{self};
     use crate::{
         contract::instantiate,
@@ -114,43 +115,49 @@ mod tests {
         storage::securities::{self},
     };
     use crate::{instantiate::handler::new_active_marker, storage::remaining_securities};
+    use crate::util::provenance_utilities::{activate_marker, create_marker, finalize_marker, grant_marker_access};
 
     #[test]
     fn test_new_active_marker_creates_and_activates_marker() {
         let address = Addr::unchecked("address");
         let denom = "denom".to_string();
-        let amount = 1000;
-        let permissions = vec![
-            MarkerAccess::Admin,
-            MarkerAccess::Mint,
-            MarkerAccess::Burn,
-            MarkerAccess::Withdraw,
-            MarkerAccess::Transfer,
+        let amount = Uint128::new(1000);
+        let grants = vec![
+            AccessGrant {
+                address: address.to_string(),
+                permissions: vec![
+                    Access::Admin.into(),
+                    Access::Mint.into(),
+                    Access::Burn.into(),
+                    Access::Withdraw.into(),
+                    Access::Transfer.into(),
+                ],
+            }
         ];
 
         let messages = new_active_marker(address.clone(), &denom, amount).unwrap();
         assert_eq!(4, messages.len());
         assert_eq!(
-            create_marker(amount, &denom, MarkerType::Restricted).unwrap(),
+            create_marker(amount, &denom, MarkerType::Restricted, address.clone()).unwrap(),
             messages[0]
         );
         assert_eq!(
-            grant_marker_access(&denom, address.clone(), permissions,).unwrap(),
+            grant_marker_access(&denom, address.clone(), grants).unwrap(),
             messages[1]
         );
-        assert_eq!(finalize_marker(&denom).unwrap(), messages[2]);
-        assert_eq!(activate_marker(&denom).unwrap(), messages[3]);
+        assert_eq!(finalize_marker(&denom, address.clone()).unwrap(), messages[2]);
+        assert_eq!(activate_marker(&denom, address.clone()).unwrap(), messages[3]);
     }
 
     #[test]
     fn test_new_active_marker_throws_errors_on_invalid_marker_txs() {
         let bad_addr =
-            new_active_marker(Addr::unchecked(""), &"mycustomdenom".to_string(), 1000).unwrap_err();
+            new_active_marker(Addr::unchecked(""), &"mycustomdenom".to_string(), Uint128::new(1000)).unwrap_err();
         let expected = StdError::generic_err("address must not be empty");
         assert_eq!(expected, bad_addr);
 
         let bad_denom =
-            new_active_marker(Addr::unchecked("address"), &"".to_string(), 1000).unwrap_err();
+            new_active_marker(Addr::unchecked("address"), &"".to_string(), Uint128::new(1000)).unwrap_err();
         let expected = StdError::generic_err("denom must not be empty");
         assert_eq!(expected, bad_denom);
     }
@@ -158,8 +165,8 @@ mod tests {
     #[test]
     fn test_with_valid_data() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
-        let info = mock_info("admin", &[]);
+        let mut deps = mock_provenance_dependencies();
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_TIME: Option<Uint64> = None;
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
@@ -168,14 +175,14 @@ mod tests {
                 name: "Tranche 1".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
         ];
@@ -225,8 +232,8 @@ mod tests {
     #[test]
     fn test_with_valid_data_and_fee() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
-        let info = mock_info("admin", &[]);
+        let mut deps = mock_provenance_dependencies();
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         const DEFAULT_TIME: Option<Uint64> = None;
@@ -235,14 +242,14 @@ mod tests {
                 name: "Tranche 1".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
         ];
@@ -253,7 +260,7 @@ mod tests {
             settlement_time: DEFAULT_TIME,
             fee: Some(Fee {
                 recipient: Some(Addr::unchecked("recipient")),
-                amount: Coin::new(100, "nhash"),
+                amount: Coin::new(Uint128::new(100), "nhash"),
             }),
         };
 
@@ -268,7 +275,7 @@ mod tests {
                     vec![
                         Attribute::new("action", "init"),
                         Attribute::new("fee_recipient", "recipient"),
-                        Attribute::new("fee_amount", format!("{:?}", Coin::new(100, "nhash")))
+                        Attribute::new("fee_amount", format!("{:?}", Coin::new(Uint128::new(100), "nhash")))
                     ],
                     res.attributes
                 )
@@ -300,8 +307,8 @@ mod tests {
     #[test]
     fn test_with_valid_data_and_provenance_fee() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
-        let info = mock_info("admin", &[]);
+        let mut deps = mock_provenance_dependencies();
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         const DEFAULT_TIME: Option<Uint64> = None;
@@ -310,14 +317,14 @@ mod tests {
                 name: "Tranche 1".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
             Security {
                 name: "Tranche 2".to_string(),
                 amount: Uint128::new(1000),
                 minimum_amount: Uint128::new(100),
-                price_per_unit: Coin::new(100, "denom"),
+                price_per_unit: Coin::new(Uint128::new(100), "denom"),
                 security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
             },
         ];
@@ -328,7 +335,7 @@ mod tests {
             settlement_time: DEFAULT_TIME,
             fee: Some(Fee {
                 recipient: None,
-                amount: Coin::new(100, "nhash"),
+                amount: Coin::new(Uint128::new(100), "nhash"),
             }),
         };
 
@@ -343,7 +350,7 @@ mod tests {
                     vec![
                         Attribute::new("action", "init"),
                         Attribute::new("fee_recipient", "msgfees_module"),
-                        Attribute::new("fee_amount", format!("{:?}", Coin::new(100, "nhash")))
+                        Attribute::new("fee_amount", format!("{:?}", Coin::new(Uint128::new(100), "nhash")))
                     ],
                     res.attributes
                 )
@@ -375,8 +382,8 @@ mod tests {
     #[test]
     fn test_with_invalid_data() {
         // create valid init data
-        let mut deps = mock_dependencies(&[]);
-        let info = mock_info("admin", &[]);
+        let mut deps = mock_provenance_dependencies();
+        let info = message_info(&Addr::unchecked("admin"), &[]);
         const DEFAULT_GP: &str = "gp";
         const DEFAULT_CAPITAL_DENOM: &str = "denom";
         const DEFAULT_TIME: Option<Uint64> = None;

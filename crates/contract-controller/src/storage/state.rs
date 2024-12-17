@@ -51,7 +51,7 @@ pub fn is_migrating(storage: &dyn Storage) -> Result<bool, ContractError> {
 #[cfg(test)]
 mod tests {
 
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::state::{is_migrating, set, update_batch_size};
 
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_get_set() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let state = State::new(2);
 
         set(deps.as_mut().storage, &state).unwrap();
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn test_update_batch_size() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let state = State::new(2);
 
         set(deps.as_mut().storage, &state).unwrap();
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn test_is_migrating() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut state = State::new(2);
 
         set(deps.as_mut().storage, &state).unwrap();

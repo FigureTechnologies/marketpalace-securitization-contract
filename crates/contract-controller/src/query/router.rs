@@ -21,7 +21,7 @@ pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_binary, testing::mock_env};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::msg::{
@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn test_query_version_has_correct_response() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let message = QueryMsg::QueryVersion {};
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_query_state_has_correct_response() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let message = QueryMsg::QueryState {};
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_query_contracts_has_correct_response() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let message = QueryMsg::QueryContracts {};
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();

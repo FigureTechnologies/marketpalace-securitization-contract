@@ -1,9 +1,9 @@
 use cosmwasm_std::{
-    testing::{mock_env, mock_info, MockApi, MockStorage},
+    testing::{mock_env, message_info, MockApi, MockStorage},
     Addr, Coin, Env, OwnedDeps, Storage, Uint128, Uint64,
 };
-use provwasm_mocks::ProvenanceMockQuerier;
-use provwasm_std::ProvenanceQuery;
+use cosmwasm_std::testing::mock_info;
+use provwasm_mocks::MockProvenanceQuerier;
 
 use crate::{
     contract::{execute, instantiate},
@@ -17,19 +17,6 @@ use crate::{
         state::{self, State},
     },
 };
-
-#[cfg(tests)]
-
-pub fn setup_tests() {
-    // We want things added to STATE
-    // We want things added to COMMITS
-    // We want things added to PAID_IN_CAPITAL
-    // We want a way for things added to
-}
-
-// We want a way to create a security commitment
-// We want a way to create a commitment
-// Maybe we want a way to easily transition between states for the settlement
 
 pub struct SettlementTester {
     pub security_commitments: Vec<SecurityCommitment>,
@@ -77,14 +64,14 @@ pub fn create_test_securities() -> Vec<Security> {
             amount: Uint128::new(1000),
             security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
             minimum_amount: Uint128::new(10),
-            price_per_unit: Coin::new(100, "denom".to_string()),
+            price_per_unit: Coin::new(Uint128::new(100), "denom".to_string()),
         },
         Security {
             name: "Security2".to_string(),
             amount: Uint128::new(1000),
             security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
             minimum_amount: Uint128::new(10),
-            price_per_unit: Coin::new(100, "denom".to_string()),
+            price_per_unit: Coin::new(Uint128::new(100), "denom".to_string()),
         },
     ]
 }
@@ -101,7 +88,7 @@ pub fn test_init_message() -> InstantiateMsg {
 
 pub fn instantiate_contract(deps: ProvDepsMut) -> ProvTxResponse {
     let env = mock_env();
-    let info = mock_info("sender", &[]);
+    let info = message_info(&Addr::unchecked("sender"), &[]);
     let msg = test_init_message();
 
     instantiate(deps, env, info, msg)
@@ -210,6 +197,8 @@ pub fn test_withdraw_all_commitments_message() -> ExecuteMsg {
     ExecuteMsg::WithdrawAllCommitments {}
 }
 
+pub type MockDeps = OwnedDeps<MockStorage, MockApi, MockProvenanceQuerier>;
+
 pub fn update_settlement_time_test(deps: ProvDepsMut, env: Env, sender: &str) -> ProvTxResponse {
     let info = mock_info(sender, &[]);
     let msg = test_update_settlement_time_message();
@@ -221,8 +210,6 @@ pub fn test_update_settlement_time_message() -> ExecuteMsg {
         settlement_time: Some(Uint64::new(99999)),
     }
 }
-
-pub type MockDeps = OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery>;
 
 pub fn create_test_state(deps: &mut MockDeps, env: &Env, has_settlement: bool) {
     let settlement_time = match has_settlement {

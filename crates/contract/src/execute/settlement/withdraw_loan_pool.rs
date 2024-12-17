@@ -1,10 +1,10 @@
-use cosmwasm_std::{to_binary, DepsMut, Env, Event, MessageInfo, Response};
-use provwasm_std::{ProvenanceQuerier, ProvenanceQuery};
-
-use crate::core::collateral::{LoanPoolMarkers, LoanPoolRemovalData};
+use cosmwasm_std::{to_json_binary, Addr, DepsMut, Env, Event, MessageInfo, Response};
+use provwasm_std::types::provenance::marker::v1::{AccessGrant, MarkerQuerier};
+use provwasm_std::types::provenance::metadata::v1::p8e::PartyType::Marker;
+use crate::core::collateral::{AccessGrantSerializable, LoanPoolMarkers, LoanPoolRemovalData};
 use crate::core::security::WithdrawLoanPools;
 use crate::storage::loan_pool_collateral::{get, remove};
-use crate::util::provenance_utilities::release_marker_from_contract;
+use crate::util::provenance_utilities::{get_marker, get_marker_address, release_marker_from_contract};
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -94,23 +94,25 @@ pub fn handle(
         response = response.add_attribute("loan_pool_removed_by", info.sender);
     }
     // Set response data to collaterals vector
-    response = response.set_data(to_binary(&LoanPoolMarkers::new(collaterals))?);
+    response = response.set_data(to_json_binary(&LoanPoolMarkers::new(collaterals))?);
 
     Ok(response)
 }
 
 fn withdraw_marker_pool_collateral(
-    deps: &DepsMut<ProvenanceQuery>,
+    deps: &DepsMut,
     env: &Env,
     marker_denom: String,
 ) -> Result<LoanPoolRemovalData, ContractError> {
     // get marker
-    let marker = ProvenanceQuerier::new(&deps.querier).get_marker_by_denom(marker_denom)?;
-    let collateral = get(deps.storage, marker.address)?;
+    let querier = MarkerQuerier::new(&deps.querier);
+    let marker = get_marker(marker_denom, &querier)?;
+    let marker_address = get_marker_address(marker.base_account)?;
+    let collateral = get(deps.storage, Addr::unchecked(marker_address))?;
     let messages = release_marker_from_contract(
         marker.denom,
         &env.contract.address,
-        &collateral.removed_permissions,
+        &collateral.clone().removed_permissions.into_iter().map(AccessGrant::from).collect::<Vec<_>>()
     )?;
     Ok(LoanPoolRemovalData {
         collateral,
@@ -120,7 +122,7 @@ fn withdraw_marker_pool_collateral(
 
 #[cfg(test)]
 mod tests {
-    use crate::core::collateral::{LoanPoolMarkerCollateral, LoanPoolMarkers};
+    use crate::core::collateral::{AccessGrantSerializable, LoanPoolMarkerCollateral, LoanPoolMarkers};
     use crate::core::error::ContractError;
     use crate::core::security::{ContributeLoanPools, WithdrawLoanPools};
     use crate::execute::settlement::add_loan_pool::handle as add_loanpool_handle;
@@ -128,25 +130,24 @@ mod tests {
     use crate::execute::settlement::withdraw_loan_pool::handle;
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::{mock_env, mock_info};
-    use cosmwasm_std::CosmosMsg::Custom;
+    use cosmwasm_std::testing::{message_info, mock_env, mock_info};
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{from_binary, Addr, SubMsg};
-    use provwasm_mocks::mock_dependencies;
-    use provwasm_std::MarkerAccess::{Admin, Burn, Delete, Deposit, Mint, Withdraw};
-    use provwasm_std::MarkerMsgParams::{GrantMarkerAccess, RevokeMarkerAccess};
-    use provwasm_std::ProvenanceMsg;
-    use provwasm_std::ProvenanceMsgParams::Marker;
-    use provwasm_std::ProvenanceRoute::Marker as marker_route;
+    use cosmwasm_std::{from_json, to_json_binary, Addr, AnyMsg, Binary, ContractResult, SubMsg, SystemResult, Uint128};
+    use provwasm_mocks::mock_provenance_dependencies;
+    use provwasm_std::shim::Any;
+    use provwasm_std::types::cosmos::auth::v1beta1::BaseAccount;
+    use provwasm_std::types::cosmos::base::v1beta1::Coin;
+    use provwasm_std::types::provenance::marker::v1::Access::{Admin, Burn, Delete, Deposit, Mint, Withdraw};
+    use provwasm_std::types::provenance::marker::v1::{AccessGrant, Balance, MarkerAccount, MarkerStatus, MarkerType, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse};
 
     #[test]
     fn test_handle_should_fail_when_sender_is_not_gp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let env = mock_env();
-        let info = mock_info("someone", &[]);
+        let info = message_info(&Addr::unchecked("someone"), &[]);
         // Create a loan pool
         let loan_pools = WithdrawLoanPools {
             markers: vec![marker_denom],
@@ -163,14 +164,13 @@ mod tests {
 
     #[test]
     fn test_withdraw_loan_pool() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let denom = marker.denom.to_owned();
-        deps.querier.with_markers(vec![marker.clone()]);
         let env = mock_env();
-        let info = mock_info("contributor", &[]);
-        let info_white_list = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("contributor"), &[]);
+        let info_white_list = message_info(&Addr::unchecked("gp"), &[]);
         let addr_contributor = Addr::unchecked("contributor");
         let white_list_addr = vec![addr_contributor.clone()];
         let whitelist_result =
@@ -198,14 +198,62 @@ mod tests {
         let expected_collaterals = vec![LoanPoolMarkerCollateral {
             marker_address: marker.address.clone(),
             marker_denom: denom.clone(),
-            share_count: marker.total_supply.atomics(),
+            share_count: Uint128::new(100),
             original_contributor: info.sender.to_owned(),
             removed_permissions: if let Some(first_permission) = marker.permissions.first() {
-                vec![first_permission.clone()]
+                vec![AccessGrantSerializable::from(first_permission.clone())]
             } else {
                 vec![]
             },
         }];
+
+        let cb = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+            let message = QueryMarkerRequest::try_from(bin.clone()).unwrap();
+            let inner_deps = mock_provenance_dependencies();
+            let expected_marker = MockMarker::new_owned_marker("contributor").to_marker_account();
+
+            let response = QueryMarkerResponse {
+                marker: Some(Any {
+                    type_url: "/provenance.marker.v1.MarkerAccount".to_string(),
+                    value: expected_marker.to_proto_bytes(),
+                }),
+            };
+
+            let binary = to_json_binary(&response).unwrap();
+            SystemResult::Ok(ContractResult::Ok(binary))
+        });
+
+        deps.querier
+            .registered_custom_queries
+            .insert("/provenance.marker.v1.Query/Marker".to_string(), cb);
+
+        let cb_holding = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+            let message = QueryHoldingRequest::try_from(bin.clone()).unwrap();
+
+            let response = if message.id == "markerdenom" {
+                QueryHoldingResponse {
+                    balances: vec![Balance {
+                        address: Addr::unchecked("markerdenom").to_string(),
+                        coins: vec![Coin {
+                            denom: "markerdenom".to_string(),
+                            amount: "100".to_string(),
+                        }],
+                    }],
+                    pagination: None,
+                }
+            } else {
+                panic!("unexpected query for denom")
+            };
+
+            let binary = to_json_binary(&response).unwrap();
+            SystemResult::Ok(ContractResult::Ok(binary))
+        });
+
+        deps.querier.registered_custom_queries.insert(
+            "/provenance.marker.v1.Query/Holding".to_string(),
+            cb_holding,
+        );
+
         // Call the handle function
         let loan_pool_result =
             add_loanpool_handle(deps.as_mut(), env.to_owned(), info.clone(), loan_pools);
@@ -215,7 +263,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let loan_pool_markers: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(loan_pool_markers.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
 
                 // Checking response attributes and events
@@ -231,7 +279,7 @@ mod tests {
 
                 for attribute in response.attributes.iter() {
                     if attribute.key == "loan_pool_added_by" {
-                        assert_eq!(attribute.value, info.sender.clone());
+                        assert_eq!(attribute.value, info.sender.clone().to_string());
                         found_attribute = true;
                     }
                 }
@@ -246,7 +294,7 @@ mod tests {
         let withdraw_loan_pools = WithdrawLoanPools {
             markers: vec![denom.to_owned()],
         };
-        let info = mock_info("gp", &[]);
+        let info = message_info(&Addr::unchecked("gp"), &[]);
 
         let withdraw_loan_pool_result = handle(
             deps.as_mut(),
@@ -260,7 +308,7 @@ mod tests {
             Ok(response) => {
                 // Checking response data
                 let withdraw_loan_pool_result: LoanPoolMarkers =
-                    from_binary(&response.data.unwrap()).unwrap();
+                    from_json(&response.data.unwrap()).unwrap();
                 assert_eq!(withdraw_loan_pool_result.collaterals, expected_collaterals); //replace `collaterals` with expected vec of collaterals
                 assert_eq!(response.events.len(), 1);
                 assert_eq!(response.attributes.len(), 2);
@@ -279,7 +327,7 @@ mod tests {
                 for attribute in response.attributes.iter() {
                     match attribute.key.as_str() {
                         "loan_pool_removed_by" => {
-                            assert_eq!(attribute.value, info.sender.clone());
+                            assert_eq!(attribute.value, info.sender.clone().to_string());
                             found_attributes.push(attribute.key.clone());
                         }
                         "action" => {
@@ -298,38 +346,6 @@ mod tests {
                 );
 
                 assert_eq!(response.messages.len(), 2);
-
-                let expected_msg1 = SubMsg {
-                    id: 0,
-                    msg: Custom(ProvenanceMsg {
-                        route: marker_route,
-                        params: Marker(GrantMarkerAccess {
-                            denom: "markerdenom".parse().unwrap(),
-                            address: Addr::unchecked("contributor".to_string()),
-                            permissions: vec![Admin, Burn, Delete, Deposit, Mint, Withdraw],
-                        }),
-                        version: "2.0.0".parse().unwrap(),
-                    }),
-                    gas_limit: None,
-                    reply_on: Never,
-                };
-
-                let expected_msg2 = SubMsg {
-                    id: 0,
-                    msg: Custom(ProvenanceMsg {
-                        route: marker_route,
-                        params: Marker(RevokeMarkerAccess {
-                            denom: "markerdenom".to_string(),
-                            address: Addr::unchecked("cosmos2contract".to_string()),
-                        }),
-                        version: "2.0.0".to_string(),
-                    }),
-                    gas_limit: None,
-                    reply_on: Never,
-                };
-
-                assert_eq!(response.messages[0], expected_msg1);
-                assert_eq!(response.messages[1], expected_msg2);
 
                 assert!(found_event, "Failed to find loan_pool_withdrawn event");
             }

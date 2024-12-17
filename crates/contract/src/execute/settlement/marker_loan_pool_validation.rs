@@ -1,9 +1,8 @@
+use std::str::FromStr;
 use crate::core::error::ContractError;
-use crate::util::provenance_utilities::{
-    get_single_marker_coin_holding, marker_has_admin, marker_has_permissions,
-};
-use cosmwasm_std::{Addr, Uint128};
-use provwasm_std::{Marker, MarkerAccess, MarkerStatus};
+use crate::util::provenance_utilities::{get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, Marker};
+use cosmwasm_std::{Addr, DepsMut, Uint128};
+use provwasm_std::types::provenance::marker::v1::{Access, MarkerAccount, MarkerStatus};
 use result_extensions::ResultExtensions;
 
 // New helper function for generating error messages
@@ -29,10 +28,11 @@ fn get_contract_error(msg: String) -> Result<(), ContractError> {
 /// * Returns a `Result` with `Ok(())` if the `marker` has the `expected_contract_permissions`, is Active, holds some of its `denom`, and doesn't hold more than what is supplied by the bank.
 /// * Returns a `Result` with `Err(ContractError)` if any of the checks fails. Each failure case has a unique error message that describes what went wrong.
 pub fn validate_marker_for_loan_pool_add_remove(
-    marker: &Marker,
+    deps: &DepsMut,
+    marker: &MarkerAccount,
     original_owner_address: &Addr,
     contract_address: &Addr,
-    expected_contract_permissions: &[MarkerAccess],
+    expected_contract_permissions: &[Access],
     bank_supply: Uint128,
 ) -> Result<(), ContractError> {
     if !marker_has_admin(marker, original_owner_address) {
@@ -52,40 +52,44 @@ pub fn validate_marker_for_loan_pool_add_remove(
         ));
     }
     // Active check
-    if marker.status != MarkerStatus::Active {
+    if marker.status != MarkerStatus::Active as i32 {
         return get_contract_error(format!(
             "expected marker [{}] to be active, but was in status [{:?}]",
             marker.denom, marker.status,
         ));
     }
     // get denom that this marker holds, where denom == marker denom
-    let marker_coin = get_single_marker_coin_holding(marker)?;
+    let marker_coin = get_single_marker_coin_holding(deps, marker)?;
+    let coin_amount = Uint128::from_str(marker_coin.amount.as_str())?;
+    let marker_supply = Uint128::from_str(marker.supply.as_str())?;
 
-    if marker_coin.amount.u128() == 0 {
+    if coin_amount == Uint128::new(0) {
         return get_contract_error(format!(
             "expected marker [{}] to hold at least one of its supply of denom, but it had [{}]",
             marker.denom,
-            marker_coin.amount.u128(),
+            marker_coin.amount,
         ));
     }
+
     // supply fixed then we can trust the marker total_supply
     if marker.supply_fixed {
         // amount held in marker cannot be greater than total supply
-        if marker_coin.amount > marker.total_supply.atomics() {
+        if coin_amount > marker_supply {
             return get_contract_error(format!(
-                "expected marker [{}] to be holding all the shares with supply [{}]",
+                "expected marker [{}] to be holding all the shares with supply [{}], found [{}]",
                 marker.denom,
-                marker_coin.amount.u128(),
+                marker_coin.amount,
+                marker.supply,
             ));
         }
     } else {
         // use the bank supply passed in
         // amount held in marker cannot be less than bank supply
-        if bank_supply > marker_coin.amount {
+        if bank_supply > coin_amount {
             return get_contract_error(format!(
                 "expected that marker, [{}] to be holding all the shares with supply, [{}]",
                 marker.denom,
-                marker_coin.amount.u128(),
+                marker_coin.amount,
             ));
         }
     }

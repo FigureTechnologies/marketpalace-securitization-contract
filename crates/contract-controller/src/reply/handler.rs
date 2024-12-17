@@ -1,5 +1,5 @@
 use cosmwasm_std::{Env, Event, Reply, Response, SubMsgResult};
-
+use provwasm_std::types::cosmwasm::wasm::v1beta1::MsgInstantiateContractResponse;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -18,7 +18,14 @@ pub fn handle(deps: ProvDepsMut, env: Env, reply: Reply) -> ProvTxResponse {
 }
 
 pub fn on_init_reply(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxResponse {
-    let response = cw_utils::parse_reply_instantiate_data(reply)?;
+    let data = match &reply.result {
+        SubMsgResult::Ok(response) => response.data.as_ref(),
+        SubMsgResult::Err(_) => None,
+    }.ok_or_else(|| ContractError::ParseReply(
+        "Invalid reply from sub-message: Missing reply data".to_string()
+    ))?;
+
+    let response = cw_utils::parse_instantiate_response_data(data)?;
     let contract_address = deps.api.addr_validate(&response.contract_address)?;
     storage::contract::add(deps.storage, &contract_address)?;
     let uuid = storage::uuid::get_last_uuid(deps.storage)?;
@@ -48,11 +55,10 @@ pub fn on_migrate_reply(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxRes
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{
-        testing::mock_env, Addr, Attribute, Event, Reply, SubMsgResponse, SubMsgResult,
-    };
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Binary, Event, Reply, SubMsgResponse, SubMsgResult};
+    use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
     use prost::Message;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{core::error::ContractError, reply, storage, util::testing::instantiate_contract};
 
@@ -66,14 +72,17 @@ mod tests {
 
     #[test]
     fn test_invalid_init_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let reply = Reply {
             id: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: None,
+                msg_responses: vec![],
             }),
+            gas_used: 50,
+            payload: Binary::from("dummyData".as_bytes())
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let error = reply::handler::handle(deps.as_mut(), env, reply).unwrap_err();
@@ -88,12 +97,12 @@ mod tests {
 
     #[test]
     fn test_valid_init_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let uuid = "uuid";
 
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: env.contract.address.to_string(),
+            contract_address: deps.api.addr_make(MOCK_CONTRACT_ADDR).to_string(),
             data: vec![],
         };
         let mut encoded_instantiate_reply =
@@ -109,7 +118,10 @@ mod tests {
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
+            gas_used: 50,
+            payload: Binary::from("dummyData".as_bytes())
         };
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -119,21 +131,24 @@ mod tests {
         assert_eq!(0, res.attributes.len());
         assert_eq!(
             true,
-            storage::contract::has(&deps.storage, &Addr::unchecked("cosmos2contract"))
+            storage::contract::has(&deps.storage, &deps.api.addr_make(MOCK_CONTRACT_ADDR))
         );
         assert_eq!(true, storage::uuid::has(&deps.storage, uuid));
     }
 
     #[test]
     fn test_invalid_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let reply = Reply {
             id: 100,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: None,
+                msg_responses: vec![],
             }),
+            gas_used: 50,
+            payload: Binary::from("dummyData".as_bytes())
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = reply::handler::handle(deps.as_mut(), env, reply).unwrap_err();
@@ -145,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_valid_success_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let contract = Addr::unchecked("contract1");
         let reply = Reply {
@@ -153,7 +168,10 @@ mod tests {
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: None,
+                msg_responses: vec![],
             }),
+            gas_used: 50,
+            payload: Binary::from("dummyData".as_bytes())
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         storage::reply::add(deps.as_mut().storage, &contract).unwrap();
@@ -170,13 +188,15 @@ mod tests {
 
     #[test]
     fn test_valid_error_reply() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let contract = Addr::unchecked("contract1");
         let error = "error from contract";
         let reply = Reply {
             id: 1,
             result: SubMsgResult::Err(error.to_string()),
+            gas_used: 50,
+            payload: Binary::from("dummyData".as_bytes())
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         storage::reply::add(deps.as_mut().storage, &contract).unwrap();

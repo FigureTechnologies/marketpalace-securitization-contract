@@ -45,7 +45,7 @@ pub fn range(storage: &dyn Storage, start: Option<&Addr>, amount: u128) -> Vec<A
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Addr;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::contract::{add, range, remove};
 
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_has_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         CONTRACTS_MAP
             .save(deps.as_mut().storage, &contract, &true)
@@ -63,14 +63,14 @@ mod tests {
 
     #[test]
     fn test_has_failure() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         assert_eq!(false, has(&deps.storage, &contract));
     }
 
     #[test]
     fn test_add() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn test_remove() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_remove_non_existant() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         remove(deps.as_mut().storage, &contract);
         assert!(true);
@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn test_list_non_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_list_empty() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let addresses = list(&deps.storage);
         let expected: Vec<Addr> = vec![];
         assert_eq!(expected, addresses);
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn test_range_starts_at_beginning() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_range_starts_at_location() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_range_handles_zero_elements() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let addresses = range(&deps.storage, None, 1);
         let expected: Vec<Addr> = vec![];
 
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_range_returns_all_for_zero_length() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn test_range_doesnt_exceed_elements() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let contract2 = Addr::unchecked("addr2");
         add(deps.as_mut().storage, &contract).unwrap();

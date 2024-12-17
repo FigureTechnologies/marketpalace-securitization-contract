@@ -5,15 +5,8 @@ use crate::core::{
     msg::ExecuteMsg,
 };
 
-use crate::execute::settlement::whitelist_loanpool_contributors;
+use crate::execute::settlement::{accept_commitments, cancel_commitment, deposit_commitment, propose_commitment, remove_whitelist_loanpool_contributors, update_settlement_time, whitelist_loanpool_contributors, withdraw_all_commitments, withdraw_commitment};
 use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
-use crate::execute::{
-    settlement::propose_commitment,
-    settlement::withdraw_commitment,
-    settlement::{accept_commitments, deposit_commitment},
-};
-
-use super::settlement::{cancel_commitment, update_settlement_time, withdraw_all_commitments};
 
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {
     match msg {
@@ -53,7 +46,7 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
         ),
         ExecuteMsg::RemoveWhiteListLoanPoolContributors {
             remove_loan_pool_contributors,
-        } => whitelist_loanpool_contributors::handle(
+        } => remove_whitelist_loanpool_contributors::handle(
             deps,
             info.sender,
             remove_loan_pool_contributors.addresses,
@@ -64,20 +57,20 @@ pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) ->
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::mock_env;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::util::{self, testing::test_security_commitments};
 
     #[test]
     fn test_propose_commitment_is_routed() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
     }
 
     #[test]
     fn test_accept_commitment() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
         util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp"]).unwrap();
@@ -85,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_deposit_commitment() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
         util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp"]).unwrap();
@@ -100,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_commitment() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
         util::testing::accept_test_commitment(deps.as_mut(), mock_env(), "gp", &["lp"]).unwrap();
@@ -116,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_withdraw_all_commitments() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp2").unwrap();
@@ -134,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_update_settlement_time() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp2").unwrap();
@@ -153,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_cancel_commitment() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         util::testing::instantiate_contract(deps.as_mut()).unwrap();
         util::testing::propose_test_commitment(deps.as_mut(), mock_env(), "lp").unwrap();
         util::testing::cancel_test(deps.as_mut(), mock_env(), "lp", "lp").unwrap();

@@ -40,16 +40,66 @@ mod tests {
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::mock_info;
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
-    use provwasm_mocks::mock_dependencies;
+    use cosmwasm_std::{from_binary, testing::mock_env, to_json_binary, Addr, Binary, ContractResult, SystemResult};
+    use provwasm_mocks::{mock_provenance_dependencies};
+    use provwasm_std::shim::Any;
+    use provwasm_std::types::cosmos::base::v1beta1::Coin;
+    use provwasm_std::types::provenance::marker::v1::{Balance, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse};
 
     #[test]
     fn test_all_collateral_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
         let marker_denom = marker.denom.clone();
-        deps.querier.with_markers(vec![marker.clone()]);
+
+        let cb = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+            let message = QueryMarkerRequest::try_from(bin.clone()).unwrap();
+            let inner_deps = mock_provenance_dependencies();
+            let expected_marker = MockMarker::new_owned_marker("contributor").to_marker_account();
+
+            let response = QueryMarkerResponse {
+                marker: Some(Any {
+                    type_url: "/provenance.marker.v1.MarkerAccount".to_string(),
+                    value: expected_marker.to_proto_bytes(),
+                }),
+            };
+
+            let binary = to_json_binary(&response).unwrap();
+            SystemResult::Ok(ContractResult::Ok(binary))
+        });
+
+        deps.querier
+            .registered_custom_queries
+            .insert("/provenance.marker.v1.Query/Marker".to_string(), cb);
+
+        let cb_holding = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+            let message = QueryHoldingRequest::try_from(bin.clone()).unwrap();
+
+            let response = if message.id == "markerdenom" {
+                QueryHoldingResponse {
+                    balances: vec![Balance {
+                        address: Addr::unchecked("markerdenom").to_string(),
+                        coins: vec![Coin {
+                            denom: "markerdenom".to_string(),
+                            amount: "1".to_string(),
+                        }],
+                    }],
+                    pagination: None,
+                }
+            } else {
+                panic!("unexpected query for denom")
+            };
+
+            let binary = to_json_binary(&response).unwrap();
+            SystemResult::Ok(ContractResult::Ok(binary))
+        });
+
+        deps.querier.registered_custom_queries.insert(
+            "/provenance.marker.v1.Query/Holding".to_string(),
+            cb_holding,
+        );
+
         let env = mock_env();
         let info = mock_info("contributor", &[]);
         let info_white_list = mock_info("gp", &[]);
@@ -65,6 +115,10 @@ mod tests {
         // Call the handle function
         let loan_pool_result =
             add_loanpool_handle(deps.as_mut(), env.to_owned(), info.clone(), loan_pools);
+        if let Err(err) = &loan_pool_result {
+            panic!("Error: {:?}", err);
+        }
+
         // Assert that the result is not an error
         assert!(loan_pool_result.is_ok());
 
@@ -76,10 +130,56 @@ mod tests {
 
     #[test]
     fn test_all_collateral_none_exists() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         let marker = MockMarker::new_owned_marker("contributor");
-        deps.querier.with_markers(vec![marker.clone()]);
+
+        let cb = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+            let message = QueryMarkerRequest::try_from(bin.clone()).unwrap();
+            let inner_deps = mock_provenance_dependencies();
+            let expected_marker = MockMarker::new_owned_marker("contributor").to_marker_account();
+
+            let response = QueryMarkerResponse {
+                marker: Some(Any {
+                    type_url: "/provenance.marker.v1.MarkerAccount".to_string(),
+                    value: expected_marker.to_proto_bytes(),
+                }),
+            };
+
+            let binary = to_json_binary(&response).unwrap();
+            SystemResult::Ok(ContractResult::Ok(binary))
+        });
+
+        deps.querier
+            .registered_custom_queries
+            .insert("/provenance.marker.v1.Query/Marker".to_string(), cb);
+
+        let cb_holding = Box::new(|bin: &Binary| -> SystemResult<ContractResult<Binary>> {
+            let message = QueryHoldingRequest::try_from(bin.clone()).unwrap();
+
+            let response = if message.id == "markerdenom" {
+                QueryHoldingResponse {
+                    balances: vec![Balance {
+                        address: Addr::unchecked("markerdenom").to_string(),
+                        coins: vec![Coin {
+                            denom: "markerdenom".to_string(),
+                            amount: "1".to_string(),
+                        }],
+                    }],
+                    pagination: None,
+                }
+            } else {
+                panic!("unexpected query for denom")
+            };
+
+            let binary = to_json_binary(&response).unwrap();
+            SystemResult::Ok(ContractResult::Ok(binary))
+        });
+
+        deps.querier.registered_custom_queries.insert(
+            "/provenance.marker.v1.Query/Holding".to_string(),
+            cb_holding,
+        );
 
         //query all states
         let res = query(deps.as_ref(), mock_env(), QueryMsg::QueryCollaterals {}).unwrap();

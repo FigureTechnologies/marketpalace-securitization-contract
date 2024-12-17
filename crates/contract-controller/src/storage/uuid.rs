@@ -37,7 +37,7 @@ pub fn get_last_uuid(storage: &dyn Storage) -> Result<String, ContractError> {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Addr;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::uuid::{add, get, get_last_uuid, remove, set_last_uuid};
 
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn test_has_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let uuid = "uuid";
         UUID_MAP
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn test_get_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let uuid = "uuid".to_string();
         set_last_uuid(deps.as_mut().storage, &uuid).unwrap();
         assert_eq!(uuid, get_last_uuid(&deps.storage).unwrap());
@@ -64,7 +64,7 @@ mod tests {
 
     #[test]
     fn test_get_set() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract = Addr::unchecked("addr");
         let uuid = "uuid";
         UUID_MAP
@@ -75,14 +75,14 @@ mod tests {
 
     #[test]
     fn test_has_failure() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let uuid = "uuid";
         assert_eq!(false, has(&deps.storage, &uuid));
     }
 
     #[test]
     fn test_add() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let uuid1 = "uuid1";
         let uuid2 = "uuid2";
         let contract1 = Addr::unchecked("addr");
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn test_remove() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let uuid1 = "uuid1";
         let uuid2 = "uuid2";
         let contract1 = Addr::unchecked("addr");
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_remove_non_existant() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let uuid = "uuid";
         remove(deps.as_mut().storage, &uuid);
         assert!(true);

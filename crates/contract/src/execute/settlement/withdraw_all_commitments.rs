@@ -41,8 +41,8 @@ pub fn handle(mut deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin};
-    use provwasm_mocks::mock_dependencies;
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128};
+    use provwasm_mocks::{mock_provenance_dependencies};
 
     use crate::{
         core::error::ContractError,
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn test_should_fail_when_sender_must_be_gp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let sender = Addr::unchecked("lp");
 
         let settlement_tester = SettlementTester::new();
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn test_should_fail_when_settlement_is_expired() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut env = mock_env();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -89,7 +89,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_should_succeed_when_settlement_time_does_not_exist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -125,7 +125,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_should_succeed_when_settlement_time_is_not_expired() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -166,7 +166,7 @@ mod tests {
         available_capital::add_capital(
             deps.as_mut().storage,
             commitment.lp.clone(),
-            vec![Coin::new(100, &capital_denom)],
+            vec![Coin::new(Uint128::new(100), &capital_denom)],
         )
         .unwrap();
 
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_should_succeed_with_multiple() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -207,7 +207,7 @@ mod tests {
             available_capital::add_capital(
                 deps.as_mut().storage,
                 commitment.lp.clone(),
-                vec![Coin::new(100, &capital_denom)],
+                vec![Coin::new(Uint128::new(100), &capital_denom)],
             )
             .unwrap();
 
