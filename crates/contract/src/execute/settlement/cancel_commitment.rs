@@ -64,8 +64,6 @@ fn refund_lp(deps: ProvDepsMut, commitment_lp: Addr) -> Result<Vec<ProvMsg>, Con
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, BankMsg, Coin, SubMsg, Uint128};
-    use provwasm_mocks::mock_provenance_dependencies;
     use crate::{
         core::{aliases::ProvMsg, error::ContractError},
         storage::{
@@ -74,6 +72,8 @@ mod tests {
         },
         util::testing::{create_testing_commitments, instantiate_contract},
     };
+    use cosmwasm_std::{testing::mock_env, Addr, Attribute, BankMsg, Coin, SubMsg, Uint128};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     #[test]
     fn test_handle_should_fail_when_sender_is_neither_gp_nor_owner() {

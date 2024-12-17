@@ -83,7 +83,10 @@ mod tests {
     fn test_add_to_capital_updates_first_capital() {
         let denom = "denom".to_string();
         let coin = Coin::new(Uint128::new(100), denom.clone());
-        let mut capital = vec![Coin::new(Uint128::new(100), denom.clone()), Coin::new(Uint128::new(100), denom.clone())];
+        let mut capital = vec![
+            Coin::new(Uint128::new(100), denom.clone()),
+            Coin::new(Uint128::new(100), denom.clone()),
+        ];
         add_to_capital(&coin, &mut capital);
 
         assert_eq!(2, capital.len());
@@ -203,6 +206,9 @@ mod tests {
         add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         let capital = get_capital(deps.as_mut().storage, lp).unwrap();
-        assert_eq!(vec![Coin::new(Uint128::new(100), "denom".to_string())], capital);
+        assert_eq!(
+            vec![Coin::new(Uint128::new(100), "denom".to_string())],
+            capital
+        );
     }
 }

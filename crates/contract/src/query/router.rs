@@ -4,7 +4,10 @@ use crate::core::{
     aliases::{ProvDeps, ProvQueryResponse},
     msg::QueryMsg,
 };
-use crate::query::{query_commitments, query_investor, query_loan_pool_collaterals, query_securitizations, query_state, query_version, query_white_list_contributors};
+use crate::query::{
+    query_commitments, query_investor, query_loan_pool_collaterals, query_securitizations,
+    query_state, query_version, query_white_list_contributors,
+};
 
 pub fn route(deps: ProvDeps, _env: Env, msg: QueryMsg) -> ProvQueryResponse {
     match msg {

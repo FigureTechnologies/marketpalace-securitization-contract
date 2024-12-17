@@ -1,5 +1,3 @@
-use cosmwasm_std::{Env, Event, Reply, Response, SubMsgResult};
-use provwasm_std::types::cosmwasm::wasm::v1beta1::MsgInstantiateContractResponse;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -8,6 +6,8 @@ use crate::{
     },
     storage,
 };
+use cosmwasm_std::{Env, Event, Reply, Response, SubMsgResult};
+use provwasm_std::types::cosmwasm::wasm::v1beta1::MsgInstantiateContractResponse;
 
 pub fn handle(deps: ProvDepsMut, env: Env, reply: Reply) -> ProvTxResponse {
     if reply.id == constants::REPLY_INIT_ID {
@@ -21,9 +21,10 @@ pub fn on_init_reply(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxRespon
     let data = match &reply.result {
         SubMsgResult::Ok(response) => response.data.as_ref(),
         SubMsgResult::Err(_) => None,
-    }.ok_or_else(|| ContractError::ParseReply(
-        "Invalid reply from sub-message: Missing reply data".to_string()
-    ))?;
+    }
+    .ok_or_else(|| {
+        ContractError::ParseReply("Invalid reply from sub-message: Missing reply data".to_string())
+    })?;
 
     let response = cw_utils::parse_instantiate_response_data(data)?;
     let contract_address = deps.api.addr_validate(&response.contract_address)?;
@@ -55,8 +56,10 @@ pub fn on_migrate_reply(deps: ProvDepsMut, _env: Env, reply: Reply) -> ProvTxRes
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{testing::mock_env, Addr, Attribute, Binary, Event, Reply, SubMsgResponse, SubMsgResult};
     use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
+    use cosmwasm_std::{
+        testing::mock_env, Addr, Attribute, Binary, Event, Reply, SubMsgResponse, SubMsgResult,
+    };
     use prost::Message;
     use provwasm_mocks::mock_provenance_dependencies;
 
@@ -82,7 +85,7 @@ mod tests {
                 msg_responses: vec![],
             }),
             gas_used: 50,
-            payload: Binary::from("dummyData".as_bytes())
+            payload: Binary::from("dummyData".as_bytes()),
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let error = reply::handler::handle(deps.as_mut(), env, reply).unwrap_err();
@@ -121,7 +124,7 @@ mod tests {
                 msg_responses: vec![],
             }),
             gas_used: 50,
-            payload: Binary::from("dummyData".as_bytes())
+            payload: Binary::from("dummyData".as_bytes()),
         };
 
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
@@ -148,7 +151,7 @@ mod tests {
                 msg_responses: vec![],
             }),
             gas_used: 50,
-            payload: Binary::from("dummyData".as_bytes())
+            payload: Binary::from("dummyData".as_bytes()),
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         let res = reply::handler::handle(deps.as_mut(), env, reply).unwrap_err();
@@ -171,7 +174,7 @@ mod tests {
                 msg_responses: vec![],
             }),
             gas_used: 50,
-            payload: Binary::from("dummyData".as_bytes())
+            payload: Binary::from("dummyData".as_bytes()),
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         storage::reply::add(deps.as_mut().storage, &contract).unwrap();
@@ -196,7 +199,7 @@ mod tests {
             id: 1,
             result: SubMsgResult::Err(error.to_string()),
             gas_used: 50,
-            payload: Binary::from("dummyData".as_bytes())
+            payload: Binary::from("dummyData".as_bytes()),
         };
         instantiate_contract(deps.as_mut(), env.clone()).unwrap();
         storage::reply::add(deps.as_mut().storage, &contract).unwrap();

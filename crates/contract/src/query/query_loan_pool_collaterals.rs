@@ -40,11 +40,15 @@ mod tests {
     use crate::util::mock_marker::MockMarker;
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::mock_info;
-    use cosmwasm_std::{from_binary, testing::mock_env, to_json_binary, Addr, Binary, ContractResult, SystemResult};
-    use provwasm_mocks::{mock_provenance_dependencies};
+    use cosmwasm_std::{
+        from_binary, testing::mock_env, to_json_binary, Addr, Binary, ContractResult, SystemResult,
+    };
+    use provwasm_mocks::mock_provenance_dependencies;
     use provwasm_std::shim::Any;
     use provwasm_std::types::cosmos::base::v1beta1::Coin;
-    use provwasm_std::types::provenance::marker::v1::{Balance, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse};
+    use provwasm_std::types::provenance::marker::v1::{
+        Balance, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse,
+    };
 
     #[test]
     fn test_all_collateral_success() {

@@ -20,7 +20,7 @@ pub fn handle(storage: &dyn Storage, security_names: Vec<String>) -> ProvQueryRe
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_binary, testing::mock_env};
-    use provwasm_mocks::{mock_provenance_dependencies};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         contract::query,

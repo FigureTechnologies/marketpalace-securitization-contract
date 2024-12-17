@@ -1,6 +1,10 @@
 use cosmwasm_std::{Addr, Env, Event, Response, Storage};
 // use provwasm_std::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
 
+use super::commitment::{Commitment, CommitmentState};
+use crate::util::provenance_utilities::{
+    mint_marker_supply, transfer_marker_coins, withdraw_coins,
+};
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
@@ -13,8 +17,6 @@ use crate::{
     },
     util::{self, to},
 };
-use crate::util::provenance_utilities::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
-use super::commitment::{Commitment, CommitmentState};
 
 pub fn handle(mut deps: ProvDepsMut, env: Env, sender: Addr, commitment: Addr) -> ProvTxResponse {
     let state = state::get(deps.storage)?;
@@ -83,13 +85,14 @@ fn transfer_investment_tokens(
     let mut messages = vec![];
     for security in &commitment.commitments {
         let investment_name = to::security_to_investment_name(&security.name, contract);
-        let mint_msg = mint_marker_supply(security.amount.u128(), &investment_name, contract.clone())?;
+        let mint_msg =
+            mint_marker_supply(security.amount.u128(), &investment_name, contract.clone())?;
         let withdraw_msg = withdraw_coins(
             &investment_name,
             security.amount.u128(),
             &investment_name,
             commitment.lp.clone(),
-            contract.clone()
+            contract.clone(),
         )?;
         messages.push(mint_msg);
         messages.push(withdraw_msg);
@@ -100,8 +103,10 @@ fn transfer_investment_tokens(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Event, Uint128, Uint64};
-    use provwasm_mocks::{mock_provenance_dependencies};
+    use provwasm_mocks::mock_provenance_dependencies;
 
+    use super::{handle, process_withdraw, transfer_investment_tokens, withdraw_commitment};
+    use crate::util::provenance_utilities::{mint_marker_supply, withdraw_coins};
     use crate::{
         core::error::ContractError,
         execute::settlement::commitment::{Commitment, CommitmentState},
@@ -112,8 +117,6 @@ mod tests {
         },
         util::{testing::SettlementTester, to},
     };
-    use crate::util::provenance_utilities::{mint_marker_supply, withdraw_coins};
-    use super::{handle, process_withdraw, transfer_investment_tokens, withdraw_commitment};
 
     #[test]
     fn test_transfer_investment_tokens_success() {
@@ -126,13 +129,15 @@ mod tests {
         let mut expected = vec![];
         for commitment in &commitment.commitments {
             let investment_name = to::security_to_investment_name(&commitment.name, &contract);
-            let mint_msg = mint_marker_supply(commitment.amount.u128(), &investment_name, contract.clone()).unwrap();
+            let mint_msg =
+                mint_marker_supply(commitment.amount.u128(), &investment_name, contract.clone())
+                    .unwrap();
             let withdraw_msg = withdraw_coins(
                 &investment_name,
                 commitment.amount.u128(),
                 &investment_name,
                 lp.clone(),
-                contract.clone()
+                contract.clone(),
             )
             .unwrap();
             expected.push(mint_msg);

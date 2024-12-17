@@ -1,8 +1,10 @@
+use crate::util::provenance_utilities::Marker;
 use cosmwasm_std::testing::MOCK_CONTRACT_ADDR;
 use cosmwasm_std::{coins, Addr, Coin, Decimal, Uint128};
 use provwasm_std::types::cosmos::auth::v1beta1::BaseAccount;
-use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerAccount, MarkerStatus, MarkerType};
-use crate::util::provenance_utilities::Marker;
+use provwasm_std::types::provenance::marker::v1::{
+    Access, AccessGrant, MarkerAccount, MarkerStatus, MarkerType,
+};
 
 pub const DEFAULT_MARKER_ADDRESS: &str = "marker_address";
 pub const DEFAULT_MARKER_HOLDINGS: u128 = 100;

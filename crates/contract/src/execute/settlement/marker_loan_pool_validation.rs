@@ -1,9 +1,11 @@
-use std::str::FromStr;
 use crate::core::error::ContractError;
-use crate::util::provenance_utilities::{get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, Marker};
+use crate::util::provenance_utilities::{
+    get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, Marker,
+};
 use cosmwasm_std::{Addr, DepsMut, Uint128};
 use provwasm_std::types::provenance::marker::v1::{Access, MarkerAccount, MarkerStatus};
 use result_extensions::ResultExtensions;
+use std::str::FromStr;
 
 // New helper function for generating error messages
 fn get_contract_error(msg: String) -> Result<(), ContractError> {
@@ -66,8 +68,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
     if coin_amount == Uint128::new(0) {
         return get_contract_error(format!(
             "expected marker [{}] to hold at least one of its supply of denom, but it had [{}]",
-            marker.denom,
-            marker_coin.amount,
+            marker.denom, marker_coin.amount,
         ));
     }
 
@@ -77,9 +78,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
         if coin_amount > marker_supply {
             return get_contract_error(format!(
                 "expected marker [{}] to be holding all the shares with supply [{}], found [{}]",
-                marker.denom,
-                marker_coin.amount,
-                marker.supply,
+                marker.denom, marker_coin.amount, marker.supply,
             ));
         }
     } else {
@@ -88,8 +87,7 @@ pub fn validate_marker_for_loan_pool_add_remove(
         if bank_supply > coin_amount {
             return get_contract_error(format!(
                 "expected that marker, [{}] to be holding all the shares with supply, [{}]",
-                marker.denom,
-                marker_coin.amount,
+                marker.denom, marker_coin.amount,
             ));
         }
     }

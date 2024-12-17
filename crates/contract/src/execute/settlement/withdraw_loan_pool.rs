@@ -1,10 +1,9 @@
-use cosmwasm_std::{to_json_binary, Addr, DepsMut, Env, Event, MessageInfo, Response};
-use provwasm_std::types::provenance::marker::v1::{AccessGrant, MarkerQuerier};
-use provwasm_std::types::provenance::metadata::v1::p8e::PartyType::Marker;
 use crate::core::collateral::{AccessGrantSerializable, LoanPoolMarkers, LoanPoolRemovalData};
 use crate::core::security::WithdrawLoanPools;
 use crate::storage::loan_pool_collateral::{get, remove};
-use crate::util::provenance_utilities::{get_marker, get_marker_address, release_marker_from_contract};
+use crate::util::provenance_utilities::{
+    get_marker, get_marker_address, release_marker_from_contract,
+};
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvTxResponse},
@@ -12,6 +11,9 @@ use crate::{
     },
     storage::state::{self},
 };
+use cosmwasm_std::{to_json_binary, Addr, DepsMut, Env, Event, MessageInfo, Response};
+use provwasm_std::types::provenance::marker::v1::{AccessGrant, MarkerQuerier};
+use provwasm_std::types::provenance::metadata::v1::p8e::PartyType::Marker;
 
 /// Handle function that processes a list of loan pools to be withdrawn.
 ///
@@ -112,7 +114,12 @@ fn withdraw_marker_pool_collateral(
     let messages = release_marker_from_contract(
         marker.denom,
         &env.contract.address,
-        &collateral.clone().removed_permissions.into_iter().map(AccessGrant::from).collect::<Vec<_>>()
+        &collateral
+            .clone()
+            .removed_permissions
+            .into_iter()
+            .map(AccessGrant::from)
+            .collect::<Vec<_>>(),
     )?;
     Ok(LoanPoolRemovalData {
         collateral,
@@ -122,7 +129,9 @@ fn withdraw_marker_pool_collateral(
 
 #[cfg(test)]
 mod tests {
-    use crate::core::collateral::{AccessGrantSerializable, LoanPoolMarkerCollateral, LoanPoolMarkers};
+    use crate::core::collateral::{
+        AccessGrantSerializable, LoanPoolMarkerCollateral, LoanPoolMarkers,
+    };
     use crate::core::error::ContractError;
     use crate::core::security::{ContributeLoanPools, WithdrawLoanPools};
     use crate::execute::settlement::add_loan_pool::handle as add_loanpool_handle;
@@ -132,13 +141,21 @@ mod tests {
     use crate::util::testing::instantiate_contract;
     use cosmwasm_std::testing::{message_info, mock_env, mock_info};
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{from_json, to_json_binary, Addr, AnyMsg, Binary, ContractResult, SubMsg, SystemResult, Uint128};
+    use cosmwasm_std::{
+        from_json, to_json_binary, Addr, AnyMsg, Binary, ContractResult, SubMsg, SystemResult,
+        Uint128,
+    };
     use provwasm_mocks::mock_provenance_dependencies;
     use provwasm_std::shim::Any;
     use provwasm_std::types::cosmos::auth::v1beta1::BaseAccount;
     use provwasm_std::types::cosmos::base::v1beta1::Coin;
-    use provwasm_std::types::provenance::marker::v1::Access::{Admin, Burn, Delete, Deposit, Mint, Withdraw};
-    use provwasm_std::types::provenance::marker::v1::{AccessGrant, Balance, MarkerAccount, MarkerStatus, MarkerType, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse};
+    use provwasm_std::types::provenance::marker::v1::Access::{
+        Admin, Burn, Delete, Deposit, Mint, Withdraw,
+    };
+    use provwasm_std::types::provenance::marker::v1::{
+        AccessGrant, Balance, MarkerAccount, MarkerStatus, MarkerType, QueryHoldingRequest,
+        QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse,
+    };
 
     #[test]
     fn test_handle_should_fail_when_sender_is_not_gp() {

@@ -1,8 +1,8 @@
+use cosmwasm_std::testing::mock_info;
 use cosmwasm_std::{
-    testing::{mock_env, message_info, MockApi, MockStorage},
+    testing::{message_info, mock_env, MockApi, MockStorage},
     Addr, Coin, Env, OwnedDeps, Storage, Uint128, Uint64,
 };
-use cosmwasm_std::testing::mock_info;
 use provwasm_mocks::MockProvenanceQuerier;
 
 use crate::{

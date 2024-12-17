@@ -1,10 +1,18 @@
-use cosmwasm_schema::cw_serde;
 use crate::core::error::ContractError;
-use provwasm_std::types::cosmos::base::v1beta1::Coin;
-use cosmwasm_std::{coin, Addr, BankQuery, CosmosMsg, Decimal, DepsMut, Empty, StdError, StdResult, SupplyResponse, Uint128};
+use cosmwasm_schema::cw_serde;
+use cosmwasm_std::{
+    coin, Addr, BankQuery, CosmosMsg, Decimal, DepsMut, Empty, StdError, StdResult, SupplyResponse,
+    Uint128,
+};
 use provwasm_std::try_proto_to_cosmwasm_coins;
 use provwasm_std::types::cosmos::auth::v1beta1::BaseAccount;
-use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, MarkerAccount, MarkerQuerier, MarkerStatus, MarkerType, MsgActivateRequest, MsgAddAccessRequest, MsgAddMarkerRequest, MsgDeleteAccessRequest, MsgFinalizeRequest, MsgMintRequest, MsgTransferRequest, MsgWithdrawRequest, QueryHoldingRequest, QueryHoldingResponse};
+use provwasm_std::types::cosmos::base::v1beta1::Coin;
+use provwasm_std::types::provenance::marker::v1::{
+    Access, AccessGrant, MarkerAccount, MarkerQuerier, MarkerStatus, MarkerType,
+    MsgActivateRequest, MsgAddAccessRequest, MsgAddMarkerRequest, MsgDeleteAccessRequest,
+    MsgFinalizeRequest, MsgMintRequest, MsgTransferRequest, MsgWithdrawRequest,
+    QueryHoldingRequest, QueryHoldingResponse,
+};
 use provwasm_std::types::provenance::msgfees::v1::MsgAssessCustomMsgFeeRequest;
 use result_extensions::ResultExtensions;
 use schemars::JsonSchema;
@@ -27,9 +35,11 @@ pub fn marker_has_permissions(
 ) -> bool {
     marker.access_control.iter().any(|permission| {
         &permission.address == &address.clone().into_string()
-            && expected_permissions
-                .iter()
-                .all(|expected_permission| permission.permissions.contains(&expected_permission.to_i32()))
+            && expected_permissions.iter().all(|expected_permission| {
+                permission
+                    .permissions
+                    .contains(&expected_permission.to_i32())
+            })
     })
 }
 
@@ -43,7 +53,6 @@ impl AccessExt for Access {
         *self as i32
     }
 }
-
 
 pub fn create_marker<S: Into<String>>(
     amount: Uint128,
@@ -71,7 +80,7 @@ pub fn create_marker<S: Into<String>>(
         volume: 0,
         usd_mills: 0,
     }
-        .into())
+    .into())
 }
 
 pub fn marker_has_admin(marker: &MarkerAccount, admin_address: &Addr) -> bool {
@@ -126,12 +135,16 @@ pub struct MockMarker {
 //     Err(e) => println!("Error retrieving coin holding: {}", e),
 // }
 // ```
-pub fn get_single_marker_coin_holding(deps: &DepsMut, marker: &MarkerAccount) -> Result<Coin, ContractError> {
+pub fn get_single_marker_coin_holding(
+    deps: &DepsMut,
+    marker: &MarkerAccount,
+) -> Result<Coin, ContractError> {
     let holding_response: QueryHoldingResponse = deps.querier.query(
         &QueryHoldingRequest {
             id: marker.denom.clone(),
             pagination: None,
-        }.into(),
+        }
+        .into(),
     )?;
     let marker_denom_holdings = holding_response
         .balances
@@ -160,7 +173,7 @@ pub fn finalize_marker<S: Into<String>>(denom: S, contract_address: Addr) -> Std
         denom: validate_string(denom, "denom")?,
         administrator: validate_address(contract_address)?.to_string(),
     }
-        .into())
+    .into())
 }
 
 // pub fn get_marker_by_denom<H: Into<String>>(
@@ -218,7 +231,7 @@ pub fn activate_marker<S: Into<String>>(denom: S, contract_address: Addr) -> Std
         denom: validate_string(denom, "denom")?,
         administrator: validate_address(contract_address)?.to_string(),
     }
-        .into())
+    .into())
 }
 
 pub fn transfer_marker_coins<S: Into<String>, H: Into<Addr>>(
@@ -241,7 +254,7 @@ pub fn transfer_marker_coins<S: Into<String>, H: Into<Addr>>(
         from_address: validate_address(from)?.to_string(),
         to_address: validate_address(to)?.to_string(),
     }
-        .into())
+    .into())
 }
 
 pub fn mint_marker_supply<S: Into<String>>(
@@ -261,7 +274,7 @@ pub fn mint_marker_supply<S: Into<String>>(
         amount: Some(coin),
         administrator: validate_address(contract_address)?.to_string(),
     }
-        .into())
+    .into())
 }
 
 pub fn withdraw_coins<S: Into<String>, H: Into<Addr>>(
@@ -284,7 +297,7 @@ pub fn withdraw_coins<S: Into<String>, H: Into<Addr>>(
         to_address: validate_address(recipient)?.to_string(),
         amount: vec![coin],
     }
-        .into())
+    .into())
 }
 
 pub fn grant_marker_access<S: Into<String>, H: Into<Addr>>(
@@ -296,7 +309,8 @@ pub fn grant_marker_access<S: Into<String>, H: Into<Addr>>(
         denom: validate_string(denom, "denom")?,
         administrator: validate_address(address)?.to_string(),
         access: permissions,
-    }.into())
+    }
+    .into())
 }
 
 pub fn revoke_marker_access<S: Into<String>, H: Into<Addr> + Clone>(
@@ -307,7 +321,8 @@ pub fn revoke_marker_access<S: Into<String>, H: Into<Addr> + Clone>(
         denom: validate_string(denom, "denom")?,
         administrator: validate_address(address.clone())?.to_string(),
         removed_address: validate_address(address)?.to_string(),
-    }.into())
+    }
+    .into())
 }
 
 /// A helper that ensures string params are non-empty.
@@ -354,8 +369,6 @@ pub fn release_marker_from_contract<S: Into<String>>(
     messages.to_ok()
 }
 
-
-
 pub fn assess_custom_fee<S: Into<String>>(
     amount: cosmwasm_std::Coin,
     name: Option<S>,
@@ -374,7 +387,7 @@ pub fn assess_custom_fee<S: Into<String>>(
         from: validate_address(from)?.to_string(),
         recipient_basis_points: "10000".to_string(),
     }
-        .into())
+    .into())
 }
 
 pub fn query_total_supply(deps: &DepsMut, denom: String) -> StdResult<Uint128> {
@@ -396,16 +409,22 @@ pub fn get_marker_address(base_account: Option<BaseAccount>) -> Result<String, C
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-    use cosmwasm_std::{coin, coins, to_json_binary, Addr, Binary, ContractResult, SystemResult, Uint128};
+    use crate::core::error::ContractError;
+    use crate::util::mock_marker::MockMarker;
+    use crate::util::provenance_utilities::{
+        format_coin_display, get_single_marker_coin_holding, marker_has_admin,
+        marker_has_permissions, NHASH,
+    };
+    use cosmwasm_std::{
+        coin, coins, to_json_binary, Addr, Binary, ContractResult, SystemResult, Uint128,
+    };
     use provwasm_mocks::mock_provenance_dependencies;
     use provwasm_std::types::cosmos::base::v1beta1::Coin;
     use provwasm_std::types::provenance::attribute::v1::AttributeType::String;
-    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant, Balance, QueryHoldingRequest, QueryHoldingResponse};
-    use crate::core::error::ContractError;
-    use crate::util::mock_marker::MockMarker;
-    use crate::util::provenance_utilities::{format_coin_display, get_single_marker_coin_holding, marker_has_admin, marker_has_permissions, NHASH};
-
+    use provwasm_std::types::provenance::marker::v1::{
+        Access, AccessGrant, Balance, QueryHoldingRequest, QueryHoldingResponse,
+    };
+    use std::str::FromStr;
 
     #[test]
     fn test_into_to_string() {
@@ -452,11 +471,7 @@ mod tests {
             !marker_has_permissions(
                 &marker,
                 &Addr::unchecked("not the same address"),
-                &[
-                    Access::Admin,
-                    Access::Mint,
-                    Access::Delete
-                ],
+                &[Access::Admin, Access::Mint, Access::Delete],
             ),
             "multiple target with bad target address should produce a false response",
         );

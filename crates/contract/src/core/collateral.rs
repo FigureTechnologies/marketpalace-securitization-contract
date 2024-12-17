@@ -69,7 +69,11 @@ impl From<AccessGrant> for AccessGrantSerializable {
     fn from(access_grant: AccessGrant) -> Self {
         AccessGrantSerializable {
             address: access_grant.address,
-            permissions: access_grant.permissions.into_iter().map(|p| MarkerAccess::from(Access::from_i32(p).unwrap())).collect()
+            permissions: access_grant
+                .permissions
+                .into_iter()
+                .map(|p| MarkerAccess::from(Access::from_i32(p).unwrap()))
+                .collect(),
         }
     }
 }
@@ -78,7 +82,11 @@ impl From<AccessGrantSerializable> for AccessGrant {
     fn from(serializable: AccessGrantSerializable) -> Self {
         AccessGrant {
             address: serializable.address,
-            permissions: serializable.permissions.into_iter().map(|p| Access::from(p).into()).collect()
+            permissions: serializable
+                .permissions
+                .into_iter()
+                .map(|p| Access::from(p).into())
+                .collect(),
         }
     }
 }
@@ -96,7 +104,10 @@ impl LoanPoolMarkerCollateral {
             marker_denom: marker_denom.into(),
             share_count: Uint128::new(share_count),
             original_contributor: original_owner,
-            removed_permissions: removed_permissions.into_iter().map(AccessGrantSerializable::from).collect(),
+            removed_permissions: removed_permissions
+                .into_iter()
+                .map(AccessGrantSerializable::from)
+                .collect(),
         }
     }
 }

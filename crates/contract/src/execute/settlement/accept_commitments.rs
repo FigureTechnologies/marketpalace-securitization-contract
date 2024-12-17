@@ -102,7 +102,7 @@ fn track_paid_capital(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint128};
-    use provwasm_mocks::{mock_provenance_dependencies};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::{error::ContractError, security::AcceptedCommitment},

@@ -14,8 +14,6 @@ pub fn handle(storage: &dyn Storage, commitment_state: CommitmentState) -> ProvQ
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
-    use provwasm_mocks::mock_provenance_dependencies;
     use crate::{
         contract::query,
         core::msg::{QueryCommitmentsResponse, QueryMsg},
@@ -24,6 +22,8 @@ mod tests {
             create_testing_commitments, instantiate_contract, test_security_commitments,
         },
     };
+    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     #[test]
     fn test_pending_commitments() {

@@ -5,7 +5,11 @@ use crate::core::{
     msg::ExecuteMsg,
 };
 
-use crate::execute::settlement::{accept_commitments, cancel_commitment, deposit_commitment, propose_commitment, remove_whitelist_loanpool_contributors, update_settlement_time, whitelist_loanpool_contributors, withdraw_all_commitments, withdraw_commitment};
+use crate::execute::settlement::{
+    accept_commitments, cancel_commitment, deposit_commitment, propose_commitment,
+    remove_whitelist_loanpool_contributors, update_settlement_time,
+    whitelist_loanpool_contributors, withdraw_all_commitments, withdraw_commitment,
+};
 use crate::execute::settlement::{add_loan_pool, withdraw_loan_pool};
 
 pub fn route(deps: ProvDepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> ProvTxResponse {

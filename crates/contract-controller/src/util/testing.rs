@@ -1,13 +1,3 @@
-use cosmwasm_std::{
-    testing::{mock_info, MockApi, MockStorage},
-    to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
-    SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
-};
-use cosmwasm_std::testing::MockQuerier;
-use provwasm_mocks::{mock_provenance_dependencies, MockProvenanceQuerier};
-use provwasm_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use crate::{
     contract::{execute, instantiate},
     core::{
@@ -17,6 +7,16 @@ use crate::{
         security,
     },
 };
+use cosmwasm_std::testing::MockQuerier;
+use cosmwasm_std::{
+    testing::{mock_info, MockApi, MockStorage},
+    to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
+    SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
+};
+use provwasm_mocks::{mock_provenance_dependencies, MockProvenanceQuerier};
+use provwasm_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 pub fn test_init_message() -> InstantiateMsg {
     InstantiateMsg {

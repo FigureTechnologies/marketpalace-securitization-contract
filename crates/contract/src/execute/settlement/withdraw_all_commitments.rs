@@ -42,7 +42,7 @@ pub fn handle(mut deps: ProvDepsMut, env: Env, sender: Addr) -> ProvTxResponse {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128};
-    use provwasm_mocks::{mock_provenance_dependencies};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::error::ContractError,

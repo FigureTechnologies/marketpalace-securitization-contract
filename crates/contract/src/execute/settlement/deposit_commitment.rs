@@ -1,6 +1,8 @@
 use cosmwasm_std::{Addr, Coin, Env, Event, Response, Uint128};
 
+use super::commitment::CommitmentState;
 use crate::storage::{securities, state};
+use crate::util::provenance_utilities::transfer_marker_coins;
 use crate::{
     core::{
         aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
@@ -16,8 +18,6 @@ use crate::{
     },
     util,
 };
-use crate::util::provenance_utilities::transfer_marker_coins;
-use super::commitment::CommitmentState;
 
 pub fn handle(
     deps: ProvDepsMut,
@@ -199,7 +199,7 @@ fn is_accepted(deps: &ProvDepsMut, sender: &Addr) -> Result<bool, ContractError>
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128, Uint64};
-    use provwasm_mocks::{mock_provenance_dependencies};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
@@ -558,7 +558,10 @@ mod tests {
                 amount: Uint128::new(10),
             }
         );
-        assert_eq!(available_capital[0], Coin::new(Uint128::new(20), &capital_denom));
+        assert_eq!(
+            available_capital[0],
+            Coin::new(Uint128::new(20), &capital_denom)
+        );
     }
 
     #[test]

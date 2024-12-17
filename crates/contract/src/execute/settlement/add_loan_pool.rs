@@ -1,9 +1,11 @@
-use std::str::FromStr;
-use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128};
 use cosmwasm_std::OverflowOperation::Add;
+use cosmwasm_std::{
+    to_json_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response, Uint128,
+};
 use provwasm_std::types::provenance::marker::v1::Access::{Admin, Withdraw};
 use provwasm_std::types::provenance::marker::v1::{AccessGrant, MarkerAccount, MarkerQuerier};
 use result_extensions::ResultExtensions;
+use std::str::FromStr;
 
 use crate::core::collateral::{LoanPoolAdditionData, LoanPoolMarkerCollateral, LoanPoolMarkers};
 use crate::core::{
@@ -14,7 +16,10 @@ use crate::core::{
 use crate::execute::settlement::marker_loan_pool_validation::validate_marker_for_loan_pool_add_remove;
 use crate::storage::loan_pool_collateral::set;
 use crate::storage::whitelist_contributors_store::get_whitelist_contributors;
-use crate::util::provenance_utilities::{get_marker, get_marker_address, get_single_marker_coin_holding, query_total_supply, revoke_marker_access, Marker};
+use crate::util::provenance_utilities::{
+    get_marker, get_marker_address, get_single_marker_coin_holding, query_total_supply,
+    revoke_marker_access, Marker,
+};
 
 /// Handles loan pool additions.
 ///
@@ -152,7 +157,12 @@ fn create_marker_pool_collateral(
 
     let messages = get_marker_permission_revoke_messages(&marker, &env.contract.address)?;
     let marker_address = get_marker_address(marker.base_account.clone())?;
-    let share_count = Uint128::from_str(get_single_marker_coin_holding(&deps, &marker.clone())?.amount.as_str())?.u128();
+    let share_count = Uint128::from_str(
+        get_single_marker_coin_holding(&deps, &marker.clone())?
+            .amount
+            .as_str(),
+    )?
+    .u128();
 
     LoanPoolAdditionData {
         collateral: LoanPoolMarkerCollateral::new(
@@ -160,7 +170,8 @@ fn create_marker_pool_collateral(
             &marker.denom,
             share_count,
             info.sender.to_owned(),
-            marker.clone()
+            marker
+                .clone()
                 .access_control
                 .into_iter()
                 .filter(|perm| Addr::unchecked(perm.address.clone()) != env.contract.address)
@@ -168,7 +179,7 @@ fn create_marker_pool_collateral(
         ),
         messages,
     }
-        .to_ok()
+    .to_ok()
 }
 /// A helper function to construct messages required to revoke marker permissions
 ///
@@ -203,7 +214,9 @@ fn get_marker_permission_revoke_messages(
 
 #[cfg(test)]
 mod tests {
-    use crate::core::collateral::{AccessGrantSerializable, LoanPoolMarkerCollateral, LoanPoolMarkers};
+    use crate::core::collateral::{
+        AccessGrantSerializable, LoanPoolMarkerCollateral, LoanPoolMarkers,
+    };
     use crate::core::error::ContractError;
     use crate::core::security::ContributeLoanPools;
     use crate::execute::settlement::add_loan_pool::{
@@ -213,14 +226,22 @@ mod tests {
     use crate::execute::settlement::whitelist_loanpool_contributors::handle as whitelist_loanpool_handle;
     use crate::util::mock_marker::{MockMarker, DEFAULT_MARKER_ADDRESS, DEFAULT_MARKER_DENOM};
     use crate::util::testing::instantiate_contract;
-    use cosmwasm_std::testing::{mock_env, message_info};
+    use cosmwasm_std::testing::{message_info, mock_env};
     use cosmwasm_std::CosmosMsg::Custom;
     use cosmwasm_std::ReplyOn::Never;
-    use cosmwasm_std::{coins, from_json, to_json_binary, Addr, AnyMsg, Binary, ContractResult, Empty, Event, Response, SubMsg, SystemResult};
-    use provwasm_mocks::{mock_provenance_dependencies, mock_provenance_dependencies_with_custom_querier};
+    use cosmwasm_std::{
+        coins, from_json, to_json_binary, Addr, AnyMsg, Binary, ContractResult, Empty, Event,
+        Response, SubMsg, SystemResult,
+    };
+    use provwasm_mocks::{
+        mock_provenance_dependencies, mock_provenance_dependencies_with_custom_querier,
+    };
     use provwasm_std::shim::Any;
     use provwasm_std::types::cosmos::base::v1beta1::Coin;
-    use provwasm_std::types::provenance::marker::v1::{AccessGrant, Balance, MarkerQuerier, QueryHoldingRequest, QueryHoldingResponse, QueryMarkerRequest, QueryMarkerResponse};
+    use provwasm_std::types::provenance::marker::v1::{
+        AccessGrant, Balance, MarkerQuerier, QueryHoldingRequest, QueryHoldingResponse,
+        QueryMarkerRequest, QueryMarkerResponse,
+    };
 
     #[test]
     fn test_coin_trade_with_valid_data() {
