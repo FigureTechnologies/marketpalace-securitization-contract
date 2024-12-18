@@ -216,7 +216,6 @@ mod tests {
         util::testing::SettlementTester,
     };
 
-    // use super::{calculate_funds, funds_match_deposit, handle, is_accepted, securities_match};
     use super::{calculate_funds, handle, is_accepted, securities_match};
 
     #[test]

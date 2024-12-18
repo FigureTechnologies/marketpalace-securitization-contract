@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Env, Event, Response, Storage};
-// use provwasm_std::{mint_marker_supply, transfer_marker_coins, withdraw_coins};
 
 use super::commitment::{Commitment, CommitmentState};
 use crate::util::provenance_utilities::{

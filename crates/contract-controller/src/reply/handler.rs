@@ -7,7 +7,6 @@ use crate::{
     storage,
 };
 use cosmwasm_std::{Env, Event, Reply, Response, SubMsgResult};
-use provwasm_std::types::cosmwasm::wasm::v1beta1::MsgInstantiateContractResponse;
 
 pub fn handle(deps: ProvDepsMut, env: Env, reply: Reply) -> ProvTxResponse {
     if reply.id == constants::REPLY_INIT_ID {
