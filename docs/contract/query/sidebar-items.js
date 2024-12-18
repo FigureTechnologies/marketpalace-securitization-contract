@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["router",""],["validate",""]]};
+window.SIDEBAR_ITEMS = {"mod":["query_loan_pool_collaterals","query_white_list_contributors","router","validate"]};

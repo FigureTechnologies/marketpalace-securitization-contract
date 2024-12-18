@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["available_capital",""],["commits",""],["paid_in_capital",""],["remaining_securities",""],["securities",""],["state",""]]};
+window.SIDEBAR_ITEMS = {"mod":["available_capital","commits","loan_pool_collateral","paid_in_capital","remaining_securities","securities","state","whitelist_contributors_store"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["WHITELIST"],"fn":["get_whitelist_contributors","remove_contributors","save_contributors"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["router",""],["validate",""]]};
+window.SIDEBAR_ITEMS = {"mod":["router","validate"]};

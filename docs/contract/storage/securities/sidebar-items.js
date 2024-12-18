@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["SECURITIES_MAP",""]],"fn":[["get",""],["get_security_types",""],["set",""]]};
+window.SIDEBAR_ITEMS = {"constant":["SECURITIES_MAP"],"fn":["get","get_security_types","set"]};

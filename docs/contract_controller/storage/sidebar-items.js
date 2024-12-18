@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["contract",""],["reply",""],["state",""],["uuid",""]]};
+window.SIDEBAR_ITEMS = {"mod":["contract","reply","state","uuid"]};

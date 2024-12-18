@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ContractError",""]],"fn":[["contract_error",""]]};
+window.SIDEBAR_ITEMS = {"enum":["ContractError"],"fn":["contract_error"]};

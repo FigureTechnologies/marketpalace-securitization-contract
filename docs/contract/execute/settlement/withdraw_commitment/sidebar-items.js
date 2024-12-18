@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["handle",""],["withdraw_commitment",""]]};
+window.SIDEBAR_ITEMS = {"fn":["handle","withdraw_commitment"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["is_contract_admin",""]]};
+window.SIDEBAR_ITEMS = {"fn":["is_contract_admin"]};

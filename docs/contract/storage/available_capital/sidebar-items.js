@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["AVAILABLE_CAPITAL",""]],"fn":[["add_capital",""],["get_capital",""],["get_lps",""],["has_lp",""],["remove_capital",""]]};
+window.SIDEBAR_ITEMS = {"constant":["AVAILABLE_CAPITAL"],"fn":["add_capital","get_capital","get_lps","has_lp","remove_capital"]};

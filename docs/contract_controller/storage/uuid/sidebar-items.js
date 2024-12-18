@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["UUID_CACHE",""],["UUID_MAP",""]],"fn":[["add",""],["get",""],["get_last_uuid",""],["has",""],["remove",""],["set_last_uuid",""]]};
+window.SIDEBAR_ITEMS = {"constant":["UUID_CACHE","UUID_MAP"],"fn":["add","get","get_last_uuid","has","remove","set_last_uuid"]};

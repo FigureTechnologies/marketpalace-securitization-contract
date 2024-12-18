@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["handler",""]]};
+window.SIDEBAR_ITEMS = {"mod":["handler"]};

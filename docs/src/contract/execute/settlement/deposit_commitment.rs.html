@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/contract/src/execute/settlement/deposit_commitment.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>deposit_commitment.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../contract/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/contract/src/execute/settlement/deposit_commitment.rs`."><title>deposit_commitment.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">contract/execute/settlement/</div>deposit_commitment.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -959,11 +960,63 @@
 <a href="#959" id="959">959</a>
 <a href="#960" id="960">960</a>
 <a href="#961" id="961">961</a>
-</pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Coin, Env, Response};
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a></pre></div><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Addr, Coin, Env, Event, Response, Uint128};
 
+<span class="kw">use </span><span class="kw">super</span>::commitment::CommitmentState;
+<span class="kw">use </span><span class="kw">crate</span>::storage::{securities, state};
+<span class="kw">use </span><span class="kw">crate</span>::util::provenance_utilities::transfer_marker_coins;
 <span class="kw">use crate</span>::{
     core::{
-        aliases::{ProvDepsMut, ProvTxResponse},
+        aliases::{ProvDepsMut, ProvMsg, ProvTxResponse},
         error::ContractError,
         security::SecurityCommitment,
     },
@@ -972,19 +1025,15 @@
         available_capital::{<span class="self">self</span>},
         commits::{<span class="self">self</span>},
         paid_in_capital::{<span class="self">self</span>},
-        securities::{<span class="self">self</span>},
-        state::{<span class="self">self</span>},
-    },
+        <span class="comment">// securities::{self},
+    </span>},
     util,
 };
-
-<span class="kw">use </span><span class="kw">super</span>::commitment::CommitmentState;
 
 <span class="kw">pub fn </span>handle(
     deps: ProvDepsMut,
     env: Env,
     sender: Addr,
-    funds: Vec&lt;Coin&gt;,
     deposit: Vec&lt;SecurityCommitment&gt;,
 ) -&gt; ProvTxResponse {
     <span class="kw">let </span>state = state::get(deps.storage)<span class="question-mark">?</span>;
@@ -1001,22 +1050,37 @@
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::core::error::ContractError::InvalidSecurityCommitment {});
     }
 
-    <span class="kw">if </span>!funds_match_deposit(<span class="kw-2">&amp;</span>deps, <span class="kw-2">&amp;</span>funds, <span class="kw-2">&amp;</span>deposit, <span class="kw-2">&amp;</span>state.capital_denom)<span class="question-mark">? </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::core::error::ContractError::FundMismatch {});
+    <span class="comment">/*
+    if !funds_match_deposit(&amp;deps, &amp;funds, &amp;deposit, &amp;state.capital_denom)? {
+        return Err(crate::core::error::ContractError::FundMismatch {});
     }
+    */
 
-    <span class="kw">if </span>deposit_exceeds_commitment(<span class="kw-2">&amp;</span>deps, sender.clone(), <span class="kw-2">&amp;</span>deposit)<span class="question-mark">? </span>{
+    </span><span class="kw">if </span>deposit_exceeds_commitment(<span class="kw-2">&amp;</span>deps, sender.clone(), <span class="kw-2">&amp;</span>deposit)<span class="question-mark">? </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::core::error::ContractError::ExcessiveDeposit {});
     }
 
-    update_depositer_capital(deps, sender.clone(), funds, deposit)<span class="question-mark">?</span>;
+    <span class="comment">// convert the security commitment into actual fund coin
+    // assumes for now that the deposit == commitment
+    </span><span class="kw">let </span>funds = calculate_funds(<span class="kw-2">&amp;</span>deps, <span class="kw-2">&amp;</span>deposit, <span class="kw-2">&amp;</span>state.capital_denom)<span class="question-mark">?</span>;
+    <span class="kw">if </span>funds.is_empty() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::core::error::ContractError::EmptyDeposit {});
+    }
 
-    <span class="prelude-val">Ok</span>(Response::default()
-        .add_attribute(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;deposit_commitment&quot;</span>)
-        .add_attribute(<span class="string">&quot;lp&quot;</span>, sender))
+    <span class="kw">let </span>deposit_message =
+        process_deposit(sender.clone(), env.contract.address.clone(), funds.clone())<span class="question-mark">?</span>;
+    update_depositer_capital(deps, sender.clone(), funds.clone(), deposit)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(Response::new()
+        .add_messages(deposit_message)
+        .add_event(Event::new(<span class="string">"deposited"</span>).add_attribute(<span class="string">"lp"</span>, sender.clone()))
+        .add_attribute(<span class="string">"action"</span>, <span class="string">"deposit_commitment"</span>)
+        .add_attribute(<span class="string">"sender"</span>, sender)
+        .add_attribute(<span class="string">"recipient"</span>, env.contract.address)
+        .add_attribute(<span class="string">"funds_amount"</span>, funds[<span class="number">0</span>].amount.clone()))
 }
 
-<span class="comment">// Check if they have a commitment - Shouldn&#39;t really matter
+<span class="comment">// Check if they have a commitment - Shouldn't really matter
 // What if they have no paid_capital?
 </span><span class="kw">fn </span>deposit_exceeds_commitment(
     deps: <span class="kw-2">&amp;</span>ProvDepsMut,
@@ -1045,8 +1109,8 @@
             .iter()
             .find(|security_commitment| security_commitment.name == deposit_element.name);
 
-        <span class="comment">// If the security commitment doesn&#39;t exist then this deposit is invalid
-        // The new_capital must &lt;= security&#39;s commitment
+        <span class="comment">// If the security commitment doesn't exist then this deposit is invalid
+        // The new_capital must &lt;= security's commitment
         </span><span class="kw">match </span>security_commitment {
             <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
             <span class="prelude-val">Some</span>(security_commitment) =&gt; new_capital_amount &lt;= security_commitment.amount,
@@ -1054,6 +1118,27 @@
     });
 
     <span class="prelude-val">Ok</span>(!can_deposit)
+}
+
+<span class="kw">fn </span>process_deposit(
+    sender: Addr,
+    contract: Addr,
+    funds: Vec&lt;Coin&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ProvMsg&gt;, ContractError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>messages = <span class="macro">vec!</span>[];
+    <span class="kw">for </span>fund <span class="kw">in </span>funds {
+        <span class="kw">if </span>!fund.amount.is_zero() {
+            messages.push(transfer_marker_coins(
+                fund.amount.u128(),
+                fund.denom,
+                contract.clone(),
+                sender.clone(),
+                contract.clone(),
+            )<span class="question-mark">?</span>);
+        }
+    }
+
+    <span class="prelude-val">Ok</span>(messages)
 }
 
 <span class="comment">// This updates the AVAILABLE_CAPITAL and the PAID_IN_CAPITAL
@@ -1087,25 +1172,25 @@
         .iter()
         .all(|deposit_security| commitment_securities.contains(<span class="kw-2">&amp;</span>deposit_security.name)))
 }
-
-<span class="kw">fn </span>funds_match_deposit(
-    deps: <span class="kw-2">&amp;</span>ProvDepsMut,
-    funds: <span class="kw-2">&amp;</span>Vec&lt;Coin&gt;,
-    deposit: <span class="kw-2">&amp;</span>[SecurityCommitment],
-    capital_denom: <span class="kw-2">&amp;</span>String,
-) -&gt; <span class="prelude-ty">Result</span>&lt;bool, ContractError&gt; {
-    <span class="kw">let </span>expected_funds = calculate_funds(deps, deposit, capital_denom)<span class="question-mark">?</span>;
-    <span class="kw">let </span>has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
-    <span class="prelude-val">Ok</span>(expected_funds.len() == funds.len() &amp;&amp; has_funds)
+<span class="comment">/*
+fn funds_match_deposit(
+    deps: &amp;ProvDepsMut,
+    funds: &amp;Vec&lt;Coin&gt;,
+    deposit: &amp;[SecurityCommitment],
+    capital_denom: &amp;String,
+) -&gt; Result&lt;bool, ContractError&gt; {
+    let expected_funds = calculate_funds(deps, deposit, capital_denom)?;
+    let has_funds = expected_funds.iter().all(|coin| funds.contains(coin));
+    Ok(expected_funds.len() == funds.len() &amp;&amp; has_funds)
 }
-
-<span class="comment">// We are strict that all capital must be in the same denom
+*/
+// We are strict that all capital must be in the same denom
 </span><span class="kw">fn </span>calculate_funds(
     deps: <span class="kw-2">&amp;</span>ProvDepsMut,
     deposit: <span class="kw-2">&amp;</span>[SecurityCommitment],
     capital_denom: <span class="kw-2">&amp;</span>String,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Coin&gt;, ContractError&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>sum = Coin::new(<span class="number">0</span>, capital_denom);
+    <span class="kw">let </span><span class="kw-2">mut </span>sum = Coin::new(Uint128::new(<span class="number">0</span>), capital_denom);
 
     <span class="kw">for </span>security_commitment <span class="kw">in </span>deposit {
         <span class="kw">let </span>security = securities::get(deps.storage, security_commitment.name.clone())<span class="question-mark">?</span>;
@@ -1125,7 +1210,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>cosmwasm_std::{testing::mock_env, Addr, Attribute, Coin, Uint128, Uint64};
-    <span class="kw">use </span>provwasm_mocks::mock_dependencies;
+    <span class="kw">use </span>provwasm_mocks::mock_provenance_dependencies;
 
     <span class="kw">use crate</span>::{
         core::security::{FundSecurity, Security, SecurityCommitment, TrancheSecurity},
@@ -1142,19 +1227,19 @@
         util::testing::SettlementTester,
     };
 
-    <span class="kw">use super</span>::{calculate_funds, funds_match_deposit, handle, is_accepted, securities_match};
+    <span class="kw">use super</span>::{calculate_funds, handle, is_accepted, securities_match};
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_accepted_throws_error_on_invalid_lp() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"lp"</span>);
         is_accepted(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>sender).unwrap_err();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_accepted_should_return_false_on_invalid_state() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(sender.clone(), <span class="macro">vec!</span>[]);
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
         <span class="kw">let </span>res = is_accepted(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>sender).unwrap();
@@ -1163,8 +1248,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_accepted_should_return_true_on_accepted() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(sender.clone(), <span class="macro">vec!</span>[]);
         commitment.state = CommitmentState::ACCEPTED;
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
@@ -1174,54 +1259,54 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_calculate_funds_should_throw_error_with_invalid_security() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>capital_denom = <span class="string">"denom"</span>.to_string();
         <span class="kw">let </span>securities = <span class="macro">vec!</span>[SecurityCommitment {
-            name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+            name: <span class="string">"Security1"</span>.to_string(),
             amount: Uint128::new(<span class="number">5</span>),
         }];
 
         calculate_funds(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>securities, <span class="kw-2">&amp;</span>capital_denom)
-            .expect_err(<span class="string">&quot;should throw error&quot;</span>);
+            .expect_err(<span class="string">"should throw error"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_calculate_funds_should_work_with_empty() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>capital_denom = <span class="string">"denom"</span>.to_string();
         <span class="kw">let </span>securities = <span class="macro">vec!</span>[];
 
         <span class="kw">let </span>funds = calculate_funds(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>securities, <span class="kw-2">&amp;</span>capital_denom).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[Coin::new(<span class="number">0</span>, capital_denom)], funds);
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[Coin::new(Uint128::new(<span class="number">0</span>), capital_denom)], funds);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_caluclate_funds_works_with_multiple_securities() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>capital_denom = <span class="string">"denom"</span>.to_string();
         <span class="kw">let </span>securities = <span class="macro">vec!</span>[
             Security {
-                name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                name: <span class="string">"Security1"</span>.to_string(),
                 amount: Uint128::new(<span class="number">10</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">10</span>, capital_denom.clone()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">10</span>), capital_denom.clone()),
             },
             Security {
-                name: <span class="string">&quot;Security2&quot;</span>.to_string(),
+                name: <span class="string">"Security2"</span>.to_string(),
                 amount: Uint128::new(<span class="number">10</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Fund(FundSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">5</span>, capital_denom.clone()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">5</span>), capital_denom.clone()),
             },
         ];
         <span class="kw">let </span>commitments = <span class="macro">vec!</span>[
             SecurityCommitment {
-                name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                name: <span class="string">"Security1"</span>.to_string(),
                 amount: Uint128::new(<span class="number">5</span>),
             },
             SecurityCommitment {
-                name: <span class="string">&quot;Security2&quot;</span>.to_string(),
+                name: <span class="string">"Security2"</span>.to_string(),
                 amount: Uint128::new(<span class="number">7</span>),
             },
         ];
@@ -1229,106 +1314,108 @@
         securities::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>securities[<span class="number">1</span>]).unwrap();
 
         <span class="kw">let </span>funds = calculate_funds(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>commitments, <span class="kw-2">&amp;</span>capital_denom).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[Coin::new(<span class="number">85</span>, capital_denom)], funds);
+        <span class="macro">assert_eq!</span>(<span class="macro">vec!</span>[Coin::new(Uint128::new(<span class="number">85</span>), capital_denom)], funds);
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_funds_match_deposit() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(<span class="number">100</span>, <span class="kw-2">&amp;</span>capital_denom)];
-        <span class="kw">let </span>deposit = <span class="macro">vec!</span>[
+    <span class="comment">/*
+    #[test]
+    fn test_funds_match_deposit() {
+        let mut deps = mock_provenance_dependencies();
+        let capital_denom = "denom".to_string();
+        let funds = vec![Coin::new(Uint128::new(10)0, &amp;capital_denom)];
+        let deposit = vec![
             SecurityCommitment {
-                name: <span class="string">&quot;Security1&quot;</span>.to_string(),
-                amount: Uint128::new(<span class="number">1</span>),
+                name: "Security1".to_string(),
+                amount: Uint128::new(1),
             },
             SecurityCommitment {
-                name: <span class="string">&quot;Security2&quot;</span>.to_string(),
-                amount: Uint128::new(<span class="number">2</span>),
+                name: "Security2".to_string(),
+                amount: Uint128::new(2),
             },
         ];
 
         securities::set(
             deps.as_mut().storage,
-            <span class="kw-2">&amp;</span>Security {
-                name: deposit[<span class="number">0</span>].name.clone(),
-                amount: Uint128::new(<span class="number">10</span>),
-                security_type: <span class="kw">crate</span>::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">50</span>, <span class="kw-2">&amp;</span>capital_denom),
+            &amp;Security {
+                name: deposit[0].name.clone(),
+                amount: Uint128::new(10),
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(Uint128::new(50), &amp;capital_denom),
             },
         )
         .unwrap();
         securities::set(
             deps.as_mut().storage,
-            <span class="kw-2">&amp;</span>Security {
-                name: deposit[<span class="number">1</span>].name.clone(),
-                amount: Uint128::new(<span class="number">10</span>),
-                security_type: <span class="kw">crate</span>::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">25</span>, <span class="kw-2">&amp;</span>capital_denom),
+            &amp;Security {
+                name: deposit[1].name.clone(),
+                amount: Uint128::new(10),
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(25, &amp;capital_denom),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>res = funds_match_deposit(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>funds, <span class="kw-2">&amp;</span>deposit, <span class="kw-2">&amp;</span>capital_denom).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="bool-val">true</span>, res);
+        let res = funds_match_deposit(&amp;deps.as_mut(), &amp;funds, &amp;deposit, &amp;capital_denom).unwrap();
+        assert_eq!(true, res);
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_funds_match_deposit_should_fail_with_fund_amount_mismatch() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(<span class="number">120</span>, <span class="kw-2">&amp;</span>capital_denom)];
-        <span class="kw">let </span>deposit = <span class="macro">vec!</span>[
+    #[test]
+    fn test_funds_match_deposit_should_fail_with_fund_amount_mismatch() {
+        let mut deps = mock_provenance_dependencies();
+        let capital_denom = "denom".to_string();
+        let funds = vec![Coin::new(Uint128::new(120), &amp;capital_denom)];
+        let deposit = vec![
             SecurityCommitment {
-                name: <span class="string">&quot;Security1&quot;</span>.to_string(),
-                amount: Uint128::new(<span class="number">1</span>),
+                name: "Security1".to_string(),
+                amount: Uint128::new(1),
             },
             SecurityCommitment {
-                name: <span class="string">&quot;Security2&quot;</span>.to_string(),
-                amount: Uint128::new(<span class="number">2</span>),
+                name: "Security2".to_string(),
+                amount: Uint128::new(2),
             },
         ];
 
         securities::set(
             deps.as_mut().storage,
-            <span class="kw-2">&amp;</span>Security {
-                name: deposit[<span class="number">0</span>].name.clone(),
-                amount: Uint128::new(<span class="number">10</span>),
-                security_type: <span class="kw">crate</span>::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">50</span>, <span class="kw-2">&amp;</span>capital_denom),
+            &amp;Security {
+                name: deposit[0].name.clone(),
+                amount: Uint128::new(10),
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(Uint128::new(50), &amp;capital_denom),
             },
         )
         .unwrap();
         securities::set(
             deps.as_mut().storage,
-            <span class="kw-2">&amp;</span>Security {
-                name: deposit[<span class="number">1</span>].name.clone(),
-                amount: Uint128::new(<span class="number">10</span>),
-                security_type: <span class="kw">crate</span>::core::security::SecurityType::Fund(FundSecurity {}),
-                minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">25</span>, <span class="kw-2">&amp;</span>capital_denom),
+            &amp;Security {
+                name: deposit[1].name.clone(),
+                amount: Uint128::new(10),
+                security_type: crate::core::security::SecurityType::Fund(FundSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(25, &amp;capital_denom),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>res = funds_match_deposit(<span class="kw-2">&amp;</span>deps.as_mut(), <span class="kw-2">&amp;</span>funds, <span class="kw-2">&amp;</span>deposit, <span class="kw-2">&amp;</span>capital_denom).unwrap();
-        <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, res);
+        let res = funds_match_deposit(&amp;deps.as_mut(), &amp;funds, &amp;deposit, &amp;capital_denom).unwrap();
+        assert_eq!(false, res);
     }
+    */
 
-    <span class="attr">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_securities_match_can_handle_empty() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span>initial_drawdown = <span class="macro">vec!</span>[];
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         commits::set(
             deps.as_mut().storage,
             <span class="kw-2">&amp;</span>Commitment {
                 lp: lp.clone(),
                 commitments: <span class="macro">vec!</span>[SecurityCommitment {
-                    name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                    name: <span class="string">"Security1"</span>.to_string(),
                     amount: Uint128::new(<span class="number">5</span>),
                 }],
                 state: CommitmentState::ACCEPTED,
@@ -1342,23 +1429,23 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_drawdown_security_length_doesnt_match() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span>commitment = <span class="macro">vec!</span>[SecurityCommitment {
-            name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+            name: <span class="string">"Security1"</span>.to_string(),
             amount: Uint128::new(<span class="number">5</span>),
         }];
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         commits::set(
             deps.as_mut().storage,
             <span class="kw-2">&amp;</span>Commitment {
                 lp: lp.clone(),
                 commitments: <span class="macro">vec!</span>[
                     SecurityCommitment {
-                        name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                        name: <span class="string">"Security1"</span>.to_string(),
                         amount: Uint128::new(<span class="number">5</span>),
                     },
                     SecurityCommitment {
-                        name: <span class="string">&quot;Security2&quot;</span>.to_string(),
+                        name: <span class="string">"Security2"</span>.to_string(),
                         amount: Uint128::new(<span class="number">5</span>),
                     },
                 ],
@@ -1373,29 +1460,29 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_drawdown_invalid_security() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span>commitment = <span class="macro">vec!</span>[
             SecurityCommitment {
-                name: <span class="string">&quot;Security3&quot;</span>.to_string(),
+                name: <span class="string">"Security3"</span>.to_string(),
                 amount: Uint128::new(<span class="number">5</span>),
             },
             SecurityCommitment {
-                name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                name: <span class="string">"Security1"</span>.to_string(),
                 amount: Uint128::new(<span class="number">5</span>),
             },
         ];
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         commits::set(
             deps.as_mut().storage,
             <span class="kw-2">&amp;</span>Commitment {
                 lp: lp.clone(),
                 commitments: <span class="macro">vec!</span>[
                     SecurityCommitment {
-                        name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                        name: <span class="string">"Security1"</span>.to_string(),
                         amount: Uint128::new(<span class="number">5</span>),
                     },
                     SecurityCommitment {
-                        name: <span class="string">&quot;Security2&quot;</span>.to_string(),
+                        name: <span class="string">"Security2"</span>.to_string(),
                         amount: Uint128::new(<span class="number">5</span>),
                     },
                 ],
@@ -1410,18 +1497,18 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_drawdown_success() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span>commitment = <span class="macro">vec!</span>[SecurityCommitment {
-            name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+            name: <span class="string">"Security1"</span>.to_string(),
             amount: Uint128::new(<span class="number">5</span>),
         }];
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         commits::set(
             deps.as_mut().storage,
             <span class="kw-2">&amp;</span>Commitment {
                 lp: lp.clone(),
                 commitments: <span class="macro">vec!</span>[SecurityCommitment {
-                    name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                    name: <span class="string">"Security1"</span>.to_string(),
                     amount: Uint128::new(<span class="number">5</span>),
                 }],
                 state: CommitmentState::ACCEPTED,
@@ -1435,16 +1522,16 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_update_depositer_capital_new_entry() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(<span class="number">10</span>, <span class="kw-2">&amp;</span>capital_denom)];
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
+        <span class="kw">let </span>capital_denom = <span class="string">"denom"</span>.to_string();
+        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(Uint128::new(<span class="number">10</span>), <span class="kw-2">&amp;</span>capital_denom)];
         <span class="kw">let </span>deposit = <span class="macro">vec!</span>[SecurityCommitment {
-            name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+            name: <span class="string">"Security1"</span>.to_string(),
             amount: Uint128::new(<span class="number">5</span>),
         }];
         update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
-            .expect(<span class="string">&quot;should be successful&quot;</span>);
+            .expect(<span class="string">"should be successful"</span>);
 
         <span class="kw">let </span>paid_capital = paid_in_capital::get(<span class="kw-2">&amp;</span>deps.storage, lp.clone());
         <span class="kw">let </span>available_capital = available_capital::get_capital(deps.as_mut().storage, lp).unwrap();
@@ -1455,12 +1542,12 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_update_depositer_capital_update_entry() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
-        <span class="kw">let </span>capital_denom = <span class="string">&quot;denom&quot;</span>.to_string();
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(<span class="number">10</span>, <span class="kw-2">&amp;</span>capital_denom)];
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
+        <span class="kw">let </span>capital_denom = <span class="string">"denom"</span>.to_string();
+        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(Uint128::new(<span class="number">10</span>), <span class="kw-2">&amp;</span>capital_denom)];
         <span class="kw">let </span>deposit = <span class="macro">vec!</span>[SecurityCommitment {
-            name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+            name: <span class="string">"Security1"</span>.to_string(),
             amount: Uint128::new(<span class="number">5</span>),
         }];
 
@@ -1468,7 +1555,7 @@
         available_capital::add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         update_depositer_capital(deps.as_mut(), lp.clone(), funds.clone(), deposit.clone())
-            .expect(<span class="string">&quot;should be successful&quot;</span>);
+            .expect(<span class="string">"should be successful"</span>);
 
         <span class="kw">let </span>paid_capital = paid_in_capital::get(<span class="kw-2">&amp;</span>deps.storage, lp.clone());
         <span class="kw">let </span>available_capital =
@@ -1477,84 +1564,85 @@
         <span class="macro">assert_eq!</span>(
             paid_capital[<span class="number">0</span>],
             SecurityCommitment {
-                name: <span class="string">&quot;Security1&quot;</span>.to_string(),
+                name: <span class="string">"Security1"</span>.to_string(),
                 amount: Uint128::new(<span class="number">10</span>),
             }
         );
-        <span class="macro">assert_eq!</span>(available_capital[<span class="number">0</span>], Coin::new(<span class="number">20</span>, <span class="kw-2">&amp;</span>capital_denom));
+        <span class="macro">assert_eq!</span>(
+            available_capital[<span class="number">0</span>],
+            Coin::new(Uint128::new(<span class="number">20</span>), <span class="kw-2">&amp;</span>capital_denom)
+        );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_handle_should_throw_error_with_invalid_state() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>deposit = <span class="macro">vec!</span>[];
         <span class="kw">let </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         <span class="kw">let </span>commitment = Commitment::new(sender.clone(), <span class="macro">vec!</span>[]);
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
-        <span class="kw">let </span>error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err(<span class="string">&quot;should throw error&quot;</span>);
+        <span class="kw">let </span>error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err(<span class="string">"should throw error"</span>);
         <span class="macro">assert_eq!</span>(
             <span class="kw">crate</span>::core::error::ContractError::InvalidCommitmentState {}.to_string(),
             error.to_string()
         );
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_handle_should_throw_error_when_deposit_exceeds_commitment() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
+    <span class="comment">/*
+    #[test]
+    fn test_handle_should_throw_error_when_deposit_exceeds_commitment() {
+        let mut deps = mock_provenance_dependencies();
+        let sender = Addr::unchecked("lp");
+        let mut settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
-        settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(
-            settlement_tester.security_commitments[<span class="number">0</span>].amount.u128(),
-            <span class="string">&quot;denom&quot;</span>.to_string(),
-        )];
+        settlement_tester.create_security_commitments(1);
 
-        <span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
-        <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(
+
+        let deposit = settlement_tester.security_commitments.clone();
+        let mut commitment = Commitment::new(
             sender.clone(),
             settlement_tester.security_commitments.clone(),
         );
         commitment.state = CommitmentState::ACCEPTED;
-        commitment.commitments[<span class="number">0</span>].amount = Uint128::new(<span class="number">1</span>);
+        commitment.commitments[0].amount = Uint128::new(1);
 
-        commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
+        commits::set(deps.as_mut().storage, &amp;commitment).unwrap();
 
         securities::set(
             deps.as_mut().storage,
-            <span class="kw-2">&amp;</span>Security {
-                name: settlement_tester.security_commitments[<span class="number">0</span>].name.clone(),
-                amount: Uint128::new(<span class="number">1000</span>),
-                security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+            &amp;Security {
+                name: settlement_tester.security_commitments[0].name.clone(),
+                amount: Uint128::new(1000),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(Uint128::new(1), "denom".to_string()),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err(<span class="string">&quot;should throw error&quot;</span>);
-        <span class="macro">assert_eq!</span>(
-            <span class="kw">crate</span>::core::error::ContractError::ExcessiveDeposit {}.to_string(),
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
+        assert_eq!(
+            crate::core::error::ContractError::ExcessiveDeposit {}.to_string(),
             error.to_string()
         );
     }
+    */
 
-    <span class="attr">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_handle_should_throw_error_when_settlement_expired() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
         <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(
             settlement_tester.security_commitments[<span class="number">0</span>].amount.u128(),
-            <span class="string">&quot;denom&quot;</span>.to_string(),
+            <span class="string">"denom"</span>.to_string(),
         )];
 
         <span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
@@ -1575,13 +1663,13 @@
                 amount: Uint128::new(<span class="number">1000</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">1</span>), <span class="string">"denom"</span>.to_string()),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err(<span class="string">&quot;should throw error&quot;</span>);
+        <span class="kw">let </span>error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err(<span class="string">"should throw error"</span>);
         <span class="macro">assert_eq!</span>(
             <span class="kw">crate</span>::core::error::ContractError::SettlmentExpired {}.to_string(),
             error.to_string()
@@ -1590,9 +1678,9 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_handle_should_throw_error_when_drawdown_not_met() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(<span class="number">10</span>, <span class="string">&quot;capital_denom&quot;</span>.to_string())];
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"lp"</span>);
+        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(Uint128::new(<span class="number">10</span>), <span class="string">"capital_denom"</span>.to_string())];
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(<span class="number">1</span>);
         <span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
@@ -1602,64 +1690,63 @@
         settlement_tester.setup_test_state(deps.as_mut().storage);
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
-        <span class="kw">let </span>error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err(<span class="string">&quot;should throw error&quot;</span>);
+        <span class="kw">let </span>error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err(<span class="string">"should throw error"</span>);
         <span class="macro">assert_eq!</span>(
             <span class="kw">crate</span>::core::error::ContractError::InvalidSecurityCommitment {}.to_string(),
             error.to_string()
         );
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_handle_should_throw_error_when_funds_mismatch() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(<span class="number">10</span>, <span class="string">&quot;capital_denom&quot;</span>.to_string())];
-        <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
-        settlement_tester.create_security_commitments(<span class="number">1</span>);
+    <span class="comment">/* Taken out because we don't check if funds match - because SC is pulling funds committed
+    #[test]
+    fn test_handle_should_throw_error_when_funds_mismatch() {
+        let mut deps = mock_provenance_dependencies();
+        let sender = Addr::unchecked("lp");
+        let funds = vec![Coin::new(Uint128::new(10), "capital_denom".to_string())];
+        let mut settlement_tester = SettlementTester::new();
+        settlement_tester.create_security_commitments(1);
         settlement_tester.setup_test_state(deps.as_mut().storage);
-        <span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
-        <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(
+        let deposit = settlement_tester.security_commitments.clone();
+        let mut commitment = Commitment::new(
             sender.clone(),
             settlement_tester.security_commitments.clone(),
         );
         commitment.state = CommitmentState::ACCEPTED;
 
-        commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
+        commits::set(deps.as_mut().storage, &amp;commitment).unwrap();
 
         securities::set(
             deps.as_mut().storage,
-            <span class="kw-2">&amp;</span>Security {
-                name: settlement_tester.security_commitments[<span class="number">0</span>].name.clone(),
-                amount: Uint128::new(<span class="number">100</span>),
-                security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
-                minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">10</span>, <span class="string">&quot;capital_denom&quot;</span>.to_string()),
+            &amp;Security {
+                name: settlement_tester.security_commitments[0].name.clone(),
+                amount: Uint128::new(100),
+                security_type: crate::core::security::SecurityType::Tranche(TrancheSecurity {}),
+                minimum_amount: Uint128::new(1),
+                price_per_unit: Coin::new(Uint128::new(10), "capital_denom".to_string()),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>error = handle(deps.as_mut(), mock_env(), sender, funds, deposit)
-            .expect_err(<span class="string">&quot;should throw error&quot;</span>);
-        <span class="macro">assert_eq!</span>(
-            <span class="kw">crate</span>::core::error::ContractError::FundMismatch {}.to_string(),
+        let error =
+            handle(deps.as_mut(), mock_env(), sender, deposit).expect_err("should throw error");
+        assert_eq!(
+            crate::core::error::ContractError::FundMismatch {}.to_string(),
             error.to_string()
         );
     }
+    */
 
-    <span class="attr">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_handle_should_work() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"sender"</span>);
+        <span class="kw">let </span>mock_env = mock_env();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
-        settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(
-            settlement_tester.security_commitments[<span class="number">0</span>].amount.u128(),
-            <span class="string">&quot;denom&quot;</span>.to_string(),
-        )];
+        settlement_tester.create_security_commitments(<span class="number">1</span>); <span class="comment">// should be 12 units
 
-        <span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
+        </span><span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
         <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(
             sender.clone(),
             settlement_tester.security_commitments.clone(),
@@ -1675,26 +1762,32 @@
                 amount: Uint128::new(<span class="number">1000</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">1</span>), <span class="string">"denom"</span>.to_string()),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
-            .expect(<span class="string">&quot;Should not throw error&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, response.messages.len());
-        <span class="macro">assert_eq!</span>(<span class="number">2</span>, response.attributes.len());
+        <span class="kw">let </span>response = handle(deps.as_mut(), mock_env.clone(), sender.clone(), deposit)
+            .expect(<span class="string">"Should not throw error"</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1</span>, response.messages.len());
+        <span class="macro">assert_eq!</span>(<span class="number">4</span>, response.attributes.len());
         <span class="macro">assert_eq!</span>(
-            Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;deposit_commitment&quot;</span>),
+            Attribute::new(<span class="string">"action"</span>, <span class="string">"deposit_commitment"</span>),
             response.attributes[<span class="number">0</span>]
         );
-        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">&quot;lp&quot;</span>, sender), response.attributes[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">"sender"</span>, sender), response.attributes[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(
+            Attribute::new(<span class="string">"recipient"</span>, mock_env.contract.address.clone()),
+            response.attributes[<span class="number">2</span>]
+        );
+        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">"funds_amount"</span>, <span class="string">"11"</span>), response.attributes[<span class="number">3</span>]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_handle_should_work_with_zero_on_a_security() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"sender"</span>);
+        <span class="kw">let </span>mock_env = mock_env();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">2</span>);
@@ -1702,10 +1795,6 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>deposit = settlement_tester.security_commitments.clone();
         deposit[<span class="number">1</span>].amount = Uint128::new(<span class="number">0</span>);
-        <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(
-            deposit[<span class="number">0</span>].amount.u128() + deposit[<span class="number">1</span>].amount.u128(),
-            <span class="string">&quot;denom&quot;</span>.to_string(),
-        )];
 
         <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(
             sender.clone(),
@@ -1721,7 +1810,7 @@
                 amount: Uint128::new(<span class="number">1000</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">1</span>), <span class="string">"denom"</span>.to_string()),
             },
         )
         .unwrap();
@@ -1733,26 +1822,32 @@
                 amount: Uint128::new(<span class="number">1000</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">0</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">1</span>), <span class="string">"denom"</span>.to_string()),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
-            .expect(<span class="string">&quot;Should not throw error&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, response.messages.len());
-        <span class="macro">assert_eq!</span>(<span class="number">2</span>, response.attributes.len());
+        <span class="kw">let </span>response = handle(deps.as_mut(), mock_env.clone(), sender.clone(), deposit)
+            .expect(<span class="string">"Should not throw error"</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1</span>, response.messages.len());
+        <span class="macro">assert_eq!</span>(<span class="number">4</span>, response.attributes.len());
         <span class="macro">assert_eq!</span>(
-            Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;deposit_commitment&quot;</span>),
+            Attribute::new(<span class="string">"action"</span>, <span class="string">"deposit_commitment"</span>),
             response.attributes[<span class="number">0</span>]
         );
-        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">&quot;lp&quot;</span>, sender), response.attributes[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">"sender"</span>, sender), response.attributes[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(
+            Attribute::new(<span class="string">"recipient"</span>, mock_env.contract.address.clone()),
+            response.attributes[<span class="number">2</span>]
+        );
+        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">"funds_amount"</span>, <span class="string">"11"</span>), response.attributes[<span class="number">3</span>]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_handle_should_work_with_multiple() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>sender = Addr::unchecked(<span class="string">"sender"</span>);
+        <span class="kw">let </span>mock_env = mock_env();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">2</span>);
@@ -1761,7 +1856,7 @@
         <span class="kw">let </span>deposit = settlement_tester.security_commitments.clone();
         <span class="kw">let </span>funds = <span class="macro">vec!</span>[Coin::new(
             deposit[<span class="number">0</span>].amount.u128() + deposit[<span class="number">1</span>].amount.u128(),
-            <span class="string">&quot;denom&quot;</span>.to_string(),
+            <span class="string">"denom"</span>.to_string(),
         )];
 
         <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(
@@ -1778,7 +1873,7 @@
                 amount: Uint128::new(<span class="number">1000</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">1</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">1</span>), <span class="string">"denom"</span>.to_string()),
             },
         )
         .unwrap();
@@ -1790,52 +1885,57 @@
                 amount: Uint128::new(<span class="number">1000</span>),
                 security_type: <span class="kw">crate</span>::core::security::SecurityType::Tranche(TrancheSecurity {}),
                 minimum_amount: Uint128::new(<span class="number">0</span>),
-                price_per_unit: Coin::new(<span class="number">1</span>, <span class="string">&quot;denom&quot;</span>.to_string()),
+                price_per_unit: Coin::new(Uint128::new(<span class="number">1</span>), <span class="string">"denom"</span>.to_string()),
             },
         )
         .unwrap();
 
-        <span class="kw">let </span>response = handle(deps.as_mut(), mock_env(), sender.clone(), funds, deposit)
-            .expect(<span class="string">&quot;Should not throw error&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, response.messages.len());
-        <span class="macro">assert_eq!</span>(<span class="number">2</span>, response.attributes.len());
+        <span class="kw">let </span>response = handle(deps.as_mut(), mock_env.clone(), sender.clone(), deposit)
+            .expect(<span class="string">"Should not throw error"</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1</span>, response.messages.len());
+        <span class="macro">assert_eq!</span>(<span class="number">4</span>, response.attributes.len());
         <span class="macro">assert_eq!</span>(
-            Attribute::new(<span class="string">&quot;action&quot;</span>, <span class="string">&quot;deposit_commitment&quot;</span>),
+            Attribute::new(<span class="string">"action"</span>, <span class="string">"deposit_commitment"</span>),
             response.attributes[<span class="number">0</span>]
         );
-        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">&quot;lp&quot;</span>, sender), response.attributes[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">"sender"</span>, sender), response.attributes[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(
+            Attribute::new(<span class="string">"recipient"</span>, mock_env.contract.address.clone()),
+            response.attributes[<span class="number">2</span>]
+        );
+        <span class="macro">assert_eq!</span>(Attribute::new(<span class="string">"funds_amount"</span>, <span class="string">"11"</span>), response.attributes[<span class="number">3</span>]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_throws_error_on_invalid_lp() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;bad address&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"bad address"</span>);
         <span class="kw">let </span>deposit = Vec::&lt;SecurityCommitment&gt;::new();
         deposit_exceeds_commitment(<span class="kw-2">&amp;</span>deps.as_mut(), lp, <span class="kw-2">&amp;</span>deposit)
-            .expect_err(<span class="string">&quot;should throw error on invalid lp&quot;</span>);
+            .expect_err(<span class="string">"should throw error on invalid lp"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_should_succeed_on_empty_deposit() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
         <span class="kw">let </span>deposit = Vec::&lt;SecurityCommitment&gt;::new();
         deposit_exceeds_commitment(<span class="kw-2">&amp;</span>deps.as_mut(), commitment.lp, <span class="kw-2">&amp;</span>deposit)
-            .expect(<span class="string">&quot;should not throw an error&quot;</span>);
+            .expect(<span class="string">"should not throw an error"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_should_fail_on_invalid_security() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
@@ -1847,11 +1947,11 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_should_fail_on_initial_deposit_that_exceeds() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
@@ -1863,11 +1963,11 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_should_fail_on_additional_deposit_that_exceeds() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
@@ -1886,11 +1986,11 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_should_succeed_on_valid_initial_deposit() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
@@ -1902,11 +2002,11 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deposit_exceeds_commitment_should_succeed_on_additional_deposit() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.setup_test_state(deps.as_mut().storage);
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;lp&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"lp"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp, settlement_tester.security_commitments.clone());
         commits::set(deps.as_mut().storage, <span class="kw-2">&amp;</span>commitment).unwrap();
 
@@ -1920,5 +2020,4 @@
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, res);
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

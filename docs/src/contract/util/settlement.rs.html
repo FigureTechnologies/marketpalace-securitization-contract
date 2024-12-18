@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/contract/src/util/settlement.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>settlement.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../contract/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/contract/src/util/settlement.rs`."><title>settlement.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">contract/util/</div>settlement.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -187,49 +188,7 @@
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-</pre><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Env, Storage, Timestamp};
+<a href="#190" id="190">190</a></pre></div><pre class="rust"><code><span class="kw">use </span>cosmwasm_std::{Env, Storage, Timestamp};
 
 <span class="kw">use crate</span>::{
     core::error::ContractError,
@@ -242,24 +201,12 @@
 ///
 /// # Parameters
 ///
-/// * `env` A reference to an environment object provided by the cosmwasm framework.  Describes the contract&#39;s
+/// * `env` A reference to an environment object provided by the cosmwasm framework.  Describes the contract's
 /// details, as well as blockchain information at the time of the transaction.
 /// * `commitment` A reference to the commitment to check the settlement_date on.
 ///
 /// # Examples
-/// ```
-/// use contract::util::settlement::is_expired;
-/// use contract::execute::settlement::commitment::Commitment;
-///
-/// let mut commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
-/// commitment.settlment_date = Some(Uint::zero());
-/// let is_expired = is_expired(&amp;env, &amp;commitment);
-/// assert_eq!(true, is_expired);
-///
-/// let commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
-/// let is_expired = is_expired(&amp;env, &amp;commitment);
-/// assert_eq!(false, is_expired);
-/// ```
+
 </span><span class="kw">pub fn </span>is_expired(env: <span class="kw-2">&amp;</span>Env, commitment: <span class="kw-2">&amp;</span>Commitment) -&gt; bool {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(settlement_time) = commitment.settlment_date {
         <span class="kw">return </span>env.block.time.seconds() &gt; settlement_time.u64();
@@ -275,20 +222,7 @@
 /// * `time` A reference to the timestamp that will be checked for expiration.
 ///
 /// # Examples
-/// ```
-/// use contract::util::settlement::timestamp_is_expired;
-/// use contract::storage::state;
-///
-/// let state = state::State::new(Addr::unchecked(&quot;gp&quot;), &quot;denom&quot;.to_string(), None);
-/// state::set(&amp;deps.storage, &amp;state);
-/// let is_expired = timestamp_is_expired(&amp;deps.storage, &amp;env.block.time);
-/// assert_eq!(false, is_expired);
-///
-/// let state = state::State::new(Addr::unchecked(&quot;gp&quot;), &quot;denom&quot;.to_string(), &amp;env.block.time.plus_seconds(1));
-/// state::set(&amp;deps.storage, &amp;state);
-/// let is_expired = timestamp_is_expired(&amp;deps.storage, &amp;env.block.time);
-/// assert_eq!(true, is_expired);
-/// ```
+
 </span><span class="kw">pub fn </span>timestamp_is_expired(
     storage: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Storage,
     time: <span class="kw-2">&amp;</span>Timestamp,
@@ -308,23 +242,7 @@
 /// * `commitment` A reference to the commitment to check.
 ///
 /// # Examples
-/// ```
-/// use contract::util::settlement::is_settling;
-/// use contract::storage::paid_in_capital;
-/// use contract::execute::settlement::commitment::Commitment;
-///
-/// let commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
-/// paid_in_capital::set(storage, commitment.clone());
-/// let settling = is_settling(&amp;deps.storage, &amp;commitment);
-/// assert_eq!(false, settling);
-///
-/// let mut commitment = Commitment::new(Addr::unchecked(&quot;sender&quot;), vec![]);
-/// commitment.state = CommitmentState::ACCEPTED;
-/// paid_in_capital::set(storage, commitment.clone());
-/// let settling = is_settling(&amp;deps.storage, &amp;commitment);
-/// assert_eq!(true, settling);
-///
-/// ```
+
 </span><span class="kw">pub fn </span>is_settling(storage: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Storage, commitment: <span class="kw-2">&amp;</span>Commitment) -&gt; bool {
     <span class="kw">let </span>paid_in_capital = paid_in_capital::get(storage, commitment.lp.clone());
     paid_in_capital == commitment.commitments &amp;&amp; commitment.state == CommitmentState::ACCEPTED
@@ -333,7 +251,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>cosmwasm_std::{testing::mock_env, Addr, Uint64};
-    <span class="kw">use </span>provwasm_mocks::mock_dependencies;
+    <span class="kw">use </span>provwasm_mocks::mock_provenance_dependencies;
 
     <span class="kw">use crate</span>::{
         execute::settlement::commitment::{Commitment, CommitmentState},
@@ -347,7 +265,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_settlement_expired_with_no_settlement_date() {
         <span class="kw">let </span>env = mock_env();
-        <span class="kw">let </span>commitment = Commitment::new(Addr::unchecked(<span class="string">&quot;lp&quot;</span>), <span class="macro">vec!</span>[]);
+        <span class="kw">let </span>commitment = Commitment::new(Addr::unchecked(<span class="string">"lp"</span>), <span class="macro">vec!</span>[]);
         <span class="kw">let </span>res = is_expired(<span class="kw-2">&amp;</span>env, <span class="kw-2">&amp;</span>commitment);
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, res);
     }
@@ -355,7 +273,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_settlement_expired_with_future_time() {
         <span class="kw">let </span>env = mock_env();
-        <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(Addr::unchecked(<span class="string">&quot;lp&quot;</span>), <span class="macro">vec!</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(Addr::unchecked(<span class="string">"lp"</span>), <span class="macro">vec!</span>[]);
         commitment.settlment_date = <span class="prelude-val">Some</span>(Uint64::new(env.block.time.seconds()));
         <span class="kw">let </span>res = is_expired(<span class="kw-2">&amp;</span>env, <span class="kw-2">&amp;</span>commitment);
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, res);
@@ -364,7 +282,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_settlement_expired_with_past_time() {
         <span class="kw">let </span>env = mock_env();
-        <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(Addr::unchecked(<span class="string">&quot;lp&quot;</span>), <span class="macro">vec!</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>commitment = Commitment::new(Addr::unchecked(<span class="string">"lp"</span>), <span class="macro">vec!</span>[]);
         commitment.settlment_date = <span class="prelude-val">Some</span>(Uint64::new(env.block.time.seconds() - <span class="number">1</span>));
         <span class="kw">let </span>res = is_expired(<span class="kw-2">&amp;</span>env, <span class="kw-2">&amp;</span>commitment);
         <span class="macro">assert_eq!</span>(<span class="bool-val">true</span>, res);
@@ -373,7 +291,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_timestamp_expired_with_no_settlement_date() {
         <span class="kw">let </span>env = mock_env();
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         create_test_state(<span class="kw-2">&amp;mut </span>deps, <span class="kw-2">&amp;</span>env, <span class="bool-val">false</span>);
         <span class="kw">let </span>res = timestamp_is_expired(<span class="kw-2">&amp;</span>deps.storage, <span class="kw-2">&amp;</span>env.block.time).unwrap();
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, res);
@@ -382,7 +300,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_timestamp_expired_with_unexpired_time() {
         <span class="kw">let </span>env = mock_env();
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         create_test_state(<span class="kw-2">&amp;mut </span>deps, <span class="kw-2">&amp;</span>env, <span class="bool-val">true</span>);
         <span class="kw">let </span>res = timestamp_is_expired(<span class="kw-2">&amp;</span>deps.storage, <span class="kw-2">&amp;</span>env.block.time.plus_seconds(<span class="number">86400</span>)).unwrap();
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, res);
@@ -391,7 +309,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_timestamp_expired_with_expired_time() {
         <span class="kw">let </span>env = mock_env();
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         create_test_state(<span class="kw-2">&amp;mut </span>deps, <span class="kw-2">&amp;</span>env, <span class="bool-val">true</span>);
         <span class="kw">let </span>res = timestamp_is_expired(<span class="kw-2">&amp;</span>deps.storage, <span class="kw-2">&amp;</span>env.block.time.plus_seconds(<span class="number">86401</span>)).unwrap();
         <span class="macro">assert_eq!</span>(<span class="bool-val">true</span>, res);
@@ -399,10 +317,10 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_settling_success() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;bad address&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"bad address"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
@@ -418,9 +336,9 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_settling_fails_on_already_settled() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span>settlement_tester = SettlementTester::new();
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;bad address&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"bad address"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::SETTLED;
@@ -436,9 +354,9 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_settling_handles_invalid_lp() {
-        <span class="kw">let </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span>settlement_tester = SettlementTester::new();
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;bad address&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"bad address"</span>);
         <span class="kw">let </span>commitment = Commitment::new(lp.clone(), settlement_tester.security_commitments);
         <span class="kw">let </span>settling = is_settling(<span class="kw-2">&amp;</span>deps.storage, <span class="kw-2">&amp;</span>commitment);
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, settling);
@@ -446,10 +364,10 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_is_settling_fails_on_missing_capital() {
-        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_dependencies(<span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span><span class="kw-2">mut </span>deps = mock_provenance_dependencies();
         <span class="kw">let </span><span class="kw-2">mut </span>settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(<span class="number">1</span>);
-        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">&quot;bad address&quot;</span>);
+        <span class="kw">let </span>lp = Addr::unchecked(<span class="string">"bad address"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>commitment =
             Commitment::new(lp.clone(), settlement_tester.security_commitments.clone());
         commitment.state = CommitmentState::ACCEPTED;
@@ -460,5 +378,4 @@
         <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, settling);
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="contract" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

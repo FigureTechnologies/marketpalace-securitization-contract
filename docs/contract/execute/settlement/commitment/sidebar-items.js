@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["CommitmentState",""]],"struct":[["Commitment",""]]};
+window.SIDEBAR_ITEMS = {"enum":["CommitmentState"],"struct":["Commitment"]};

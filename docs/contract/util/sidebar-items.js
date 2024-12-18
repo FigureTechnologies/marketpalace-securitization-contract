@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["settlement",""],["to",""],["validate",""]]};
+window.SIDEBAR_ITEMS = {"mod":["provenance_utilities","settlement","to","validate"]};

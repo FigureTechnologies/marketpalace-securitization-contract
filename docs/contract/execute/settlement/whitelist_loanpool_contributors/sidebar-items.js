@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["handle","loan_pool_contributors"]};

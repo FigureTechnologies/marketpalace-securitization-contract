@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["validate_marker_for_loan_pool_add_remove"]};

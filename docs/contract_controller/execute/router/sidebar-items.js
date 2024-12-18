@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["route",""]]};
+window.SIDEBAR_ITEMS = {"fn":["route"]};

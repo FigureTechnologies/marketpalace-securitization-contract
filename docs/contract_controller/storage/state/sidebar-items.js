@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["STATE",""]],"fn":[["get",""],["is_migrating",""],["set",""],["update_batch_size",""]],"struct":[["State",""]]};
+window.SIDEBAR_ITEMS = {"constant":["STATE"],"fn":["get","is_migrating","set","update_batch_size"],"struct":["State"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["CONTRACTS_MAP",""]],"fn":[["add",""],["has",""],["list",""],["range",""],["remove",""]]};
+window.SIDEBAR_ITEMS = {"constant":["CONTRACTS_MAP"],"fn":["add","has","list","range","remove"]};

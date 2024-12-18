@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["migrate_contracts",""]]};
+window.SIDEBAR_ITEMS = {"fn":["migrate_contracts"]};
