@@ -90,7 +90,7 @@ pub fn add(
 
 #[cfg(test)]
 mod tests {
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::remaining_securities::{add, set, subtract};
 
@@ -98,14 +98,14 @@ mod tests {
 
     #[test]
     fn test_get_invalid() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let security_name = "badname".to_string();
         get(&deps.storage, security_name).unwrap_err();
     }
 
     #[test]
     fn test_get_set_valid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
         set(deps.as_mut().storage, security_name.clone(), amount).unwrap();
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_subtract_on_missing_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
 
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_subtract_on_greater_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
         set(deps.as_mut().storage, security_name.clone(), amount).unwrap();
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_subtract_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
         set(deps.as_mut().storage, security_name.clone(), amount).unwrap();
@@ -152,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_add_on_missing_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
 
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_add_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let security_name = "Security1".to_string();
         let amount = 100 as u128;
         set(deps.as_mut().storage, security_name.clone(), amount).unwrap();

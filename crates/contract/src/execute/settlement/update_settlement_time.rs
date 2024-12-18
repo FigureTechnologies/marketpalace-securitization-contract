@@ -22,16 +22,16 @@ pub fn handle(deps: ProvDepsMut, sender: Addr, settlement_time: Option<Uint64>) 
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::error::ContractError,
-        util::testing::{create_test_state, create_testing_commitments, instantiate_contract},
+        util::testing::{create_test_state, instantiate_contract},
     };
 
     #[test]
     fn test_handle_should_fail_if_sender_is_not_gp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let sender = Addr::unchecked("lp");
         let settlement_time = Some(Uint64::new(9999));
@@ -42,13 +42,12 @@ mod tests {
 
     #[test]
     fn test_handle_should_succeed() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let sender = Addr::unchecked("gp");
         let settlement_time = Some(Uint64::new(9999));
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_test_state(&mut deps, &env, false);
-        create_testing_commitments(&mut deps);
         let res = super::handle(deps.as_mut(), sender, settlement_time).unwrap();
         assert_eq!(0, res.events.len());
         assert_eq!(

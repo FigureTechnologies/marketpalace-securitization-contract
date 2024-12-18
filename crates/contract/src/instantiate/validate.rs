@@ -109,7 +109,7 @@ mod tests {
             settlement_time: None,
             fee: Some(Fee {
                 recipient: Some(Addr::unchecked("receiver")),
-                amount: Coin::new(100, "nhash"),
+                amount: Coin::new(Uint128::new(100), "nhash"),
             }),
         };
         let funds = vec![];

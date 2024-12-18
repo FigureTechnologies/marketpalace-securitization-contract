@@ -102,7 +102,7 @@ fn track_paid_capital(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Attribute, Uint128};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::{error::ContractError, security::AcceptedCommitment},
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn test_accepted_commit_must_match_securities() {
         let lp = Addr::unchecked("address");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         create_test_state(&mut deps, &mock_env(), false);
         settlement_tester.create_security_commitments(1);
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_accepted_commit_must_exist() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("bad address");
         let accepted_commitments = test_create_accepted_commitments(&[lp.as_str()]);
         let res = accept_commitment(deps.as_mut().storage, accepted_commitments[0].clone());
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn test_accepted_commit_must_be_pending() {
         let lp = Addr::unchecked("address");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let mut commitment =
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_accepted_commit_cannot_make_sum_of_securities_greater_than_the_amount() {
         let lp = Addr::unchecked("address");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let commitment =
@@ -241,7 +241,7 @@ mod tests {
 
     #[test]
     fn test_track_paid_capital_makes_an_empty_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("address");
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(2);
@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn test_accept_commit_succeeds_and_updates_settlement_time() {
         let lp = Addr::unchecked("address");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let commitment =
@@ -293,7 +293,7 @@ mod tests {
     #[test]
     fn test_accept_commit_succeeds() {
         let lp = Addr::unchecked("address");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         create_test_state(&mut deps, &mock_env(), false);
         settlement_tester.create_security_commitments(1);
@@ -329,7 +329,7 @@ mod tests {
         let gp = Addr::unchecked("gp");
         let lp1 = Addr::unchecked("lp1");
         let lp2 = Addr::unchecked("lp2");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         let env = mock_env();
         settlement_tester.setup_test_state(deps.as_mut().storage);
@@ -388,7 +388,7 @@ mod tests {
     #[test]
     fn test_handle_succeeds_with_no_commits() {
         let gp = Addr::unchecked("gp");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         state::set(
             deps.as_mut().storage,
@@ -402,13 +402,13 @@ mod tests {
         assert_eq!(res.attributes[0].key, "action");
         assert_eq!(res.attributes[0].value, "accept_commitments");
         assert_eq!(res.attributes[1].key, "gp");
-        assert_eq!(res.attributes[1].value, gp);
+        assert_eq!(res.attributes[1].value, gp.to_string());
     }
 
     #[test]
     fn test_handle_succeeds_with_settlement_time() {
         let gp = Addr::unchecked("gp");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         create_test_state(&mut deps, &env, true);
 
@@ -418,13 +418,13 @@ mod tests {
         assert_eq!(res.attributes[0].key, "action");
         assert_eq!(res.attributes[0].value, "accept_commitments");
         assert_eq!(res.attributes[1].key, "gp");
-        assert_eq!(res.attributes[1].value, gp);
+        assert_eq!(res.attributes[1].value, gp.to_string());
     }
 
     #[test]
     fn test_handle_fails_with_invalid_settlement_time() {
         let gp = Addr::unchecked("gp");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut env = mock_env();
         create_test_state(&mut deps, &env, true);
         env.block.time = env.block.time.plus_seconds(86401);
@@ -440,7 +440,7 @@ mod tests {
     fn test_handle_must_be_triggered_by_gp() {
         let gp = Addr::unchecked("gp");
         let sender = Addr::unchecked("lp1");
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         state::set(
             deps.as_mut().storage,

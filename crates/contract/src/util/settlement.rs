@@ -61,7 +61,7 @@ pub fn is_settling(storage: &dyn Storage, commitment: &Commitment) -> bool {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{testing::mock_env, Addr, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         execute::settlement::commitment::{Commitment, CommitmentState},
@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn test_timestamp_expired_with_no_settlement_date() {
         let env = mock_env();
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         create_test_state(&mut deps, &env, false);
         let res = timestamp_is_expired(&deps.storage, &env.block.time).unwrap();
         assert_eq!(false, res);
@@ -110,7 +110,7 @@ mod tests {
     #[test]
     fn test_timestamp_expired_with_unexpired_time() {
         let env = mock_env();
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         create_test_state(&mut deps, &env, true);
         let res = timestamp_is_expired(&deps.storage, &env.block.time.plus_seconds(86400)).unwrap();
         assert_eq!(false, res);
@@ -119,7 +119,7 @@ mod tests {
     #[test]
     fn test_timestamp_expired_with_expired_time() {
         let env = mock_env();
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         create_test_state(&mut deps, &env, true);
         let res = timestamp_is_expired(&deps.storage, &env.block.time.plus_seconds(86401)).unwrap();
         assert_eq!(true, res);
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_is_settling_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let lp = Addr::unchecked("bad address");
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_is_settling_fails_on_already_settled() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let settlement_tester = SettlementTester::new();
         let lp = Addr::unchecked("bad address");
         let mut commitment =
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_is_settling_handles_invalid_lp() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let settlement_tester = SettlementTester::new();
         let lp = Addr::unchecked("bad address");
         let commitment = Commitment::new(lp.clone(), settlement_tester.security_commitments);
@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_is_settling_fails_on_missing_capital() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let mut settlement_tester = SettlementTester::new();
         settlement_tester.create_security_commitments(1);
         let lp = Addr::unchecked("bad address");

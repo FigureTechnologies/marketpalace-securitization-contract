@@ -20,7 +20,7 @@ impl Validate for InstantiateMsg {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Coin;
+    use cosmwasm_std::{Coin, Uint128};
 
     use crate::{
         core::error::ContractError,
@@ -37,7 +37,7 @@ mod tests {
     fn test_funds_throw_error() {
         let message = test_init_message();
         let error = message
-            .validate_msg_funds(&[Coin::new(50, "nhash")])
+            .validate_msg_funds(&[Coin::new(Uint128::new(50), "nhash")])
             .unwrap_err();
         assert_eq!(
             ContractError::UnexpectedFunds {}.to_string(),

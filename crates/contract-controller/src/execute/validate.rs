@@ -41,7 +41,7 @@ impl Validate for ExecuteMsg {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::Coin;
+    use cosmwasm_std::{Coin, Uint128};
 
     use crate::{
         core::error::ContractError,
@@ -76,7 +76,7 @@ mod tests {
     fn test_add_contracts_should_not_have_funds() {
         let message = test_add_contracts_message();
         let error = message
-            .validate_msg_funds(&[Coin::new(5, "nhash")])
+            .validate_msg_funds(&[Coin::new(Uint128::new(5), "nhash")])
             .unwrap_err();
         assert_eq!(
             ContractError::UnexpectedFunds {}.to_string(),
@@ -110,7 +110,7 @@ mod tests {
     fn test_remove_contracts_should_not_have_funds() {
         let message = test_remove_contracts_message();
         let error = message
-            .validate_msg_funds(&[Coin::new(5, "nhash")])
+            .validate_msg_funds(&[Coin::new(Uint128::new(5), "nhash")])
             .unwrap_err();
         assert_eq!(
             ContractError::UnexpectedFunds {}.to_string(),
@@ -144,7 +144,7 @@ mod tests {
     fn test_migrate_contracts_should_not_have_funds() {
         let message = test_migrate_contracts_message();
         let error = message
-            .validate_msg_funds(&[Coin::new(5, "nhash")])
+            .validate_msg_funds(&[Coin::new(Uint128::new(5), "nhash")])
             .unwrap_err();
         assert_eq!(
             ContractError::UnexpectedFunds {}.to_string(),
@@ -168,7 +168,7 @@ mod tests {
     fn test_migrate_all_contracts_should_not_have_funds() {
         let message = test_migrate_all_contracts_message();
         let error = message
-            .validate_msg_funds(&[Coin::new(5, "nhash")])
+            .validate_msg_funds(&[Coin::new(Uint128::new(5), "nhash")])
             .unwrap_err();
         assert_eq!(
             ContractError::UnexpectedFunds {}.to_string(),
@@ -192,7 +192,7 @@ mod tests {
     fn test_modify_batch_size_should_not_have_funds() {
         let message = test_modify_batch_size_message();
         let error = message
-            .validate_msg_funds(&[Coin::new(5, "nhash")])
+            .validate_msg_funds(&[Coin::new(Uint128::new(5), "nhash")])
             .unwrap_err();
         assert_eq!(
             ContractError::UnexpectedFunds {}.to_string(),

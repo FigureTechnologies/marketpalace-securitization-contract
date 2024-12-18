@@ -96,12 +96,12 @@ pub fn get_all_states(storage: &dyn Storage) -> Vec<LoanPoolMarkerCollateral> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use provwasm_mocks::mock_dependencies;
-    use provwasm_std::{AccessGrant, MarkerAccess};
+    use provwasm_mocks::mock_provenance_dependencies;
+    use provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
 
     #[test]
     fn test_get_and_set() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let marker_address = Addr::unchecked("addr1");
 
         let collateral = sample_collateral("addr1", "denom", 100, Vec::new(), "owner");
@@ -118,11 +118,11 @@ mod tests {
 
     #[test]
     fn test_get_and_set_non_empty_permissions() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let marker_address = Addr::unchecked("addr1");
         let permissions = vec![AccessGrant {
-            permissions: vec![MarkerAccess::Mint, MarkerAccess::Transfer],
-            address: Addr::unchecked("addr2"),
+            permissions: vec![Access::Mint as i32, Access::Transfer as i32],
+            address: "addr2".to_string(),
         }];
         let collateral = sample_collateral("addr1", "denom", 100, permissions.clone(), "owner");
 
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_exists() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let collateral = sample_collateral("addr1", "denom", 100, Vec::new(), "owner");
 
         // Test existence after setting
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_get_with_state() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         // Set up different collaterals
         let collateral1 = sample_collateral("addr1", "denom1", 100, Vec::new(), "owner");
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn test_get_all_states() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
 
         // Set up different collaterals
         let collateral1 = sample_collateral("addr1", "denom1", 100, Vec::new(), "owner");

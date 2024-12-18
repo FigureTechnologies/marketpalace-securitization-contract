@@ -17,9 +17,6 @@ pub fn handle(storage: &dyn Storage, lp: Addr) -> ProvQueryResponse {
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
-    use provwasm_mocks::mock_dependencies;
-
     use crate::{
         contract::query,
         core::msg::{QueryInvestorResponse, QueryMsg},
@@ -28,10 +25,12 @@ mod tests {
             create_testing_commitments, instantiate_contract, test_security_commitments,
         },
     };
+    use cosmwasm_std::{from_binary, testing::mock_env, Addr};
+    use provwasm_mocks::mock_provenance_dependencies;
 
     #[test]
     fn test_query_investor() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         instantiate_contract(deps.as_mut()).expect("should be able to instantiate contract");
         create_testing_commitments(&mut deps);
         let res = query(

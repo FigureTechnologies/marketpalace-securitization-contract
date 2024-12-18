@@ -50,13 +50,13 @@ mod tests {
     use crate::util::testing::create_test_state;
     use cosmwasm_std::testing::mock_env;
     use cosmwasm_std::{Addr, StdResult};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     #[test]
     fn test_add_contributors() -> StdResult<()> {
         let gp = Addr::unchecked("gp");
 
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         create_test_state(&mut deps, &mock_env(), false);
         let other = Addr::unchecked("addr_other");
         let contributors = vec![Addr::unchecked("addr1"), Addr::unchecked("addr2")];

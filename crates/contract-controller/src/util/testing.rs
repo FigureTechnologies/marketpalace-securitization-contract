@@ -1,11 +1,3 @@
-use cosmwasm_std::{
-    testing::{mock_info, MockApi, MockStorage},
-    to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
-    SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
-};
-use provwasm_mocks::{mock_dependencies, ProvenanceMockQuerier};
-use provwasm_std::ProvenanceQuery;
-
 use crate::{
     contract::{execute, instantiate},
     core::{
@@ -15,6 +7,16 @@ use crate::{
         security,
     },
 };
+use cosmwasm_std::testing::MockQuerier;
+use cosmwasm_std::{
+    testing::{mock_info, MockApi, MockStorage},
+    to_binary, Addr, Coin, ContractInfoResponse, ContractResult, Env, OwnedDeps, QuerierResult,
+    SubMsg, SystemError, SystemResult, Uint128, Uint64, WasmMsg, WasmQuery,
+};
+use provwasm_mocks::{mock_provenance_dependencies, MockProvenanceQuerier};
+use provwasm_std::types::cosmwasm::wasm::v1::QueryContractInfoResponse;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 pub fn test_init_message() -> InstantiateMsg {
     InstantiateMsg {
@@ -149,9 +151,9 @@ pub fn get_test_admin(deps: &ProvDepsMut, env: &Env) -> Result<Addr, ContractErr
 
 pub fn create_admin_deps(
     contract_balance: &[Coin],
-) -> OwnedDeps<MockStorage, MockApi, ProvenanceMockQuerier, ProvenanceQuery> {
-    let mut deps = mock_dependencies(contract_balance);
-    let querier: &mut ProvenanceMockQuerier = &mut deps.querier;
+) -> OwnedDeps<MockStorage, MockApi, MockProvenanceQuerier> {
+    let mut deps = mock_provenance_dependencies();
+    let querier: &mut MockProvenanceQuerier = &mut deps.querier;
 
     let handler = Box::from(|request: &WasmQuery| -> QuerierResult {
         let err = match request {
@@ -168,8 +170,13 @@ pub fn create_admin_deps(
             WasmQuery::ContractInfo {
                 contract_addr: _, ..
             } => {
-                let mut res = ContractInfoResponse::default();
-                res.admin = Some("admin".to_string());
+                let res = ContractResponse {
+                    code_id: 123,
+                    creator: Addr::unchecked("creator".to_string()),
+                    admin: Some(Addr::unchecked("admin".to_string())),
+                    pinned: false,
+                    ibc_port: None,
+                };
                 SystemResult::Ok(ContractResult::Ok(to_binary(&res).unwrap()))
             }
             #[cfg(feature = "cosmwasm_1_2")]
@@ -181,8 +188,21 @@ pub fn create_admin_deps(
         err
     });
 
-    querier.base.update_wasm(handler);
+    querier.mock_querier.update_wasm(handler);
     deps
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ContractResponse {
+    pub code_id: u64,
+    /// address that instantiated this contract
+    pub creator: Addr,
+    /// admin who can run migrations (if any)
+    pub admin: Option<Addr>,
+    /// if set, the contract is pinned to the cache, and thus uses less gas when called
+    pub pinned: bool,
+    /// set if this contract has bound an IBC port
+    pub ibc_port: Option<String>,
 }
 
 pub fn create_test_query_contracts() -> QueryMsg {

@@ -17,7 +17,7 @@ pub fn handle(storage: &dyn Storage) -> ProvQueryResponse {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{from_binary, testing::mock_env, Uint128};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         core::msg::QueryStateResponse, query::query_state::handle,
@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn test_query_state_has_correct_default_values() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let env = mock_env();
         let _ = instantiate_contract(deps.as_mut(), env).unwrap();
         let bin_response = handle(&deps.storage).unwrap();

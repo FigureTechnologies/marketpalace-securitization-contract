@@ -38,7 +38,7 @@ fn get_next_index(storage: &dyn Storage) -> Result<u64, ContractError> {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::Addr;
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::reply::{has, REPLIES_MAP};
 
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract1 = Addr::unchecked("address1");
         let contract2 = Addr::unchecked("address2");
 
@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn test_has() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract1 = Addr::unchecked("address1");
 
         assert_eq!(false, has(&deps.storage, 0));
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn test_remove_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract1 = Addr::unchecked("address1");
         let contract2 = Addr::unchecked("address2");
 
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn test_remove_non_existant() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract1 = Addr::unchecked("address1");
         let contract2 = Addr::unchecked("address2");
 
@@ -102,13 +102,13 @@ mod tests {
 
     #[test]
     fn test_get_next_index_first() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         assert_eq!(1, get_next_index(&deps.storage).unwrap());
     }
 
     #[test]
     fn test_get_next_index_multiple() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let contract1 = Addr::unchecked("address1");
 
         add(deps.as_mut().storage, &contract1).unwrap();

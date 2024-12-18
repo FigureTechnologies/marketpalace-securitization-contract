@@ -63,7 +63,7 @@ fn add_to_capital(new_coin: &Coin, capital: &mut [Coin]) {
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Coin, Uint128};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::storage::available_capital::{add_capital, add_to_capital, has_lp, remove_capital};
 
@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn test_add_to_capital_works_with_empty() {
         let denom = "denom".to_string();
-        let coin = Coin::new(100, denom);
+        let coin = Coin::new(Uint128::new(100), denom);
         let mut capital = vec![];
         add_to_capital(&coin, &mut capital);
 
@@ -82,36 +82,39 @@ mod tests {
     #[test]
     fn test_add_to_capital_updates_first_capital() {
         let denom = "denom".to_string();
-        let coin = Coin::new(100, denom.clone());
-        let mut capital = vec![Coin::new(100, denom.clone()), Coin::new(100, denom.clone())];
+        let coin = Coin::new(Uint128::new(100), denom.clone());
+        let mut capital = vec![
+            Coin::new(Uint128::new(100), denom.clone()),
+            Coin::new(Uint128::new(100), denom.clone()),
+        ];
         add_to_capital(&coin, &mut capital);
 
         assert_eq!(2, capital.len());
-        assert_eq!(Coin::new(200, denom.clone()), capital[0]);
-        assert_eq!(Coin::new(100, denom.clone()), capital[1]);
+        assert_eq!(Coin::new(Uint128::new(200), denom.clone()), capital[0]);
+        assert_eq!(Coin::new(Uint128::new(100), denom.clone()), capital[1]);
     }
 
     #[test]
     fn test_add_to_capital_ignores_invalid_coin() {
         let denom = "denom".to_string();
         let denom2 = "denom2".to_string();
-        let coin = Coin::new(100, denom.clone());
+        let coin = Coin::new(Uint128::new(100), denom.clone());
         let mut capital = vec![
-            Coin::new(100, denom2.clone()),
-            Coin::new(100, denom.clone()),
+            Coin::new(Uint128::new(100), denom2.clone()),
+            Coin::new(Uint128::new(100), denom.clone()),
         ];
         add_to_capital(&coin, &mut capital);
 
         assert_eq!(2, capital.len());
-        assert_eq!(Coin::new(100, denom2.clone()), capital[0]);
-        assert_eq!(Coin::new(200, denom.clone()), capital[1]);
+        assert_eq!(Coin::new(Uint128::new(100), denom2.clone()), capital[0]);
+        assert_eq!(Coin::new(Uint128::new(200), denom.clone()), capital[1]);
     }
 
     #[test]
     fn test_remove_capital_success() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("bad address");
-        let funds = vec![Coin::new(50, "denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp.clone(), funds).unwrap();
 
         let removed = remove_capital(deps.as_mut().storage, lp.clone()).unwrap();
@@ -121,16 +124,16 @@ mod tests {
 
     #[test]
     fn test_remove_capital_handles_invalid_lp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("bad address");
         remove_capital(deps.as_mut().storage, lp).unwrap_err();
     }
 
     #[test]
     fn test_has_lp() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
-        let funds = vec![Coin::new(50, "denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp.clone(), funds).unwrap();
 
         assert!(has_lp(&deps.storage, lp));
@@ -139,9 +142,9 @@ mod tests {
 
     #[test]
     fn test_get_lps_not_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
-        let funds = vec![Coin::new(50, "denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp.clone(), funds).unwrap();
 
         let lps = get_lps(&deps.storage).unwrap();
@@ -149,7 +152,7 @@ mod tests {
         assert_eq!(lp, lps[0]);
 
         let lp2 = Addr::unchecked("lp2");
-        let funds2 = vec![Coin::new(50, "denom".to_string())];
+        let funds2 = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp2.clone(), funds2).unwrap();
         let lps = get_lps(&deps.storage).unwrap();
         assert_eq!(2, lps.len());
@@ -159,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_get_lps_empty() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
 
         let lps = get_lps(&deps.storage).unwrap();
         assert_eq!(0, lps.len());
@@ -167,16 +170,16 @@ mod tests {
 
     #[test]
     fn test_get_capital_invalid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("bad address");
         get_capital(deps.as_mut().storage, lp).unwrap_err();
     }
 
     #[test]
     fn test_get_capital_valid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
-        let funds = vec![Coin::new(50, "denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         let capital = get_capital(deps.as_mut().storage, lp).unwrap();
@@ -185,9 +188,9 @@ mod tests {
 
     #[test]
     fn test_add_capital_new_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
-        let funds = vec![Coin::new(50, "denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         let capital = get_capital(deps.as_mut().storage, lp).unwrap();
@@ -196,13 +199,16 @@ mod tests {
 
     #[test]
     fn test_add_capital_update_entry() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
-        let funds = vec![Coin::new(50, "denom".to_string())];
+        let funds = vec![Coin::new(Uint128::new(50), "denom".to_string())];
         add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
         add_capital(deps.as_mut().storage, lp.clone(), funds.clone()).unwrap();
 
         let capital = get_capital(deps.as_mut().storage, lp).unwrap();
-        assert_eq!(vec![Coin::new(100, "denom".to_string())], capital);
+        assert_eq!(
+            vec![Coin::new(Uint128::new(100), "denom".to_string())],
+            capital
+        );
     }
 }

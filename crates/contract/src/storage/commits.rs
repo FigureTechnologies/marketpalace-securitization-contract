@@ -52,7 +52,7 @@ pub fn set_settlement_time(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::{Addr, Uint64};
-    use provwasm_mocks::mock_dependencies;
+    use provwasm_mocks::mock_provenance_dependencies;
 
     use crate::{
         execute::settlement::commitment::Commitment,
@@ -64,14 +64,14 @@ mod tests {
 
     #[test]
     fn test_get_invalid() {
-        let deps = mock_dependencies(&[]);
+        let deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("bad address");
         get(&deps.storage, lp).unwrap_err();
     }
 
     #[test]
     fn test_remove() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitment = Commitment::new(lp.clone(), vec![]);
         set(deps.as_mut().storage, &commitment).unwrap();
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn test_get_set_valid() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitment = Commitment::new(lp.clone(), vec![]);
         set(deps.as_mut().storage, &commitment).unwrap();
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn test_exists() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lp = Addr::unchecked("lp");
         let commitment = Commitment::new(lp.clone(), vec![]);
         assert!(!exists(&deps.storage, lp.clone()));
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_update_settlement_time() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         let lps = vec![Addr::unchecked("lp"), Addr::unchecked("lp2")];
         let settlement_time = Some(Uint64::new(9999));
         for lp in lps.clone() {
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_update_settlement_time_empty() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_provenance_dependencies();
         set_settlement_time(deps.as_mut().storage, None).unwrap();
     }
 }
