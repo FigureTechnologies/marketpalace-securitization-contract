@@ -30,6 +30,7 @@ pub enum MarkerAccess {
     Delete,
     Mint,
     Transfer,
+    ForceTransfer,
     Unspecified,
     Withdraw,
 }
@@ -44,6 +45,7 @@ impl From<MarkerAccess> for Access {
             MarkerAccess::Delete => Access::Delete,
             MarkerAccess::Mint => Access::Mint,
             MarkerAccess::Transfer => Access::Transfer,
+            MarkerAccess::ForceTransfer => Access::ForceTransfer,
             MarkerAccess::Withdraw => Access::Withdraw,
         }
     }
@@ -60,7 +62,7 @@ impl From<Access> for MarkerAccess {
             Access::Mint => MarkerAccess::Mint,
             Access::Transfer => MarkerAccess::Transfer,
             Access::Withdraw => MarkerAccess::Withdraw,
-            Access::ForceTransfer => panic!("ForceTransfer is not supported"),
+            Access::ForceTransfer => MarkerAccess::ForceTransfer,
         }
     }
 }
