@@ -62,7 +62,7 @@ impl From<Access> for MarkerAccess {
             Access::Mint => MarkerAccess::Mint,
             Access::Transfer => MarkerAccess::Transfer,
             Access::Withdraw => MarkerAccess::Withdraw,
-            Access::ForceTransfer => MarkerAccess::ForceTransfer
+            Access::ForceTransfer => MarkerAccess::ForceTransfer,
         }
     }
 }
