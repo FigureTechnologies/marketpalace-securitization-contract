@@ -140,7 +140,9 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="kw">use </span>cosmwasm_schema::cw_serde;
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a></pre></div><pre class="rust"><code><span class="kw">use </span>cosmwasm_schema::cw_serde;
 <span class="kw">use </span>cosmwasm_std::{Addr, CosmosMsg, Uint128};
 <span class="kw">use </span>provwasm_std::types::provenance::marker::v1::{Access, AccessGrant};
 <span class="kw">use </span>schemars::JsonSchema;
@@ -172,6 +174,7 @@
     Delete,
     Mint,
     Transfer,
+    ForceTransfer,
     Unspecified,
     Withdraw,
 }
@@ -186,6 +189,7 @@
             MarkerAccess::Delete =&gt; Access::Delete,
             MarkerAccess::Mint =&gt; Access::Mint,
             MarkerAccess::Transfer =&gt; Access::Transfer,
+            MarkerAccess::ForceTransfer =&gt; Access::ForceTransfer,
             MarkerAccess::Withdraw =&gt; Access::Withdraw,
         }
     }
@@ -202,7 +206,7 @@
             Access::Mint =&gt; MarkerAccess::Mint,
             Access::Transfer =&gt; MarkerAccess::Transfer,
             Access::Withdraw =&gt; MarkerAccess::Withdraw,
-            Access::ForceTransfer =&gt; <span class="macro">panic!</span>(<span class="string">"ForceTransfer is not supported"</span>),
+            Access::ForceTransfer =&gt; MarkerAccess::ForceTransfer,
         }
     }
 }
